@@ -14,7 +14,7 @@ collate_lists <- function(path, list_suffix = "_list") {
   labels <- gsub(paste0(list_suffix, ".csv"),
                  "",
                  file_names)
-
+  # create alerts_lookup data.frame
   alerts_lookup <- data.frame(
     label = labels,
     path = file_paths
