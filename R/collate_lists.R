@@ -8,7 +8,7 @@
 collate_lists <- function(path, list_suffix = "_list") {
 
   # add defensive programming for path name - must end in /
-  if (substr(-1, -1, path) != "/") {
+  if (substr(path, nchar(path), nchar(path)) != "/") {
     stop("Path must end in '/'")
   }
 
