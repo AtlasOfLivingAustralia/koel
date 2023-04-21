@@ -6,6 +6,10 @@
 
 collate_lists <- function(path, list_suffix = "_list") {
 
+  # add defensive programming for path name - must end in /
+  if (substr(-1, -1, path) != "/") {
+    stop("Path must end in '/'")
+  }
   # obtain file names from the directory
   file_names <- list.files(path)
   # file paths
