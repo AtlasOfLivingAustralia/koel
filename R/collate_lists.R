@@ -1,6 +1,6 @@
 #' Collate all existing lists into a single dataframe for use with "get_species_lists"
 #'
-#' @importFrom koel clean_list_names
+#' @importFrom janitor make_clean_names
 #' @param path A `character string` of the path of the folder containing the lists. Begins with `./` and ends with `/`
 #' @param list_suffix A `character string` of the suffix after the list name and before `.csv`
 #' @export
@@ -12,9 +12,15 @@ collate_lists <- function(path, list_suffix = "_list") {
     stop("Path must end in '/'")
   }
 
-  # clean list names
-  clean_list_names(path)
+  ### clean list names
+  # obtain file names from the directory
+  file_names <- list.files(path)
+  # clean the file names
+  new_file_names <- make_clean_names(file_names, case = "snake")
+  # rename the files with the new names
+  file.rename(paste0(path, file_names), paste0(path, new_file_names))
 
+  ### create alerts_lookup
   # obtain file names from the directory
   file_names <- list.files(path)
   # file paths
