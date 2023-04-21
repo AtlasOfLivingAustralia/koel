@@ -1,6 +1,6 @@
 #' Import all files, formatting with logical columns stating source
 #'
-#' Early days
+#' Redoing Martin's function minus lapply and to hopefully run smoother
 #'
 #' @param df A `data.frame` containing columns 'path' and 'label'
 #' @importFrom readr read_csv
