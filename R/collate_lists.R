@@ -16,7 +16,8 @@ collate_lists <- function(path, list_suffix = "_list") {
   # obtain file names from the directory
   file_names <- list.files(path)
   # clean the file names
-  new_file_names <- make_clean_names(file_names, case = "snake")
+  #### NOTE: tolower is best to remove uppercase letters. Ideally the names will already be in snakecase once we do that. If we have to use make_clean_names then we'll have to then deal with the .csv part afterwards.
+  new_file_names <- tolower(file_names)
   # rename the files with the new names
   file.rename(paste0(path, file_names), paste0(path, new_file_names))
 
