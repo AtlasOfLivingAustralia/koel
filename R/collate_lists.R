@@ -15,25 +15,22 @@ collate_lists <- function(path, list_suffix = "_list") {
   ### clean list names
   # obtain file names from the directory
   file_names <- list.files(path)
-  # clean the file names
-  #### NOTE: tolower is best to remove uppercase letters. Ideally the names will already be in snakecase once we do that. If we have to use make_clean_names then we'll have to then deal with the .csv part afterwards.
-  new_file_names <- tolower(file_names)
-  # rename the files with the new names
-  file.rename(paste0(path, file_names), paste0(path, new_file_names))
-
-  ### create alerts_lookup
-  # obtain file names from the directory
-  file_names <- list.files(path)
   # file paths
   file_paths <- paste0(path, file_names)
   # labels remove the _list.csv
   labels <- gsub(paste0(list_suffix, ".csv"),
                  "",
                  file_names)
+  # clean the label names
+  labels_lower <- tolower(labels)
+  #### NOTE: tolower is best to remove uppercase letters. Ideally the names will already be in snakecase once we do that. If we have to use make_clean_names then we'll have to then deal with the .csv part afterwards.
+  ### create alerts_lookup
   # create alerts_lookup data.frame
   alerts_lookup <- data.frame(
     label = labels,
-    path = file_paths
+    labels_lower = labels_lower,
+    path = file_paths,
+    csv_names = file_names
   )
 
   return(alerts_lookup)
