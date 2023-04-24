@@ -28,7 +28,7 @@ collate_lists <- function(path, list_suffix = "_list") {
   # create alerts_lookup data.frame
   alerts_lookup <- data.frame(
     label = labels,
-    labels_lower = labels_lower,
+    source = labels_lower,
     path = file_paths,
     csv_names = file_names
   )
