@@ -24,5 +24,7 @@ build_ALA_query <- function(start_days_ago, lat_bounds, lng_bounds) {
     raw_scientificName == "none")
 
   filter_df$query[1] <- paste0("decimalLongitude:[", lng_bounds[1], " TO ", lng_bounds[2], "]")
-  filter_df$query[2] <- paste("decimalLatitude:[", lat_bounds[1], " TO ", lat_bounds[2], "]")
+  filter_df$query[2] <- paste0("decimalLatitude:[", lat_bounds[1], " TO ", lat_bounds[2], "]")
+
+  return(filter_df)
 }

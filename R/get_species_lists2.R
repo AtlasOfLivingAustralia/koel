@@ -17,7 +17,7 @@
 #' @importFrom tidyr pivot_wider
 #' @export
 
-get_species_lists <- function(lists_df){
+get_species_lists2 <- function(lists_df){
 
   # we want to import the relevant list csvs and then string them together
   combined_df <- split(lists_df, 1:nrow(lists_df)) |>

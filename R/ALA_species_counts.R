@@ -1,0 +1,36 @@
+#' Search all of ALA for species and record their counts of records in the timeframe
+#'
+#' Redoing Martin's function minus lapply and to hopefully run smoother
+#'
+#' @param species_list A `data.frame` containing columns of 'correct_name', 'search_term', 'common_name' for species, and T/F columns for each list
+#' @param filter_df A `list` of ALA query conditions
+#' @importFrom galah atlas_counts
+#' @importFrom purrr map
+#' @importFrom purrr list_rbind
+#' @importFrom dplyr mutate
+#' @export
+
+ALA_species_counts <- function(species_list, filter_df) {
+  # iterate search of Atlas for each search term. Store counts
+  species_counts <- map(
+    .x = species_list$search_term,
+    .f = function(search_term) {
+      cat(search_term)
+      filter_tmp <- filter_df
+      filter_tmp$query[4] <- sub("none", search_term, filter_df$query[4])
+      ALA_search <- atlas_counts(filter = filter_tmp)
+      if (any(colnames(ALA_search) == "count")) {
+        number_out <- ALA_search$count[1]
+      } else {
+        number_out <- 0
+      }
+      cat(paste0(": ", number_out, "\n"))
+      return(number_out)
+      }) |>
+    unlist()
+
+  species_list <- species_list |>
+    mutate(counts = species_counts) |>
+    filter(counts > 0)
+  return(species_list)
+}
