@@ -8,7 +8,7 @@
 #' @importFrom galah galah_filter
 #' @export
 
-build_ALA_query <- function(start_days_ago, lat_bounds, lng_bounds) {
+build_ala_query <- function(start_days_ago, lat_bounds, lng_bounds) {
   # set required date range
   start_date <- as.character(Sys.Date() - start_days_ago) |>
     paste0("T00:00:00Z")

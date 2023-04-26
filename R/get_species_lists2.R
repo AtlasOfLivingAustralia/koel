@@ -15,6 +15,7 @@
 #' @importFrom dplyr distinct
 #' @importFrom tidyr pivot_longer
 #' @importFrom tidyr pivot_wider
+#' @importFrom tools toTitleCase
 #' @export
 
 get_species_lists2 <- function(lists_df){
@@ -35,7 +36,7 @@ get_species_lists2 <- function(lists_df){
     gsub(",", "", x = _) |> # remove commas (fail on ALA)
     gsub("\\:.+", "", x = _) # remove colons : and anything after
 
-  # function to shorten column names
+  # function to shorten species names
   short_names <- function(col){
     a <- strsplit(col, split = " ")[[1]]
     return(paste(a[c(1:min(c(2, length(a))))], collapse = " "))
@@ -68,6 +69,7 @@ get_species_lists2 <- function(lists_df){
   combined_df_joined <- combined_df_clean |>
     dplyr::left_join(unique_species, by = "correct_name") |>
     dplyr::select(-list_name) |>
+    mutate(common_name = toTitleCase(common_name)) |>
     distinct()
 
   return(combined_df_joined)
