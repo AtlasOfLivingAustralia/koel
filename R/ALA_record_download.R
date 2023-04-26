@@ -10,9 +10,9 @@
 #' @importFrom dplyr mutate
 #' @export
 
-ALA_record_download <- function(species_list) {
+ala_record_download <- function(species_list) {
   if (nrow(species_list) > 0) {
-    cat(paste0("Downloading records for ", n_spp, " species\n"))
+    cat(paste0("Downloading records for ", nrow(species_list), " species\n"))
 
     galah_config(
       email = "callumwaite2000@gmail.com",
@@ -33,8 +33,7 @@ ALA_record_download <- function(species_list) {
         atlas_occurrences(
           filter = filter_tmp,
           select = select_tmp)
-        }
-    ) |>
+        }) |>
       list_rbind() |>
       search_media() |>
       filter(!duplicated(recordID)) |> # i.e. one image per record
@@ -47,4 +46,5 @@ ALA_record_download <- function(species_list) {
       left_join(species_list,
                 by = c("verbatimScientificName" = "search_term"))
   }
+  return(occ_list)
 }

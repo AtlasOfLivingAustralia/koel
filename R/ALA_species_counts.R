@@ -8,9 +8,17 @@
 #' @importFrom purrr map
 #' @importFrom purrr list_rbind
 #' @importFrom dplyr mutate
+#' @importFrom dplyr select
+#' @importFrom dplyr distinct
 #' @export
 
-ALA_species_counts <- function(species_list, filter_df) {
+ala_species_counts <- function(species_list, filter_df) {
+
+  # make sure there are no double ups due to common name in 'species_list'
+  species_list <- species_list |>
+    dplyr::select(-common_name) |>
+    distinct()
+
   # iterate search of Atlas for each search term. Store counts
   species_counts <- map(
     .x = species_list$search_term,
@@ -18,9 +26,9 @@ ALA_species_counts <- function(species_list, filter_df) {
       cat(search_term)
       filter_tmp <- filter_df
       filter_tmp$query[4] <- sub("none", search_term, filter_df$query[4])
-      ALA_search <- atlas_counts(filter = filter_tmp)
-      if (any(colnames(ALA_search) == "count")) {
-        number_out <- ALA_search$count[1]
+      ala_search <- atlas_counts(filter = filter_tmp)
+      if (any(colnames(ala_search) == "count")) {
+        number_out <- ala_search$count[1]
       } else {
         number_out <- 0
       }
