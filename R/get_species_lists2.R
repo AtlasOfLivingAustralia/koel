@@ -24,7 +24,7 @@ get_species_lists2 <- function(lists_df){
   combined_df <- split(lists_df, 1:nrow(lists_df)) |>
     purrr::map(
       .f = \(x) readr::read_csv(x$path, show_col_types = FALSE) |>
-        dplyr::mutate(list_name = x$source)) |>
+        dplyr::mutate(list_name = x$label)) |>
     purrr::list_rbind() |>
     # remove duplicate rows (from same database)
     distinct()
