@@ -38,27 +38,10 @@ build_email <- function(alerts_data, email_list, template_path) {
                      as.vector()
                    send_email(recipients)
 
+                 } else {
+                   cat(paste0("No alert sent for list: ", list))
                  }
-               })
-
-
-    invisible(lapply(alerts_lookup$label, function(a){
-      if(any(alerts_data[[a]])){
-        cat(paste0("Writing email for list: ", a))
-        x <- alerts_data |> filter(alerts_data[[a]])
-        table_df <- build_gt_table(x)
-        # render and save output
-        rmarkdown::render("email_template.Rmd",
-                          output_file = paste0("./outputs/html/email_",
-                                               time_string,
-                                               "_",
-                                               a,
-                                               ".html"))
-        recipients_tr <- email_list$email[email_list[[a]]]
-        send_email(recipients_tr)
-      }else{
-        cat(paste0("No alert sent for list: ", a))
-      }
-    }))
+               }
+    )
   }
 }
