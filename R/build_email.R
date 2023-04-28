@@ -22,9 +22,8 @@ build_email <- function(alerts_data, email_list, template_path) {
                .f = function(list_name) {
                  list_col <- alerts_data[[list_name]]
                  if (any(list_col)) {
-                   cat(paste0("Writing email for list: ", list_name))
-                   table_df <- build_gt_table(alerts_data |>
-                                                filter(list_col))
+                   cat(paste0("Writing email for list: ", list_name, "\n"))
+                   build_gt_table(alerts_data |> filter(list_col))
                    # render and save output
                    rmarkdown::render(template_path,
                                      output_file = paste0("./outputs/html/email_",
@@ -39,9 +38,22 @@ build_email <- function(alerts_data, email_list, template_path) {
                    send_email(recipients)
 
                  } else {
-                   cat(paste0("No alert sent for list: ", list_name))
+                   cat(paste0("No alert sent for list: ", list_name, "\n"))
                  }
                }
     )
+
+    # save out and clean up
+    write.csv(alerts_data,
+              file = paste0("./outputs/csv/alerts_data_", time_string, ".csv"),
+              row.names = FALSE)
+  } else {
+    # if no data returned, cache an empty csv file to show the script has run
+    write.csv(tibble(),
+              file = paste0("./outputs/csv/alerts_data_", time_string, ".csv"),
+              row.names = FALSE)
   }
+
+  # unlink("./cache", recursive = TRUE)
+
 }

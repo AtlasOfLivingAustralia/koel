@@ -67,5 +67,6 @@ build_gt_table <- function(df){
     ) |>
     select(species, observation, location, image)
 
-  return(table_df)
+  save(table_df, file = "./outputs/table_df.RData")
+  # return(table_df)
 }
