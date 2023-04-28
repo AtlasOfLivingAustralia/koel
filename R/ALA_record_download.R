@@ -59,7 +59,8 @@ ala_record_download <- function(species_list, common_names, path) {
                        by = c("verbatimScientificName" = "search_term")) |>
       dplyr::left_join(common_names,
                        by = c("verbatimScientificName" = "correct_name")) |>
-      dplyr::mutate(common_name = replace_na(common_name, "[Common Name Unknown]"))
+      dplyr::mutate(common_name = replace_na(common_name, "[Common Name Unknown]")) |>
+      dply::select(-counts)
 
     write.csv(occ_list,
               file = paste0(path, "alerts_data.csv"),

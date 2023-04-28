@@ -17,7 +17,7 @@ common_names_assigned <- function(species_list) {
     dplyr::select(correct_name, common_name) |>
     dplyr::group_by(correct_name) |>
     # take the first common_name present for each correct species name
-    dplyr::summarise(common_name = common_name[1])
+    dplyr::summarise(common_name = common_name[1], .groups = "drop")
 
   return(common_names)
 }

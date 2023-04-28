@@ -4,6 +4,7 @@
 #'
 #' @param species_list A `data.frame` containing columns of 'correct_name', 'search_term', 'common_name' for species, and T/F columns for each list
 #' @param filter_df A `list` of ALA query conditions
+#' @param max_counts A `dbl` indicating the maximum number of counts for a species that we still want a report for
 #' @importFrom galah atlas_counts
 #' @importFrom purrr map
 #' @importFrom purrr list_rbind
@@ -12,7 +13,7 @@
 #' @importFrom dplyr distinct
 #' @export
 
-ala_species_counts <- function(species_list, filter_df) {
+ala_species_counts <- function(species_list, filter_df, max_counts) {
 
   # make sure there are no double ups due to common name in 'species_list'
   species_list <- species_list |>
@@ -39,6 +40,6 @@ ala_species_counts <- function(species_list, filter_df) {
 
   species_list <- species_list |>
     mutate(counts = species_counts) |>
-    filter(counts > 0)
+    filter(counts > 0 & counts < max_counts)
   return(species_list)
 }

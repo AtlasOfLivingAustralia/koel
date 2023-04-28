@@ -13,22 +13,15 @@
 build_gt_table <- function(df){
 
   # get first image per record
-  df <- do.call(rbind, lapply(
-    split(df, df$recordID),
-    function(a){a[1, ]}
-  ))
+  df <- df |>
+    dplyr::filter(!duplicated(recordID)) |>
+    # format dates
+    dplyr::mutate(date_html = (format(eventDate, "%H:%M %d-%m-%Y")))
 
   # add maps
-  invisible(lapply(
-    split(df, seq_len(nrow(df))), map_plot))
-
-  # format dates
-  df$date_html <- paste0(
-    format(df$eventDate, "%H:%M"),
-    " ",
-    format(df$eventDate, "%d-%m-%Y"))
-
-  df$path <- here()
+  invisible(df |>
+              purrr::pmap(tibble) |>
+              purrr::map(build_map_thumbnail))
 
   # build table info
   table_df <- df |>

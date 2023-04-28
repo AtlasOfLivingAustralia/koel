@@ -16,13 +16,13 @@ build_email <- function(alerts_data, email_list, template_path) {
     gsub(":", "-", x = _)
 
   # check if we actually have records to send out
-  if (nrows(alerts_data) > 0) {
+  if (nrow(alerts_data) > 0) {
 
     purrr::map(.x = alerts_lookup$label,
-               .f = function(list) {
-                 list_col <- alerts_data[[list]]
+               .f = function(list_name) {
+                 list_col <- alerts_data[[list_name]]
                  if (any(list_col)) {
-                   cat(paste0("Writing email for list: ", list))
+                   cat(paste0("Writing email for list: ", list_name))
                    table_df <- build_gt_table(alerts_data |>
                                                 filter(list_col))
                    # render and save output
@@ -30,16 +30,16 @@ build_email <- function(alerts_data, email_list, template_path) {
                                      output_file = paste0("./outputs/html/email_",
                                                           time_string,
                                                           "_",
-                                                          list,
+                                                          list_name,
                                                           ".html"))
-                   receipients <- email_list |>
-                     dplyr::filter(list == list) |>
+                   recipients <- email_list |>
+                     dplyr::filter(list == list_name) |>
                      dplyr::select(email) |>
                      as.vector()
                    send_email(recipients)
 
                  } else {
-                   cat(paste0("No alert sent for list: ", list))
+                   cat(paste0("No alert sent for list: ", list_name))
                  }
                }
     )
