@@ -7,9 +7,14 @@
 
 collate_lists <- function(path, list_suffix = "_list") {
 
+  # both arguments must be a character string
+  if (!is.character(path) | !is.character(list_suffix)) {
+    stop("`path` and 'list_suffix` arguments must be character strings.")
+  }
+
   # add defensive programming for path name - must end in /
   if (substr(path, nchar(path), nchar(path)) != "/") {
-    stop("Path must end in '/'")
+    stop("Invalid path. Must be a character string ending in `/`")
   }
 
   ### clean list names
