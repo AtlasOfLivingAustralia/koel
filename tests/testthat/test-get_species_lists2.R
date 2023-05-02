@@ -35,5 +35,8 @@ test_that("output is in the correct dataframe format",{
   # check that df has the correct column names
   expect_equal(colnames(gsl2_output), c("correct_name", "search_term", "common_name", df$label))
   # check that the list columns are all logical
-  expect_type(gsl2_output[tail(names(gsl2_output), 2)] |> as.matrix(), "logical")
+  expect_equal(purrr::map_chr(gsl2_output, .f = class) |> unname(),
+               rep(c("character", "logical"), times = c(3, nrow(df))))
 })
+
+# test characteristics of the dataframe? Unique rows, etc?

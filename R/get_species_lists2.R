@@ -22,7 +22,7 @@
 get_species_lists2 <- function(lists_df){
 
   # defensive programming on inputs
-  if (!("data.frame" %in% class(df))) {
+  if (!("data.frame" %in% class(lists_df))) {
     stop("`lists_df` argument must be a data.frame or tibble")
   } else if (!all(c("label", "path") %in% colnames(lists_df))) {
     stop("`lists_df` must at least have columns `label` and `path`")
