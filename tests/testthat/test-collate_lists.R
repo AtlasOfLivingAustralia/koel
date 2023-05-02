@@ -13,14 +13,16 @@ test_that("check for correct type of file path name", {
 })
 
 
-# test if the output is a dataframe with four columns, and as many rows as there are files in the folder
+# test if the output is a dataframe with the correct structure
 test_that("test the form of the output", {
-  {write.csv(data.frame(), paste0(tempdir(), "/list1_list.csv"))
-   write.csv(data.frame(), paste0(tempdir(), "/list2_list.csv"))}
-  collate_lists(paste0(tempdir(), "/"))
-  expect(collate_lis)
+  dir_path <- withr::local_tempdir()
+  {write.csv(data.frame(), paste0(dir_path, "/list1_list.csv"))
+   write.csv(data.frame(), paste0(dir_path, "/list2_list.csv"))}
+  df <- collate_lists(paste0(dir_path, "/"))
+  # check that df is a dataframe
+  expect_s3_class(df, class = "data.frame")
+  # check that df has as many rows as there are lists
+  expect_equal(nrow(df), length(list.files(paste0(dir_path, "/"))))
+  # check that df has the correct column names
+  expect_equal(colnames(df), c("label", "source", "path", "csv_names"))
 })
-
-# test if the column names of the dataframe are correct
-
-#
