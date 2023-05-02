@@ -1,7 +1,12 @@
-#' Collate all existing lists into a single dataframe for use with "get_species_lists"
+#' Collate lists
 #'
-#' @param path A `character string` of the path of the folder containing the lists. Begins with `./` and ends with `/`
-#' @param list_suffix A `character string` of the suffix after the list name and before `.csv`
+#' Alerts need to be run against multiple user-supplied lists. This function
+#'   combines all existing lists and returns a single data.frame, which may
+#'   then be passed as an argument to `get_species_lists()`.
+#'
+#' @param path Path to the directory where lists are saved, beginning with "./"
+#'   and ending in "/".
+#' @param list_suffix Character string between the list name and file extension.
 #' @export
 
 collate_lists <- function(path, list_suffix = "_list") {
