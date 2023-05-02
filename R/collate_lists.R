@@ -1,4 +1,4 @@
-#' Collate lists
+#' Combine user-supplied lists into data.frame
 #'
 #' Alerts need to be run against multiple user-supplied lists. This function
 #'   combines all existing lists and returns a single data.frame, which may
