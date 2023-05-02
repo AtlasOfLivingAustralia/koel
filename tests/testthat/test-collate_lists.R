@@ -1,7 +1,4 @@
-# Test for collate-lists
-
-# test that the inputted arguments are of the correct form
-test_that("check for correct type of file path name", {
+test_that("arguments are supplied correctly", {
   # test for nice error if the path does not end in /
   expect_error(collate_lists("./dummy_path"))
   # test if both arguments are character strings
@@ -12,9 +9,7 @@ test_that("check for correct type of file path name", {
   expect_error(collate_lists("./temp_path/", "_list", "3rd_arg"))
 })
 
-
-# test if the output is a dataframe with the correct structure
-test_that("test the form of the output", {
+test_that("collate_lists returns the correct output", {
   dir_path <- withr::local_tempdir()
   {write.csv(data.frame(), paste0(dir_path, "/list1_list.csv"))
    write.csv(data.frame(), paste0(dir_path, "/list2_list.csv"))}
