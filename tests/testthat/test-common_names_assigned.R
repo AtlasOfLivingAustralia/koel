@@ -3,7 +3,7 @@
 # test format of input
 test_that("test format of dataframe input", {
   # throw an error if argument is not a data.frame or tibble
-  expect_error(common_names_assigned(list(12, "jackal")))
+  expect_error(common_names_assigned(list(12)))
   # throw an error if the argument does not have the correct columns
   expect_error(get_species_list2(data.frame(correct_name = NULL, search_term = NULL)))
 })

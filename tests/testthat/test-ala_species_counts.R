@@ -14,6 +14,7 @@ test_that("input is in the correct dataframe format", {
   # throw an error if any of species_lists or filter_df is not a data.frame or tibble
   expect_error(ala_species_counts(15, filter_df, 20))
   expect_error(ala_species_counts(species_list, TRUE, 20))
+  expect_error(ala_species_counts(species_list, data.frame(query = ""), 20))
   # throw an error if max_counts is not a numeric value
   expect_error(ala_species_counts(species_list, filter_df, data.frame()))
 })
