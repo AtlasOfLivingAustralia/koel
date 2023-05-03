@@ -10,12 +10,11 @@
 #' @examples
 
 build_email <- function(alerts_data, email_list, template_path) {
-  # Set the current time
-  time_string <- Sys.time() |>
+
+  date_time <- Sys.time() |>
     gsub("\\s", "_", x = _) |>
     gsub(":", "-", x = _)
 
-  # check if we actually have records to send out
   if (nrow(alerts_data) > 0) {
 
     purrr::map(.x = alerts_lookup$label,
@@ -27,7 +26,7 @@ build_email <- function(alerts_data, email_list, template_path) {
                    # render and save output
                    rmarkdown::render(template_path,
                                      output_file = paste0("./outputs/html/email_",
-                                                          time_string,
+                                                          date_time,
                                                           "_",
                                                           list_name,
                                                           ".html"))
@@ -45,12 +44,12 @@ build_email <- function(alerts_data, email_list, template_path) {
 
     # save out and clean up
     write.csv(alerts_data,
-              file = paste0("./outputs/csv/alerts_data_", time_string, ".csv"),
+              file = paste0("./outputs/csv/alerts_data_", date_time, ".csv"),
               row.names = FALSE)
   } else {
     # if no data returned, cache an empty csv file to show the script has run
     write.csv(tibble(),
-              file = paste0("./outputs/csv/alerts_data_", time_string, ".csv"),
+              file = paste0("./outputs/csv/alerts_data_", date_time, ".csv"),
               row.names = FALSE)
   }
 
