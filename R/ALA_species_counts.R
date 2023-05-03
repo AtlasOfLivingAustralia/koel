@@ -1,10 +1,21 @@
-#' Search all of ALA for species and record their counts of records in the timeframe
+#' Search ALA for provided species and record counts
 #'
-#' Redoing Martin's function minus lapply and to hopefully run smoother
+#' Biosecurity alerts need only be provided for invasive species that have been
+#' observed in some recent timeframe (i.e. the past week). This function searches
+#' the ALA using functions of the package `galah` for occurrences of species of
+#' interest within some search parameters. The resulting tibble summarises the
+#' counts of species that have been observed (counts > 0), which may then be
+#' passed on to  `ala_records_download()` as an argument for downloading of these
+#' records.
 #'
-#' @param species_list A `data.frame` containing columns of 'correct_name', 'search_term', 'common_name' for species, and T/F columns for each list
-#' @param filter_df A `list` of ALA query conditions
+#' @param species_list A `data.frame` or `tibble` preferably produced by
+#' `get_species_list2()`, containing details for the search of ALA for observations
+#' of invasive species. Must contain character columns 'correct_name', 'search_term',
+#' 'common_name' for each species, and logical columns for each alerts list
+#' indicating the presence of each species on that list.
+#' @param filter_df A `data.frame` or `tibble` of ALA query conditions
 #' @param max_counts A `dbl` indicating the maximum number of counts for a species that we still want a report for
+#'
 #' @importFrom galah atlas_counts
 #' @importFrom purrr map
 #' @importFrom purrr list_rbind
