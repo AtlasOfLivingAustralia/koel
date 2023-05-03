@@ -1,6 +1,3 @@
-# tests for common_names_assigned
-
-# test format of input
 test_that("test format of dataframe input", {
   # throw an error if argument is not a data.frame or tibble
   expect_error(common_names_assigned(list(12, "jackal")))
@@ -8,7 +5,6 @@ test_that("test format of dataframe input", {
   expect_error(get_species_list2(data.frame(correct_name = NULL, search_term = NULL)))
 })
 
-# test format of output
 test_that("test format of dataframe output", {
   # set up lists_df object
   dir_path <- withr::local_tempdir()
