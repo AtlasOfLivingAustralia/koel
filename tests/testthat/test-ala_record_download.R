@@ -31,6 +31,8 @@ test_that("inputs are of the correct format", {
                                    filter_df, data.frame()))
   expect_error(ala_record_download(species_lists, common_names,
                                    filter_df, withr::local_tempdir()))
+
+  unlink(path)
 })
 
 
@@ -59,6 +61,8 @@ test_that("`ala_record_download` outputs the correct dataframe format", {
   expect_equal(ncol(ard_output), 29 + ncol(species_list) - 3)
   # output has expected number of rows
   expect_equal(nrow(ard_output), sum(species_list$counts))
+
+  unlink(path)
 })
 
 # test that the correct amount of files are being saved
@@ -82,6 +86,8 @@ test_that("`ala_record_download` downloads the correct number of media files", {
 
   expect_equal(length(list.files(paste0(path, "species_images"))),
                sum(species_list$counts))
+
+  unlink(path)
 })
 
 # test that a message is provided if no "species_images" folder is available
@@ -103,7 +109,33 @@ test_that("`ala_record_download` provides a message if a new folder is created",
   expect_message(ala_record_download(species_list, common_names, filter_df, path))
   expect_equal(length(list.files(paste0(path, "species_images"))),
                sum(species_list$counts))
+
+  unlink(path)
 })
 
 # TO TEST
-# that a single csv is written
+# test that a single csv is written with the correct number of rows
+test_that("`ala_record_download` provides a message if a new folder is created", {
+  # set up arguments
+  species_list <- dplyr::tibble(
+    correct_name = c("Onychoprion fuscatus"),
+    search_term = c("Onychoprion fuscatus"),
+    list1 = c(TRUE),
+    counts = 1
+  )
+  common_names <- dplyr::tibble(
+    correct_name = c("Onychoprion fuscatus"),
+    common_name = c("Sooty Tern")
+  )
+  filter_df <- build_ala_query(30, c(-55, -10), c(110, 154))
+  path <- paste0(withr::local_tempdir(), "/")
+
+  ala_record_download(species_list, common_names, filter_df, path)
+  expect_true("alerts_data.csv" %in% list.files(path))
+  ard_csv <- readr::read_csv(paste0(path, "alerts_data.csv"),
+                             show_col_types = FALSE)
+  expect_equal(nrow(ard_csv), sum(species_list$counts))
+
+  unlink(path)
+})
+
