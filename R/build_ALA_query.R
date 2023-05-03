@@ -14,7 +14,7 @@ build_ala_query <- function(start_days_ago, lat_bounds, lng_bounds) {
     paste0("T00:00:00Z")
 
   # build a filter to use in later queries
-  filter_df <- galah_filter(
+  filter_df <- galah::galah_filter(
     # bounding box around Australia
     decimalLongitude >= 0,
     # decimalLongitude <= 154,

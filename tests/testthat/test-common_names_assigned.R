@@ -3,7 +3,7 @@
 # test format of input
 test_that("test format of dataframe input", {
   # throw an error if argument is not a data.frame or tibble
-  expect_error(common_names_assigned(list(12, "jackal")))
+  expect_error(common_names_assigned(list(12)))
   # throw an error if the argument does not have the correct columns
   expect_error(get_species_list2(data.frame(correct_name = NULL, search_term = NULL)))
 })
@@ -66,7 +66,7 @@ test_that("handle common_name NAs correctly", {
     correct_name = c("Eudynamys orientalis", "Eudynamys orientalis"),
     search_term = c("Eudynamys orientalis", "Eudynamys orientalis (Linnaeus, 1766)"),
     common_name = c(NA, NA),
-    list1 = c(TRUE, TRUE, TRUE, TRUE)
+    list1 = c(TRUE, TRUE)
   )
   # test that common_name is recorded as NA
   expect_equal(common_names_assigned(species_list),
@@ -78,7 +78,7 @@ test_that("handle common_name NAs correctly", {
     correct_name = c("Eudynamys orientalis", "Eudynamys orientalis"),
     search_term = c("Eudynamys orientalis", "Eudynamys orientalis (Linnaeus, 1766)"),
     common_name = c(NA, "Eastern Koel"),
-    list1 = c(TRUE, TRUE, TRUE, TRUE)
+    list1 = c(TRUE, TRUE)
   )
   # test that common_name is recorded as "Eastern Koel"
   expect_equal(common_names_assigned(species_list),
