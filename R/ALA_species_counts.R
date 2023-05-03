@@ -24,7 +24,7 @@ ala_species_counts <- function(species_list, filter_df, max_counts) {
   # defensive programming on inputs: filter_df
   if (!("data.frame" %in% class(filter_df))) {
     stop("`filter_df` argument must be a data.frame or tibble")
-  } else if (all(colnames(filter_df) != c("variable", "logical", "value", "query"))) {
+  } else if (any(colnames(filter_df) != c("variable", "logical", "value", "query"))) {
     stop("`filter_df` must be a dataframe created by 'galah_filter()'")
   }
   # defensive programming on inputs: max_counts
