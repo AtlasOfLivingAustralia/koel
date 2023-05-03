@@ -11,32 +11,23 @@
 
 collate_lists <- function(path, list_suffix = "_list") {
 
-  # both arguments must be a character string
-  if (!is.character(path) | !is.character(list_suffix)) {
+  if (!is.character(path) || !is.character(list_suffix)) {
     stop("`path` and 'list_suffix` arguments must be character strings.")
   }
 
-  # path name must end in /
   if (substr(path, nchar(path), nchar(path)) != "/") {
     stop("Invalid path. Must be a character string ending in `/`")
   }
 
-  # clean list names
   file_names <- list.files(path)
   file_paths <- paste0(path, file_names)
-  labels <- gsub(paste0(list_suffix, ".csv"),
-                 "",
-                 file_names,
-                 ignore.case = TRUE)
+  labels <- gsub(paste0(list_suffix, ".csv"), "", file_names, ignore.case = T)
   labels_lower <- tolower(labels)
 
-  # create alerts_lookup data.frame
-  alerts_lookup <- data.frame(
-    label = labels,
-    source = labels_lower,
-    path = file_paths,
-    csv_names = file_names
-  )
+  alerts_lookup <- data.frame(label = labels,
+                              source = labels_lower,
+                              path = file_paths,
+                              csv_names = file_names)
 
   return(alerts_lookup)
 }
