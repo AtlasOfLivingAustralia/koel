@@ -1,42 +1,36 @@
-#' Collate all existing lists into a single dataframe for use with "get_species_lists"
+#' Combine user-supplied lists into data.frame
 #'
-#' @importFrom janitor make_clean_names
-#' @param path A `character string` of the path of the folder containing the lists. Begins with `./` and ends with `/`
-#' @param list_suffix A `character string` of the suffix after the list name and before `.csv`
+#' Alerts need to be run against multiple user-supplied lists. This function
+#'   combines all existing lists and returns a single data.frame, which may
+#'   then be passed as an argument to `get_species_lists()`.
+#'
+#' @param path Path to the directory where lists are saved, beginning with "./"
+#'   and ending in "/".
+#' @param list_suffix Character string between the list name and file extension.
+#' @return A data.frame containing four columns, with information about the
+#'   source and location of user-supplied lists.
+#'
 #' @export
 
 collate_lists <- function(path, list_suffix = "_list") {
 
-  # both arguments must be a character string
-  if (!is.character(path) | !is.character(list_suffix)) {
+  if (!is.character(path) || !is.character(list_suffix)) {
     stop("`path` and 'list_suffix` arguments must be character strings.")
   }
 
-  # add defensive programming for path name - must end in /
   if (substr(path, nchar(path), nchar(path)) != "/") {
     stop("Invalid path. Must be a character string ending in `/`")
   }
 
-  ### clean list names
-  # obtain file names from the directory
   file_names <- list.files(path)
-  # file paths
   file_paths <- paste0(path, file_names)
-  # labels remove the _list.csv
-  labels <- gsub(paste0(list_suffix, ".csv"),
-                 "",
-                 file_names)
-  # clean the label names
+  labels <- gsub(paste0(list_suffix, ".csv"), "", file_names, ignore.case = T)
   labels_lower <- tolower(labels)
-  #### NOTE: tolower is best to remove uppercase letters. Ideally the names will already be in snakecase once we do that. If we have to use make_clean_names then we'll have to then deal with the .csv part afterwards.
-  ### create alerts_lookup
-  # create alerts_lookup data.frame
-  alerts_lookup <- data.frame(
-    label = labels,
-    source = labels_lower,
-    path = file_paths,
-    csv_names = file_names
-  )
+
+  alerts_lookup <- data.frame(label = labels,
+                              source = labels_lower,
+                              path = file_paths,
+                              csv_names = file_names)
 
   return(alerts_lookup)
 }

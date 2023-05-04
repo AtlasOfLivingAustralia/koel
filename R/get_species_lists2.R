@@ -1,10 +1,13 @@
-#' Import all files, formatting with logical columns stating source
+#' Import user-supplied species lists
 #'
-#' Redoing Martin's function minus lapply and to hopefully run smoother
+#' @param df A data.frame containing columns named 'path' and 'label'
+#' @return A data.frame of unique scientific names, the search term used to
+#'   match those names to the ALA taxonomy, a common name for each species, and
+#'   a column for each imported list. Each column associated with an imported
+#'   list contains information on whether or not a species appears on the list.
 #'
-#' @param df A `data.frame` containing columns 'path' and 'label'
 #' @importFrom readr read_csv
-#' @importFrom purrr map
+#' @importFrom purrr pmap
 #' @importFrom purrr map_chr
 #' @importFrom purrr list_rbind
 #' @importFrom dplyr bind_rows
@@ -21,64 +24,67 @@
 
 get_species_lists2 <- function(lists_df){
 
-  # defensive programming on inputs
   if (!("data.frame" %in% class(lists_df))) {
     stop("`lists_df` argument must be a data.frame or tibble")
   } else if (!all(c("label", "path") %in% colnames(lists_df))) {
-    stop("`lists_df` must at least have columns `label` and `path`")
+    stop("`lists_df` must have columns `label` and `path`")
   }
 
-  # we want to import the relevant list csvs and then string them together
-  combined_df <- split(lists_df, 1:nrow(lists_df)) |>
-    purrr::map(
-      .f = \(x) readr::read_csv(x$path, show_col_types = FALSE) |>
-        dplyr::mutate(list_name = x$label)) |>
-    purrr::list_rbind() |>
-    # remove duplicate rows (from same database)
-    dplyr::distinct()
-
-  # clean up correct names column
-  combined_df$correct_name <- combined_df$correct_name |>
-    gsub("\\(.+\\)", "  ", x = _) |> # remove text in brackets
-    gsub("\\s{2,}", " ", x = _) |>  # remove successive spaces
-    gsub(",", "", x = _) |> # remove commas (fail on ALA)
-    gsub("\\:.+", "", x = _) # remove colons : and anything after
-
-  # function to shorten species names
-  short_names <- function(col){
-    a <- strsplit(col, split = " ")[[1]]
-    return(paste(a[c(1:min(c(2, length(a))))], collapse = " "))
-  }
+  combined_df <- lists_df |>
+    pmap(.f = \(path, label, ...)
+         read_csv(path, show_col_types = FALSE) |>
+           mutate(list_name = label)) |>
+    list_rbind() |>
+    distinct() |>
+    mutate(correct_name = gsub("\\(.+\\)", "  ", correct_name), # text in brackets
+           correct_name = gsub("\\s{2,}", " ", correct_name),   # successive spaces
+           correct_name = gsub(",", "", correct_name),          # commas
+           correct_name = gsub("\\:.+", "", correct_name))      # colons & subsequent text
 
   combined_df_clean <- combined_df |>
-    # create a second correct_name column which'll get pivoted_longer with synonyms and provided_names
-    dplyr::mutate(correct_name_long = correct_name,
-                  correct_name_small = purrr:: map_chr(.x = correct_name, .f = short_names),
-                  correct_name = correct_name_small) |>
-    tidyr::pivot_longer(c(correct_name_small, correct_name_long, provided_name, synonyms),
-                        names_to = "type_of", values_to = "search_term") |>
-    dplyr::select(-type_of) |>
-    dplyr::relocate(search_term, .after = correct_name) |>
-    dplyr::filter(!is.na(search_term)) |>
-    # clear up search term column w.r.t commas and trailing whitespaces
-    dplyr::mutate(search_term = gsub(",", "", search_term),
-                  search_term = gsub("[ \t]+$", "", search_term)) |>
-    dplyr::distinct()
+    mutate(correct_name_long = correct_name,
+           correct_name_short =  map_chr(.x = correct_name, .f = shorten_names),
+           correct_name = correct_name_short) |>
+    pivot_longer(c(correct_name_short, correct_name_long, provided_name, synonyms),
+                 names_to = "type_of",
+                 values_to = "search_term") |>
+    select(-type_of) |>
+    relocate(search_term, .after = correct_name) |>
+    filter(!is.na(search_term)) |>
+    mutate(search_term = gsub(",", "", search_term),
+           search_term = gsub("[ \t]+$", "", search_term)) |>
+    distinct()
 
-  # pivot out the list_names into T/F columns
   unique_species <- combined_df_clean |>
-    dplyr::select(correct_name, list_name) |>
-    dplyr::distinct() |>
-    dplyr::mutate(dummy_values = TRUE) |>
-    tidyr::pivot_wider(id_cols = correct_name,
-                       names_from = list_name, values_from = dummy_values,
-                       values_fill = FALSE)
+    select(correct_name, list_name) |>
+    distinct() |>
+    mutate(dummy_values = TRUE) |>
+    pivot_wider(id_cols = correct_name,
+                names_from = list_name,
+                values_from = dummy_values,
+                values_fill = FALSE)
 
   combined_df_joined <- combined_df_clean |>
-    dplyr::left_join(unique_species, by = "correct_name") |>
-    dplyr::select(-list_name) |>
-    dplyr::mutate(common_name = tools::toTitleCase(common_name)) |>
-    dplyr::distinct()
+    left_join(unique_species, by = "correct_name") |>
+    select(-list_name) |>
+    mutate(common_name = tools::toTitleCase(common_name)) |>
+    distinct()
 
   return(combined_df_joined)
+}
+
+
+#' Shorten character string
+#'
+#' Takes a string and shortens it to comprise, at most, the first two components
+#'   separated by whitespace. If a string only has one component to begin with,
+#'   the original string is returned with no modifications
+#'
+#' @param col
+#'
+#' @noRd
+
+shorten_names <- function(col){
+  a <- strsplit(col, split = " ")[[1]]
+  return(paste(a[c(1:min(c(2, length(a))))], collapse = " "))
 }
