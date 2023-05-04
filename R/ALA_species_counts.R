@@ -1,23 +1,26 @@
 #' Search ALA for provided species and record counts
 #'
 #' Biosecurity alerts need only be provided for invasive species that have been
-#' observed in some recent timeframe (i.e. the past week). This function searches
-#' the ALA using functions of the package `galah` for occurrences of species of
-#' interest within some search parameters. The resulting tibble summarises the
-#' counts of species that have been observed (counts > 0), which may then be
-#' passed on to  `ala_records_download()` as an argument for downloading of these
-#' records.
+#'    observed in some recent timeframe (i.e. the past week). This function searches
+#'    the ALA using functions of the package `galah` for occurrences of species of
+#'    interest within some search parameters. The resulting tibble summarises the
+#'    counts of observed species, which may then be passed on to  `ala_records_download()`
+#'    as an argument for downloading of these records.
 #'
 #' @param species_list A data.frame or tibble preferably produced by
-#' `get_species_list2()`, containing details for the search of ALA for observations
-#' of invasive species. Must contain character columns 'correct_name', 'search_term',
-#' 'common_name' for each species, and logical columns for each alerts list
-#' indicating the presence of each species on that alerts list.
+#'    `get_species_list2()`, containing details for the search of ALA for observations
+#'    of invasive species. Must contain character columns 'correct_name', 'search_term',
+#'    'common_name' for each species, and logical columns for each alerts list
+#'    indicating the presence of each species on that alerts list.
 #' @param filter_df A data.frame or tibble of ALA query conditions, as produced
-#' by `galah::galah_filter()`. May be produced by `build_ala_query()`.
+#'    by `galah::galah_filter()`. May be produced by `build_ala_query()`.
 #' @param max_counts A value indicating the maximum number of counts
-#' for a species that a report is needed for. Species with greater than `max_counts`
-#' records in the search timeframe are not included in the output,
+#'    for a species that a report is needed for. Species with greater than `max_counts`
+#'    records in the search timeframe are not included in the output,
+#'
+#' @return A tibble summarising the counts of species that have been observed. A
+#'    'counts' column is added to the end of `species_list`, and only rows with
+#'    counts > 0 are retained in the resulting data.frame.
 #'
 #' @importFrom galah atlas_counts
 #' @importFrom purrr map
