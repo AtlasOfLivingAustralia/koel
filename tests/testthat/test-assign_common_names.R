@@ -1,9 +1,9 @@
-# tests for common_names_assigned
+# tests for assign_common_names
 
 # test format of input
 test_that("test format of dataframe input", {
   # throw an error if argument is not a data.frame or tibble
-  expect_error(common_names_assigned(list(12)))
+  expect_error(assign_common_names(list(12)))
   # throw an error if the argument does not have the correct columns
   expect_error(get_species_list2(data.frame(correct_name = NULL, search_term = NULL)))
 })
@@ -27,8 +27,8 @@ test_that("test format of dataframe output", {
   df <- collate_lists(paste0(dir_path, "/"))
   # run get_species_lists2
   species_list <- get_species_lists2(df)
-  # run common_names_assigned
-  common_names <- common_names_assigned(species_list)
+  # run assign_common_names
+  common_names <- assign_common_names(species_list)
 
   # check that output is a dataframe
   expect_s3_class(common_names, class = "data.frame")
@@ -50,8 +50,8 @@ test_that("correct names have unique common names", {
     common_name = c("Eastern Koel", "Pacific Koel", "Galah", "Spangled Drongo"),
     list1 = c(TRUE, TRUE, TRUE, TRUE)
   )
-  # generate output for common_names_assigned
-  common_names <- common_names_assigned(species_list)
+  # generate output for assign_common_names
+  common_names <- assign_common_names(species_list)
 
   # test that there is one row per correct_name in the input
   expect_equal(length(unique(species_list$correct_name)), dim(common_names)[1])
@@ -69,7 +69,7 @@ test_that("handle common_name NAs correctly", {
     list1 = c(TRUE, TRUE)
   )
   # test that common_name is recorded as NA
-  expect_equal(common_names_assigned(species_list),
+  expect_equal(assign_common_names(species_list),
                dplyr::tibble(correct_name = "Eudynamys orientalis",
                              common_name = NA)
                )
@@ -81,7 +81,7 @@ test_that("handle common_name NAs correctly", {
     list1 = c(TRUE, TRUE)
   )
   # test that common_name is recorded as "Eastern Koel"
-  expect_equal(common_names_assigned(species_list),
+  expect_equal(assign_common_names(species_list),
                dplyr::tibble(correct_name = "Eudynamys orientalis",
                              common_name = "Eastern Koel")
   )
