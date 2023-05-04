@@ -1,0 +1,90 @@
+#' Import user-supplied species lists
+#'
+#' @param df A data.frame containing columns named 'path' and 'label'
+#' @return A data.frame of unique scientific names, the search term used to
+#'   match those names to the ALA taxonomy, a common name for each species, and
+#'   a column for each imported list. Each column associated with an imported
+#'   list contains information on whether or not a species appears on the list.
+#'
+#' @importFrom readr read_csv
+#' @importFrom purrr pmap
+#' @importFrom purrr map_chr
+#' @importFrom purrr list_rbind
+#' @importFrom dplyr bind_rows
+#' @importFrom dplyr mutate
+#' @importFrom dplyr relocate
+#' @importFrom dplyr select
+#' @importFrom dplyr relocate
+#' @importFrom dplyr left_join
+#' @importFrom dplyr distinct
+#' @importFrom tidyr pivot_longer
+#' @importFrom tidyr pivot_wider
+#' @importFrom tools toTitleCase
+#' @export
+
+get_species_lists2 <- function(lists_df){
+
+  if (!("data.frame" %in% class(lists_df))) {
+    stop("`lists_df` argument must be a data.frame or tibble")
+  } else if (!all(c("label", "path") %in% colnames(lists_df))) {
+    stop("`lists_df` must have columns `label` and `path`")
+  }
+
+  combined_df <- lists_df |>
+    pmap(.f = \(path, label, ...)
+         read_csv(path, show_col_types = FALSE) |>
+           mutate(list_name = label)) |>
+    list_rbind() |>
+    distinct() |>
+    mutate(correct_name = gsub("\\(.+\\)", "  ", correct_name), # text in brackets
+           correct_name = gsub("\\s{2,}", " ", correct_name),   # successive spaces
+           correct_name = gsub(",", "", correct_name),          # commas
+           correct_name = gsub("\\:.+", "", correct_name))      # colons & subsequent text
+
+  combined_df_clean <- combined_df |>
+    mutate(correct_name_long = correct_name,
+           correct_name_short =  map_chr(.x = correct_name, .f = shorten_names),
+           correct_name = correct_name_short) |>
+    pivot_longer(c(correct_name_short, correct_name_long, provided_name, synonyms),
+                 names_to = "type_of",
+                 values_to = "search_term") |>
+    select(-type_of) |>
+    relocate(search_term, .after = correct_name) |>
+    filter(!is.na(search_term)) |>
+    mutate(search_term = gsub(",", "", search_term),
+           search_term = gsub("[ \t]+$", "", search_term)) |>
+    distinct()
+
+  unique_species <- combined_df_clean |>
+    select(correct_name, list_name) |>
+    distinct() |>
+    mutate(dummy_values = TRUE) |>
+    pivot_wider(id_cols = correct_name,
+                names_from = list_name,
+                values_from = dummy_values,
+                values_fill = FALSE)
+
+  combined_df_joined <- combined_df_clean |>
+    left_join(unique_species, by = "correct_name") |>
+    select(-list_name) |>
+    mutate(common_name = tools::toTitleCase(common_name)) |>
+    distinct()
+
+  return(combined_df_joined)
+}
+
+
+#' Shorten character string
+#'
+#' Takes a string and shortens it to comprise, at most, the first two components
+#'   separated by whitespace. If a string only has one component to begin with,
+#'   the original string is returned with no modifications
+#'
+#' @param col
+#'
+#' @noRd
+
+shorten_names <- function(col){
+  a <- strsplit(col, split = " ")[[1]]
+  return(paste(a[c(1:min(c(2, length(a))))], collapse = " "))
+}
