@@ -10,7 +10,7 @@
 #' @examples
 #'
 
-common_names_assigned <- function(species_list) {
+assign_common_names <- function(species_list) {
 
   # defensive programming on inputs
   if (!("data.frame" %in% class(species_list))) {
