@@ -2,13 +2,19 @@
 % Please edit documentation in R/get_species_lists2.R
 \name{get_species_lists2}
 \alias{get_species_lists2}
-\title{Import all files, formatting with logical columns stating source}
+\title{Import user-supplied species lists}
 \usage{
 get_species_lists2(lists_df)
 }
 \arguments{
-\item{df}{A `data.frame` containing columns 'path' and 'label'}
+\item{df}{A data.frame containing columns named 'path' and 'label'}
+}
+\value{
+A data.frame of unique scientific names, the search term used to
+  match those names to the ALA taxonomy, a common name for each species, and
+  a column for each imported list. Each column associated with an imported
+  list contains information on whether or not a species appears on the list.
 }
 \description{
-Redoing Martin's function minus lapply and to hopefully run smoother
+Import user-supplied species lists
 }

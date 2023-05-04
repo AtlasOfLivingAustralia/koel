@@ -12,6 +12,10 @@ and ending in "/".}
 
 \item{list_suffix}{Character string between the list name and file extension.}
 }
+\value{
+A data.frame containing four columns, with information about the
+  source and location of user-supplied lists.
+}
 \description{
 Alerts need to be run against multiple user-supplied lists. This function
   combines all existing lists and returns a single data.frame, which may
