@@ -1,3 +1,1 @@
-test_that("multiplication works", {
-  expect_equal(2 * 2, 4)
-})
+# testing for build_gt_table()

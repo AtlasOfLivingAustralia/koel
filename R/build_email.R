@@ -3,33 +3,39 @@
 #' @param alerts_data
 #' @param email_list
 #' @param template_path
+#' @param cache_path
 #'
 #' @return
 #' @export
 #'
 #' @examples
 
-build_email <- function(alerts_data, email_list, template_path) {
+build_email <- function(alerts_data, email_list, template_path, cache_path) {
 
   # defensive programming on inputs: alerts_data
   if (!("data.frame" %in% class(alerts_data))) {
-    stop("`alerts_data` argument must be a data.frame or tibble")
-  } else if (!all(c("correct_name", "search_term") %in% colnames(alerts_data))) {
-    stop("`alerts_data` must at least have columns `correct_name` and `search_term`")
+    rlang::abort("`alerts_data` argument must be a data.frame or tibble")
   }
+  # else if (!all(c("correct_name", "search_term") %in% colnames(alerts_data))) {
+  #   stop("`alerts_data` must be an object produced and returned by `ala_record_download`")
+  # }
+
   # defensive programming on inputs: email_list
-  if (!("data.frame" %in% class(common_names))) {
-    stop("`species_list` argument must be a data.frame or tibble")
-  } else if (!all(c("correct_name", "common_name") %in% colnames(common_names))) {
-    stop("`species_list` must at least have columns `correct_name` and `common_name`")
+  if (!("data.frame" %in% class(email_list))) {
+    rlang::abort("`email_list` argument must be a data.frame or tibble")
+  } else if (!all(c("email", "list") %in% colnames(email_list))) {
+    rlang::abort("`email_list` must have columns `email` and `list`")
+  } else if (nrow(email_list) == 0) {
+    rlang::inform("No emails provided in `email_list`. Reports will be saved but no emails will be sent.")
   }
   # defensive programming on inputs: path
-  if (!is.character(path) | substr(path, nchar(path), nchar(path)) != "/") {
-    stop("`path` argument but be a string ending in '/'")
-  } else if (!dir.exists(path)) {
-    stop("The directory specified by `path` does not exist")
+  if (!is.character(template_path) | substr(template_path, nchar(template_path) - 3, nchar(template_path)) != ".Rmd") {
+    rlang::abort("`template_path` argument but be a character string for a .Rmd file")
+  } else if (!file.exists(template_path)) {
+    rlang::abort("The .Rmd file specified by `template_path` does not exist")
   }
 
+  # set current date and time for inclusion in file names
   date_time <- Sys.time() |>
     gsub("\\s", "_", x = _) |>
     gsub(":", "-", x = _)
@@ -76,6 +82,6 @@ build_email <- function(alerts_data, email_list, template_path) {
               row.names = FALSE)
   }
 
-  # unlink("./cache", recursive = TRUE)
+  unlink("./cache", recursive = TRUE)
 
 }
