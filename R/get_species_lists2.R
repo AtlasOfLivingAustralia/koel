@@ -74,17 +74,25 @@ get_species_lists2 <- function(lists_df){
 }
 
 
+
 #' Shorten character string
 #'
-#' Takes a string and shortens it to comprise, at most, the first two components
-#'   separated by whitespace. If a string only has one component to begin with,
-#'   the original string is returned with no modifications
+#' Shortens the first element of a character vector to comprise, at most, the
+#'   first two components separated by whitespace. If the first element has only
+#'   one component, it is returned without modification.
 #'
-#' @param col
+#' @param x A string
+#' @return The first element of the input character vector
 #'
 #' @noRd
 
-shorten_names <- function(col){
-  a <- strsplit(col, split = " ")[[1]]
-  return(paste(a[c(1:min(c(2, length(a))))], collapse = " "))
+shorten_names <- function(x) {
+
+  if (!is.character(x)) {stop("`x` must be a string")}
+
+  a <- strsplit(x, split = " ")[[1]]
+
+  ifelse(length(a) >= 2,
+         paste0(a[1], " ", a[2]),
+         a[1])
 }
