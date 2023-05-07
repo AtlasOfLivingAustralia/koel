@@ -116,8 +116,7 @@ lookup_species_count <- function(species_list, filter_df, max_counts) {
 #' @importFrom dplyr join_by
 #' @importFrom tidyr replace_na
 #' @export
-#'
-#' @examples
+
 download_records <- function(species_list, common_names, filter_df, path) {
 
   if (!("data.frame" %in% class(species_list))) {
@@ -209,10 +208,8 @@ download_records <- function(species_list, common_names, filter_df, path) {
 #' @param lng_bounds A vector indicating lower and upper longitude bounds
 #' @return A tibble containing parameters for filtering counts and records
 #'
-#' @importFrom gal galah_filter
-#'
-#' @noRd
-
+#' @importFrom galah::galah_filter
+#' @export
 
 build_galah_query <- function(start_days_ago, lat_bounds, lng_bounds) {
 
