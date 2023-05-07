@@ -7,7 +7,7 @@
 #'
 #' @examples
 
-send_email <- function(recipients){
+send_email <- function(recipients, date_time, list_name){
 
   if (length(recipients) == 0) {
     rlang::inform("No email recipients for this list. No email sent but the table html has been saved.")
@@ -17,7 +17,12 @@ send_email <- function(recipients){
       to("biosecurity@ala.org.au ") |>
       bcc(recipients) |>
       subject("ALA biosecurity alert") |>
-      render("email_template.Rmd", include_css = "rmd")
+      html(xml2::read_html(paste0("./outputs/html/email_",
+                                  date_time,
+                                  "_",
+                                  list_name,
+                                  ".html")))
+    # render("email_template.Rmd", include_css = "rmd")
 
     smtp <- server(
       host = "smtp-relay.gmail.com",
