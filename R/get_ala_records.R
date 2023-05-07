@@ -203,12 +203,21 @@ download_records <- function(species_list, common_names, filter_df, path) {
 
 #' Set up filtering parameters for getting species counts and records with {galah}
 #'
-#' @param start_days_ago A `dbl` indicating how many days prior to search from
-#' @param lat_bounds A vector indicating lower and upper latitude bounds
-#' @param lng_bounds A vector indicating lower and upper longitude bounds
-#' @return A tibble containing parameters for filtering counts and records
+#' This function is a wrapper for the {galah} function `galah::filter()`, producing
+#'    a modifiable filter that can be used with other {galah} functions to search
+#'    the ALA and similar biodiversity databases for species occurrences within
+#'    some geographical bounding box and timeframe. The resulting output can be
+#'    passed to `lookup_species_counts()` and `download_records()` to search and
+#'    download species occurrences within the filter.
 #'
-#' @importFrom galah::galah_filter
+#' @param start_days_ago A `dbl` indicating how many days prior to search from
+#' @param lat_bounds A `numeric` vector indicating lower and upper latitude bounds
+#' @param lng_bounds A `numeric` vector indicating lower and upper longitude bounds
+#'
+#' @return A tibble containing parameters for filtering counts and records, with
+#'    columns of `variable`, `logical`, `value`, and `query`.
+#'
+#' @importFrom galah galah_filter
 #' @export
 
 build_galah_query <- function(start_days_ago, lat_bounds, lng_bounds) {
