@@ -22,7 +22,7 @@ build_gt_table <- function(df, cache_path){
   # add maps
   invisible(df |>
               purrr::pmap(tibble) |>
-              purrr::map(build_map_thumbnail(., cache_path)))
+              purrr::map(build_map_thumbnail(.x, cache_path)))
 
   # build table info
   table_df <- df |>
