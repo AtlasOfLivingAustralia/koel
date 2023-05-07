@@ -51,7 +51,7 @@ build_email <- function(alerts_data, email_list, template_path, cache_path) {
                  list_col <- alerts_data[[list_name]]
                  if (any(list_col)) {
                    cat(paste0("Writing email for list: ", list_name, "\n"))
-                   build_gt_table(alerts_data |> filter(list_col))
+                   table_df <- build_gt_table(alerts_data |> filter(list_col), cache_path)
                    # render and save output
                    rmarkdown::render(template_path,
                                      output_file = paste0("./outputs/html/email_",
@@ -63,7 +63,7 @@ build_email <- function(alerts_data, email_list, template_path, cache_path) {
                      dplyr::filter(list == list_name) |>
                      dplyr::select(email) |>
                      as.vector()
-                   send_email(recipients)
+                   send_email(recipients, date_time, list_name)
 
                  } else {
                    cat(paste0("No alert sent for list: ", list_name, "\n"))
@@ -82,6 +82,6 @@ build_email <- function(alerts_data, email_list, template_path, cache_path) {
               row.names = FALSE)
   }
 
-  unlink("./cache", recursive = TRUE)
+  #unlink("./cache", recursive = TRUE)
 
 }

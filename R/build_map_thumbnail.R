@@ -5,7 +5,9 @@
 #' @importFrom maptiles get_tiles
 #' @export
 
-build_map_thumbnail <- function(list_row){
+build_map_thumbnail <- function(list_row, cache_path){
+
+  # need to add defensive programming + check for existence of the maps directory
   box_size <- 0.15
   x <- list_row |> st_as_sf(
     coords = c("decimalLongitude", "decimalLatitude"),
@@ -18,7 +20,7 @@ build_map_thumbnail <- function(list_row){
     crs = "WGS84"
   )
   y <- get_tiles(x_box, zoom = 10, crop = TRUE)
-  png(filename = paste0("cache/maps/", list_row$recordID, ".png"))
+  png(filename = paste0(cache_path, "maps/", list_row$recordID, ".png"))
   plot_tiles(y)
   plot(x, col = "black", cex = 5, pch = 16, add = TRUE) # errors here
   dev.off()
