@@ -1,9 +1,6 @@
-<<<<<<< HEAD:tests/testthat/test-assign_common_names.R
 # tests for assign_common_names
 
 # test format of input
-=======
->>>>>>> 2d6d67de08247db737a96a3452030065ef4532e9:tests/testthat/test-common_names_assigned.R
 test_that("test format of dataframe input", {
   # throw an error if argument is not a data.frame or tibble
   expect_error(assign_common_names(list(12)))
