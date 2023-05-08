@@ -1,10 +1,23 @@
-#' Title
+#' Function to identify single assigned common names for species
 #'
-#' @param species_list
+#'
+#' This function reduces confusion and complexity that arises from species having
+#'    multiple accepted common names. It takes a `data.frame` of species name
+#'    data and filters it down to have a single row for correct scientific
+#'    species name. Each name is assigned a single correct common name.
+#'
+#' @param species_list A data.frame of species data, probably produced by
+#' `get_species_list2()`, that contains at least a 'correct_name' and a
+#' 'common_name' column.
 #'
 #' @importFrom dplyr select
 #' @importFrom dplyr group_by
 #' @importFrom dplyr summarise
+#'
+#' @return A single data.frame with a 'correct_name' and 'common_name' column.
+#'    Each correct_name is unique and has a single common name assigned to it.
+#'    This object can be passed onto `record_download()`.
+#'
 #' @export
 #'
 #' @examples
@@ -22,10 +35,10 @@ assign_common_names <- function(species_list) {
   ##### Function Implementation #####
   # take the list of all species, and keep only species names columns
   common_names <- species_list |>
-    dplyr::select(correct_name, common_name) |>
-    dplyr::group_by(correct_name) |>
+    select(correct_name, common_name) |>
+    group_by(correct_name) |>
     # take the first common_name present for each correct species name
-    dplyr::summarise(common_name = na.omit(common_name)[1], .groups = "drop")
+    summarise(common_name = na.omit(common_name)[1], .groups = "drop")
 
   return(common_names)
 }
