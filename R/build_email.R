@@ -44,7 +44,7 @@
 build_email <- function(alerts_data, email_list, template_path, cache_path, output_path = NULL) {
 
   ##### Defensive Programming #####
-  # defensive programming on inputs: alerts_data
+  # alerts_data
   if (!("data.frame" %in% class(alerts_data))) {
     rlang::abort("`alerts_data` argument must be a data.frame or tibble")
   }
@@ -52,7 +52,7 @@ build_email <- function(alerts_data, email_list, template_path, cache_path, outp
   #   stop("`alerts_data` must be an object produced and returned by `ala_record_download`")
   # }
 
-  # defensive programming on inputs: email_list
+  # email_list
   if (!("data.frame" %in% class(email_list))) {
     rlang::abort("`email_list` argument must be a data.frame or tibble")
   } else if (!all(c("email", "list") %in% colnames(email_list))) {
@@ -60,13 +60,13 @@ build_email <- function(alerts_data, email_list, template_path, cache_path, outp
   } else if (nrow(email_list) == 0) {
     rlang::inform("No emails provided in `email_list`. Reports will be produced but no emails will be sent.")
   }
-  # defensive programming on inputs: template_path
+  # template_path
   if (!is.character(template_path) | substr(template_path, nchar(template_path) - 3, nchar(template_path)) != ".Rmd") {
     rlang::abort("`template_path` argument but be a character string for a .Rmd file")
   } else if (!file.exists(template_path)) {
     rlang::abort("The .Rmd file specified by `template_path` does not exist")
   }
-  # defensive programming on inputs: cache_path
+  # cache_path
   if (!is.character(cache_path) | substr(cache_path, nchar(cache_path), nchar(cache_path)) != "/") {
     rlang::abort("`cache_path` argument but be a string ending in '/'")
   } else if (!dir.exists(cache_path)) {
@@ -80,8 +80,7 @@ build_email <- function(alerts_data, email_list, template_path, cache_path, outp
     rlang::inform("No 'maps' directory exists in the provided `cache_path`. One has been created.")
     dir.create(paste0(cache_path, "maps"))
   }
-
-  # defensive programming on inputs: output_path
+  # output_path
   if (!is.null(output_path)) {
     if (!is.character(output_path) | substr(output_path, nchar(output_path), nchar(output_path)) != "/") {
       rlang::abort("`output_path` argument but be a string ending in '/'")
@@ -188,6 +187,7 @@ build_email <- function(alerts_data, email_list, template_path, cache_path, outp
 
 build_gt_table <- function(df, cache_path){
 
+  ##### Function Implementation #####
   # get first image per record
   df <- df |>
     dplyr::filter(!duplicated(recordID)) |>
@@ -278,6 +278,7 @@ build_gt_table <- function(df, cache_path){
 
 build_map_thumbnail <- function(list_row, cache_path){
 
+  ##### Function Implementation #####
   # need to add defensive programming + check for existence of the maps directory
   box_size <- 0.15
   x <- list_row |> st_as_sf(
@@ -334,6 +335,7 @@ build_map_thumbnail <- function(list_row, cache_path){
 
 send_email <- function(recipients, output_file, subject = "ALA Biosecurity Alert") {
 
+  ##### Function Implementation #####
   if (length(recipients) == 0) {
     rlang::inform("No email recipients for this list. Email not sent but the html table has been saved.")
   } else {

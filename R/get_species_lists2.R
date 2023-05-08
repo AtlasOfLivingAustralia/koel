@@ -24,12 +24,14 @@
 
 get_species_lists2 <- function(lists_df){
 
+  ##### Defensive Programming #####
   if (!("data.frame" %in% class(lists_df))) {
     stop("`lists_df` argument must be a data.frame or tibble")
   } else if (!all(c("label", "path") %in% colnames(lists_df))) {
     stop("`lists_df` must have columns `label` and `path`")
   }
 
+  ##### Function Implementation #####
   combined_df <- lists_df |>
     pmap(.f = \(path, label, ...)
          read_csv(path, show_col_types = FALSE) |>

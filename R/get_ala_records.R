@@ -26,6 +26,7 @@
 
 lookup_species_count <- function(species_list, filter_df, max_counts) {
 
+  ##### Defensive Programming #####
   if (!("data.frame" %in% class(species_list))) {
     stop("`species_list` argument must be a data.frame or tibble")
   } else if (!all(c("correct_name", "search_term", "common_name") %in% colnames(species_list))) {
@@ -42,6 +43,7 @@ lookup_species_count <- function(species_list, filter_df, max_counts) {
     stop("`max_counts` must be a numeric value of length 1")
   }
 
+  ##### Function Implementation #####
   species_list <- species_list |>
     select(-common_name) |>
     distinct()
@@ -119,6 +121,7 @@ lookup_species_count <- function(species_list, filter_df, max_counts) {
 
 download_records <- function(species_list, common_names, filter_df, path) {
 
+  ##### Defensive Programming #####
   if (!("data.frame" %in% class(species_list))) {
     stop("`species_list` argument must be a data.frame or tibble")
   } else if (!all(c("correct_name", "search_term") %in% colnames(species_list))) {
@@ -148,6 +151,7 @@ download_records <- function(species_list, common_names, filter_df, path) {
     dir.create(paste0(path, "species_images"))
   }
 
+  ##### Function Implementation #####
   if (nrow(species_list) > 0) {
     cat(paste0("Downloading records for ", nrow(species_list), " species\n"))
 
@@ -222,6 +226,7 @@ download_records <- function(species_list, common_names, filter_df, path) {
 
 build_galah_query <- function(start_days_ago, lat_bounds, lng_bounds) {
 
+  ##### Function Implementation #####
   start_date <- as.character(Sys.Date() - start_days_ago) |>
     paste0("T00:00:00Z")
 
