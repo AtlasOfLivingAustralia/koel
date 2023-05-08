@@ -26,7 +26,7 @@
 #'    be created, in which the media output will be saved.
 #'
 #' @return A tibble containing the downloaded data for each occurrence record.
-#'    Contains 30 ALA specific columns with data regarding location, media,
+#'    Contains 29 ALA specific columns with data regarding location, media,
 #'    uploading user and data type, 2 columns containing correct and common names,
 #'    and logical columns for each list indicating the presence of that species
 #'    on that list.
