@@ -12,13 +12,14 @@
 
 assign_common_names <- function(species_list) {
 
-  # defensive programming on inputs
+  ##### Defensive Programming #####
   if (!("data.frame" %in% class(species_list))) {
     stop("`species_list` argument must be a data.frame or tibble")
   } else if (!all(c("correct_name", "common_name") %in% colnames(species_list))) {
     stop("`species_list` must at least have columns `correct_name` and `common_name`")
   }
 
+  ##### Function Implementation #####
   # take the list of all species, and keep only species names columns
   common_names <- species_list |>
     dplyr::select(correct_name, common_name) |>
