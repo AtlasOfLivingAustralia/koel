@@ -8,9 +8,10 @@
 #' @importFrom glue glue
 #' @importFrom gt html
 #' @importFrom purrr map
+#' @importFrom here here
 #' @export
 
-build_gt_table <- function(df){
+build_gt_table <- function(df, cache_path){
 
   # get first image per record
   df <- df |>
@@ -21,13 +22,13 @@ build_gt_table <- function(df){
   # add maps
   invisible(df |>
               purrr::pmap(tibble) |>
-              purrr::map(build_map_thumbnail))
+              purrr::map(~{build_map_thumbnail(.x, cache_path)}))
 
   # build table info
   table_df <- df |>
     arrange(cl22, creator) |>
     mutate(
-      path = here(),
+      path = here::here(),
       image_url = sub("thumbnail$", "original", url)
     ) |>
     mutate(
@@ -52,7 +53,7 @@ build_gt_table <- function(df){
       location = map(
         glue("
           <a href='https://www.google.com/maps/search/?api=1&query={decimalLatitude}%2C{decimalLongitude}' target='_blank'>
-            <img src='{path}/cache/maps/{recordID}.png' style='height:150px;width:150px; object-fit:cover;'>
+            <img src='{path}{cache_path}maps/{recordID}.png' style='height:150px;width:150px; object-fit:cover;'>
           </a>"),
         gt::html
       ),
@@ -67,6 +68,6 @@ build_gt_table <- function(df){
     ) |>
     select(species, observation, location, image)
 
-  save(table_df, file = "./outputs/table_df.RData")
-  # return(table_df)
+  save(table_df, file = paste0(cache_path, "table_df.RData"))
+  return(table_df)
 }

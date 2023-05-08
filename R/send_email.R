@@ -7,21 +7,26 @@
 #'
 #' @examples
 
-send_email <- function(recipients){
+send_email <- function(recipients, output_file, subject = "ALA Biosecurity Alert") {
 
-  email <- envelope() |>
-    from("biosecurity@ala.org.au") |>
-    to("biosecurity@ala.org.au ") |>
-    bcc(recipients) |>
-    subject("ALA biosecurity alert") |>
-    render("email_template.Rmd", include_css = "rmd")
+  if (length(recipients) == 0) {
+    rlang::inform("No email recipients for this list. Email not sent but the html table has been saved.")
+  } else {
+    email <- envelope() |>
+      from("biosecurity@ala.org.au") |>
+      to(recipients) |>
+      #bcc(recipients) |>
+      subject(subject) |>
+      html(xml2::read_html(output_file))
+    # render("email_template.Rmd", include_css = "rmd")
 
-  smtp <- server(
-    host = "smtp-relay.gmail.com",
-    port = 587,
-    username = "biosecurity@ala.org.au",
-    password = "Pshz27HDhQJs3y"
-  )
+    smtp <- server(
+      host = "smtp-relay.gmail.com",
+      port = 587,
+      username = "biosecurity@ala.org.au",
+      password = "Pshz27HDhQJs3y"
+    )
 
-  smtp(email, verbose = TRUE)
+    smtp(email, verbose = TRUE)
+  }
 }
