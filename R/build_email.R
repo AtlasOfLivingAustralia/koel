@@ -4,13 +4,14 @@
 #' @param email_list
 #' @param template_path
 #' @param cache_path
+#' @param outputs_path
 #'
 #' @return
 #' @export
 #'
 #' @examples
 
-build_email <- function(alerts_data, email_list, template_path, cache_path) {
+build_email <- function(alerts_data, email_list, template_path, cache_path, outputs_path = NULL) {
 
   # defensive programming on inputs: alerts_data
   if (!("data.frame" %in% class(alerts_data))) {
@@ -53,17 +54,20 @@ build_email <- function(alerts_data, email_list, template_path, cache_path) {
                    cat(paste0("Writing email for list: ", list_name, "\n"))
                    table_df <- build_gt_table(alerts_data |> filter(list_col), cache_path)
                    # render and save output
-                   rmarkdown::render(template_path,
-                                     output_file = paste0("./outputs/html/email_",
-                                                          date_time,
-                                                          "_",
-                                                          list_name,
-                                                          ".html"))
+                   if (is.null(outputs_path)) {
+                     outputs_file <- paste0(cache_path, "email_", date_time,
+                                            "_", list_name, ".html")
+                   } else {
+                     outputs_file <- paste0(outputs_path, "html/email_", date_time,
+                                            "_", list_name, ".html")
+                   }
+                   rmarkdown::render(template_path, output_file = outputs_file)
+
                    recipients <- email_list |>
                      dplyr::filter(list == list_name) |>
                      dplyr::select(email) |>
                      as.vector()
-                   send_email(recipients, date_time, list_name)
+                   send_email(recipients, outputs_file)
 
                  } else {
                    cat(paste0("No alert sent for list: ", list_name, "\n"))
@@ -71,15 +75,19 @@ build_email <- function(alerts_data, email_list, template_path, cache_path) {
                }
     )
 
-    # save out and clean up
-    write.csv(alerts_data,
-              file = paste0("./outputs/csv/alerts_data_", date_time, ".csv"),
-              row.names = FALSE)
+    if (!is.null(outputs_path)) {
+      # save out and clean up
+      write.csv(alerts_data,
+                file = paste0(outputs_path, "csv/alerts_data_", date_time, ".csv"),
+                row.names = FALSE)
+    }
   } else {
     # if no data returned, cache an empty csv file to show the script has run
-    write.csv(tibble(),
-              file = paste0("./outputs/csv/alerts_data_", date_time, ".csv"),
-              row.names = FALSE)
+    if (!is.null(outputs_path)) {
+      write.csv(tibble(),
+                file = paste0(outputs_path, "csv/alerts_data_", date_time, ".csv"),
+                row.names = FALSE)
+    }
   }
 
   #unlink("./cache", recursive = TRUE)
