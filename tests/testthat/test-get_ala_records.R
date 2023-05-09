@@ -1,7 +1,7 @@
 # Testing for all functions in `get_ala_records.R`
 
 ##### lookup_species_count() #####
-test_that("input is in the correct dataframe format", {
+test_that("data.frame argument is supplied correctly", {
   # set up arguments
   species_list <- data.frame(
     correct_name = c("Onychoprion fuscatus"),
@@ -19,7 +19,7 @@ test_that("input is in the correct dataframe format", {
   expect_error(get_ala_records(species_list, filter_df, data.frame()))
 })
 
-test_that("output is a tibble/data.frame with relevant columns", {
+test_that("get_ala_records returns the correct tibble/data.frame output", {
   # set up arguments
   species_list <- data.frame(
     correct_name = c("Onychoprion fuscatus"),
@@ -39,7 +39,7 @@ test_that("output is a tibble/data.frame with relevant columns", {
 
 ##### record_download() #####
 
-test_that("inputs are of the correct format", {
+test_that("arguments are supplied correctly to record_download", {
   # set up arguments
   species_list <- dplyr::tibble(
     correct_name = c("Onychoprion fuscatus"),
@@ -173,7 +173,7 @@ test_that("`record_download` provides a message if a new folder is created", {
 
 
 ##### build_galah_query() ######
-test_that("inputs are in the correct format", {
+test_that("arguments are supplied correctly", {
   expect_error(build_galah_query("March", c(15, 30), c(30, 45)))
   expect_error(build_galah_query(c(4, 2, 23), c(15,30), c(30, 45)))
   expect_error(build_galah_query(c(-7, c(15, 30), c(30, 45))))
@@ -185,7 +185,7 @@ test_that("inputs are in the correct format", {
   expect_error(build_galah_query(7, c(-15, 30), c("30", "45")))
 })
 
-test_that("output is in the correct format", {
+test_that("build_galah_query returns the correct data.frame output", {
   query <- build_galah_query(7, c(-15, 30), c(30, 45))
 
   expect_s3_class(query, "data.frame")
