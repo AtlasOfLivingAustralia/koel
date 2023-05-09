@@ -46,7 +46,7 @@ build_email <- function(alerts_data, email_list, template_path, cache_path, outp
   ##### Defensive Programming #####
   # alerts_data
   if (!("data.frame" %in% class(alerts_data))) {
-    rlang::abort("`alerts_data` argument must be a data.frame or tibble")
+    abort("`alerts_data` argument must be a data.frame or tibble")
   }
   # else if (!all(c("correct_name", "search_term") %in% colnames(alerts_data))) {
   #   stop("`alerts_data` must be an object produced and returned by `ala_record_download`")
@@ -54,45 +54,45 @@ build_email <- function(alerts_data, email_list, template_path, cache_path, outp
 
   # email_list
   if (!("data.frame" %in% class(email_list))) {
-    rlang::abort("`email_list` argument must be a data.frame or tibble")
+    abort("`email_list` argument must be a data.frame or tibble")
   } else if (!all(c("email", "list") %in% colnames(email_list))) {
-    rlang::abort("`email_list` must have columns `email` and `list`")
+    abort("`email_list` must have columns `email` and `list`")
   } else if (nrow(email_list) == 0) {
-    rlang::inform("No emails provided in `email_list`. Reports will be produced but no emails will be sent.")
+    inform("No emails provided in `email_list`. Reports will be produced but no emails will be sent.")
   }
   # template_path
   if (!is.character(template_path) | substr(template_path, nchar(template_path) - 3, nchar(template_path)) != ".Rmd") {
-    rlang::abort("`template_path` argument but be a character string for a .Rmd file")
+    abort("`template_path` argument but be a character string for a .Rmd file")
   } else if (!file.exists(template_path)) {
-    rlang::abort("The .Rmd file specified by `template_path` does not exist")
+    abort("The .Rmd file specified by `template_path` does not exist")
   }
   # cache_path
   if (!is.character(cache_path) | substr(cache_path, nchar(cache_path), nchar(cache_path)) != "/") {
-    rlang::abort("`cache_path` argument but be a string ending in '/'")
+    abort("`cache_path` argument but be a string ending in '/'")
   } else if (!dir.exists(cache_path)) {
-    rlang::abort("The directory specified by `cache_path` does not exist")
+    abort("The directory specified by `cache_path` does not exist")
   }
   # create a `species_images` and `maps` folder if one does not exist
   if (!("species_images" %in% list.files(cache_path))) {
-    rlang::inform("No 'species_images' directory exists in the provided `cache_path`. One has been created.")
+    inform("No 'species_images' directory exists in the provided `cache_path`. One has been created.")
     dir.create(paste0(cache_path, "species_images"))
   } else if (!("maps" %in% list.files(cache_path))) {
-    rlang::inform("No 'maps' directory exists in the provided `cache_path`. One has been created.")
+    inform("No 'maps' directory exists in the provided `cache_path`. One has been created.")
     dir.create(paste0(cache_path, "maps"))
   }
   # output_path
   if (!is.null(output_path)) {
     if (!is.character(output_path) | substr(output_path, nchar(output_path), nchar(output_path)) != "/") {
-      rlang::abort("`output_path` argument but be a string ending in '/'")
+      abort("`output_path` argument but be a string ending in '/'")
     } else if (!dir.exists(output_path)) {
-      rlang::abort("The directory specified by `output_path` does not exist")
+      abort("The directory specified by `output_path` does not exist")
     }
     # create a `html` and `csv` folder if one does not exist
     if (!("html" %in% list.files(output_path))) {
-      rlang::inform("No 'html' directory exists in the provided `output_path`. One has been created.")
+      inform("No 'html' directory exists in the provided `output_path`. One has been created.")
       dir.create(paste0(output_path, "html"))
     } else if (!("csv" %in% list.files(output_path))) {
-      rlang::inform("No 'csv' directory exists in the provided `output_path`. One has been created.")
+      inform("No 'csv' directory exists in the provided `output_path`. One has been created.")
       dir.create(paste0(output_path, "csv"))
     }
   }
@@ -109,31 +109,30 @@ build_email <- function(alerts_data, email_list, template_path, cache_path, outp
     list_names <- colnames(alerts_data)[(which(colnames(alerts_data) == "correct_name") + 1):
                                           (which(colnames(alerts_data) == "common_name") - 1)]
 
-    purrr::map(.x = list_names,
-               .f = function(list_name) {
-                 list_col <- alerts_data[[list_name]]
-                 if (any(list_col)) {
-                   cat(paste0("Writing email for list: ", list_name, "\n"))
-                   table_df <- build_gt_table(alerts_data |> dplyr::filter(list_col), cache_path)
-                   # render and save output
-                   output_file <- ifelse(
-                     is.null(output_path),
-                     paste0(cache_path, "email_", date_time, "_", list_name, ".html"),
-                     paste0(output_path, "html/email_", date_time, "_", list_name, ".html")
-                   )
-                   rmarkdown::render(template_path, output_file = output_file)
+    map(.x = list_names,
+        .f = function(list_name) {
+          list_col <- alerts_data[[list_name]]
+          if (any(list_col)) {
+            cat(paste0("Writing email for list: ", list_name, "\n"))
+            table_df <- build_gt_table(alerts_data |> filter(list_col), cache_path)
+            # render and save output
+            output_file <- ifelse(
+              is.null(output_path),
+              paste0(cache_path, "email_", date_time, "_", list_name, ".html"),
+              paste0(output_path, "html/email_", date_time, "_", list_name, ".html")
+              )
+            rmarkdown::render(template_path, output_file = output_file)
 
-                   recipients <- email_list |>
-                     dplyr::filter(list == list_name) |>
-                     dplyr::select(email) |>
-                     as.vector()
-                   send_email(recipients, output_file,
-                              subject = "[TEST] ALA Biosecurity Alert")
-
-                 } else {
-                   cat(paste0("No alert sent for list: ", list_name, "\n"))
-                 }
-               }
+            recipients <- email_list |>
+              filter(list == list_name) |>
+              select(email) |>
+              as.vector()
+            send_email(recipients, output_file,
+                       subject = "[TEST] ALA Biosecurity Alert")
+            } else {
+              cat(paste0("No alert sent for list: ", list_name, "\n"))
+            }
+        }
     )
 
     if (!is.null(output_path)) {
@@ -190,32 +189,34 @@ build_gt_table <- function(df, cache_path){
   ##### Function Implementation #####
   # get first image per record
   df <- df |>
-    dplyr::filter(!duplicated(recordID)) |>
+    filter(!duplicated(recordID)) |>
     # format dates
-    dplyr::mutate(date_html = (format(eventDate, "%H:%M %d-%m-%Y")))
+    mutate(date_html = (format(eventDate, "%H:%M %d-%m-%Y")))
 
   # add maps
-  invisible(df |>
-              purrr::pmap(tibble) |>
-              purrr::map(~{build_map_thumbnail(.x, cache_path)}))
+  invisible(
+    df |>
+      pmap(tibble) |>
+      map(~{build_map_thumbnail(.x, cache_path)})
+    )
 
   # build table info
   table_df <- df |>
     arrange(cl22, creator) |>
     mutate(
-      path = here::here(),
+      path = here(),
       image_url = sub("thumbnail$", "original", url)
     ) |>
     mutate(
       # add common name
-      species = purrr::map(glue(
+      species = map(glue(
         "<a href='https://biocache.ala.org.au/occurrences/{recordID}' target='_blank'><b><i>{correct_name}</i></b></a><br>
           Supplied as: <i>{verbatimScientificName}</i><br>
           Common name: {common_name}
         "),
         gt::html
       ),
-      observation = purrr::map(glue("
+      observation = map(glue("
          <b>{creator}</b><br>
          {date_html}<br>
          {cl22}<br>(
@@ -225,14 +226,14 @@ build_gt_table <- function(df, cache_path){
        "),
        gt::html
       ),
-      location = purrr::map(
+      location = map(
         glue("
           <a href='https://www.google.com/maps/search/?api=1&query={decimalLatitude}%2C{decimalLongitude}' target='_blank'>
             <img src='{path}{cache_path}maps/{recordID}.png' style='height:150px;width:150px; object-fit:cover;'>
           </a>"),
         gt::html
       ),
-      image = purrr::map(
+      image = map(
         glue("
           <a href={image_url} target='_blank'>
             <img src='{path}/{download_path}' style='height:150px; width:150px; object-fit:cover;'>
@@ -241,7 +242,7 @@ build_gt_table <- function(df, cache_path){
         gt::html
       )
     ) |>
-    dplyr::select(species, observation, location, image)
+    select(species, observation, location, image)
 
   save(table_df, file = paste0(cache_path, "table_df.RData"))
   return(table_df)
@@ -337,14 +338,14 @@ send_email <- function(recipients, output_file, subject = "ALA Biosecurity Alert
 
   ##### Function Implementation #####
   if (length(recipients) == 0) {
-    rlang::inform("No email recipients for this list. Email not sent but the html table has been saved.")
+    inform("No email recipients for this list. Email not sent but the html table has been saved.")
   } else {
     email <- envelope() |>
       from("biosecurity@ala.org.au") |>
       to(recipients) |>
       #bcc(recipients) |>
       subject(subject) |>
-      html(xml2::read_html(output_file))
+      html(read_html(output_file))
     # render("email_template.Rmd", include_css = "rmd")
 
     smtp <- server(

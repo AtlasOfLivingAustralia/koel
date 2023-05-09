@@ -79,7 +79,7 @@ get_species_lists2 <- function(lists_df){
   combined_df_joined <- combined_df_clean |>
     left_join(unique_species, by = "correct_name") |>
     select(-list_name) |>
-    mutate(common_name = tools::toTitleCase(common_name)) |>
+    mutate(common_name = toTitleCase(common_name)) |>
     distinct()
 
   return(combined_df_joined)
