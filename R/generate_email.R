@@ -427,4 +427,27 @@ build_map_thumbnail <- function(list_row, cache_path){
 #'
 #' @examples
 
+send_email <- function(recipients, output_file, email_send, email_password, subject = "ALA Biosecurity Alert") {
 
+  ##### Function Implementation #####
+  if (length(recipients) == 0) {
+    inform("No email recipients for this list. Email not sent but the html table has been saved.")
+  } else {
+    email <- envelope() |>
+      from("biosecurity@ala.org.au") |>
+      to(recipients) |>
+      #bcc(recipients) |>
+      subject(subject) |>
+      html(read_html(output_file))
+    # render("email_template.Rmd", include_css = "rmd")
+
+    smtp <- server(
+      host = "smtp-relay.gmail.com",
+      port = 587,
+      username = email_send,
+      password = email_password
+    )
+
+    smtp(email, verbose = TRUE)
+  }
+}
