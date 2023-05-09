@@ -193,15 +193,15 @@ build_gt_table <- function(df, cache_path){
     abort("`df` argument must be a data.frame or tibble")
   } else if (nrow(df) == 0) {
     abort("`df` requires at least one row to compile a table")
-  } else if (!(
+  } else if (!(all(
     c(
-      "recordId", "eventDate", "cl22", "creator", "url", "correct_name",
+      "recordID", "eventDate", "cl22", "creator", "url", "correct_name",
       "verbatimScientificName", "common_name", "decimalLatitude",
       "decimalLongitude", "dataResourceName",  "download_path"
       )
-    %in% colnames(df))) {
+    %in% colnames(df)))) {
     cols_needed <- c(
-      "recordId", "eventDate", "cl22", "creator", "url", "correct_name",
+      "recordID", "eventDate", "cl22", "creator", "url", "correct_name",
       "verbatimScientificName", "common_name", "decimalLatitude",
       "decimalLongitude", "dataResourceName",  "download_path"
     )
@@ -211,10 +211,11 @@ build_gt_table <- function(df, cache_path){
   # cache_path
   if (!is.character(cache_path) | substr(cache_path, nchar(cache_path), nchar(cache_path)) != "/") {
     abort("`cache_path` argument must be a string ending in '/'")
-  } else if (!(substr(cache_path, 1, 2) == "./" || substr(cache_path, 1, 1) == "/")) {
-    abort("`cache_path` argument must be a string beginning with '/' or './'")
   } else if (!dir.exists(cache_path)) {
     abort("The directory specified by `cache_path` does not exist")
+  } else if (!("maps" %in% list.files(cache_path))) {
+    inform("No 'maps' directory exists in the provided `cache_path`. One has been created.")
+    dir.create(paste0(cache_path, "maps"))
   }
 
   ##### Function Implementation #####
@@ -260,14 +261,14 @@ build_gt_table <- function(df, cache_path){
       location = map(
         glue("
           <a href='https://www.google.com/maps/search/?api=1&query={decimalLatitude}%2C{decimalLongitude}' target='_blank'>
-            <img src='{path}{cache_path}maps/{recordID}.png' style='height:150px;width:150px; object-fit:cover;'>
+            <img src='{cache_path}maps/{recordID}.png' style='height:150px;width:150px; object-fit:cover;'>
           </a>"),
         gt::html
       ),
       image = map(
         glue("
           <a href={image_url} target='_blank'>
-            <img src='{path}/{download_path}' style='height:150px; width:150px; object-fit:cover;'>
+            <img src='{download_path}' style='height:150px; width:150px; object-fit:cover;'>
           </a>"
         ),
         gt::html
@@ -283,7 +284,7 @@ build_gt_table <- function(df, cache_path){
 
 #' Internal function to build map thumbnails for ALA observations
 #'
-#' This function uses basemaps from OpenStreetMaps, called via `maptiles`,to
+#' This function uses basemaps from OpenStreetMaps, called via `leaflet`,to
 #'    produce small map thumbnails that depict the locations of individual
 #'    observations extracted from ALA. These images are saved as .png files and
 #'    imported into a `gt` table for rendering in a markdown document.
@@ -299,8 +300,13 @@ build_gt_table <- function(df, cache_path){
 #'    "./" and end  with "/". When this function it is called it should contain
 #'    a 'species_images' and a 'maps'. This function saves images in `cache_path/maps/`
 #'
-#' @importFrom maptiles get_tiles
-#' @importFrom maptiles plot_tiles
+#' @importFrom leaflet leafelt
+#' @importFrom leaflet leafletOptions
+#' @importFrom leaflet leafletCRS
+#' @importFrom leaflet addTiles
+#' @importFrom leaflet setView
+#' @importFrom leaflet addCircleMarkers
+#' @importFrom mapview mapshot
 #' @importFrom sf st_as_sf
 #'
 #' @return No returned file. Instead, a .png version of the produced thumbnail i
@@ -310,6 +316,28 @@ build_gt_table <- function(df, cache_path){
 
 build_map_thumbnail <- function(list_row, cache_path){
 
+  ##### Defensive Programming #####
+  # list row
+  if (!("data.frame" %in% class(list_row))) {
+    abort("`list_row` argument must be a data.frame or tibble")
+  } else if (nrow(list_row) != 1) {
+    abort("`list_row` requires exactly one row to compile a map")
+  } else if (
+    !(all(c("recordID", "decimalLatitude", "decimalLongitude") %in%
+          colnames(list_row)))) {
+    cols_needed <- c("recordID", "decimalLatitude", "decimalLongitude")
+    abort(paste0("`list_row` requires a column named ",
+                 cols_needed(which(!(cols_needed %in% col_names(list_row))))[1]))
+  }
+  # cache_path
+  if (!is.character(cache_path) | substr(cache_path, nchar(cache_path), nchar(cache_path)) != "/") {
+    abort("`cache_path` argument must be a string ending in '/'")
+  } else if (!dir.exists(cache_path)) {
+    abort("The directory specified by `cache_path` does not exist")
+  } else if (!("maps" %in% list.files(cache_path))) {
+    inform("No 'maps' directory exists in the provided `cache_path`. One has been created.")
+    dir.create(paste0(cache_path, "maps"))
+  }
   ##### Function Implementation #####
   # need to add defensive programming + check for existence of the maps directory
   box_size <- 0.15
@@ -330,7 +358,42 @@ build_map_thumbnail <- function(list_row, cache_path){
   dev.off()
 }
 
+build_map_thumbnail <- function(list_row, cache_path){
 
+  ##### Defensive Programming #####
+  # list row
+  if (!("data.frame" %in% class(list_row))) {
+    abort("`list_row` argument must be a data.frame or tibble")
+  } else if (nrow(list_row) != 1) {
+    abort("`list_row` requires exactly one row to compile a map")
+  } else if (
+    !(all(c("recordID", "decimalLatitude", "decimalLongitude") %in%
+          colnames(list_row)))) {
+    cols_needed <- c("recordID", "decimalLatitude", "decimalLongitude")
+    abort(paste0("`list_row` requires a column named ",
+                 cols_needed(which(!(cols_needed %in% col_names(list_row))))[1]))
+  }
+  # cache_path
+  if (!is.character(cache_path) | substr(cache_path, nchar(cache_path), nchar(cache_path)) != "/") {
+    abort("`cache_path` argument must be a string ending in '/'")
+  } else if (!dir.exists(cache_path)) {
+    abort("The directory specified by `cache_path` does not exist")
+  } else if (!("maps" %in% list.files(cache_path))) {
+    inform("No 'maps' directory exists in the provided `cache_path`. One has been created.")
+    dir.create(paste0(cache_path, "maps"))
+  }
+  ##### Function Implementation #####
+  # need to add defensive programming + check for existence of the maps directory
+  location_data <- list_row |> st_as_sf(
+    coords = c("decimalLongitude", "decimalLatitude"),
+    crs = "WGS84")
+  occurrence_map <- leaflet(options = leafletOptions(crs = leafletCRS(code = "WGS84"))) |>
+    addTiles() |>
+    setView(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude, zoom = 10) |>
+    addCircleMarkers(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude,
+                     opacity = 0.75, color = "darkblue")
+  mapshot(occurrence_map, file = paste0(cache_path, "maps/", list_row$recordID, ".png"))
+}
 
 #' Function to send html tables of occurrences in emails to stakeholders
 #'
