@@ -62,13 +62,15 @@ build_email <- function(alerts_data, email_list, template_path, cache_path, outp
   }
   # template_path
   if (!is.character(template_path) | substr(template_path, nchar(template_path) - 3, nchar(template_path)) != ".Rmd") {
-    abort("`template_path` argument but be a character string for a .Rmd file")
+    abort("`template_path` argument must be a character string for a .Rmd file")
   } else if (!file.exists(template_path)) {
     abort("The .Rmd file specified by `template_path` does not exist")
   }
   # cache_path
   if (!is.character(cache_path) | substr(cache_path, nchar(cache_path), nchar(cache_path)) != "/") {
-    abort("`cache_path` argument but be a string ending in '/'")
+    abort("`cache_path` argument must be a string ending in '/'")
+  } else if (!(substr(cache_path, 1, 2) == "./" || substr(cache_path, 1, 1) == "/")) {
+    abort("`cache_path` argument must be a string beginning with '/' or './'")
   } else if (!dir.exists(cache_path)) {
     abort("The directory specified by `cache_path` does not exist")
   }
@@ -83,7 +85,7 @@ build_email <- function(alerts_data, email_list, template_path, cache_path, outp
   # output_path
   if (!is.null(output_path)) {
     if (!is.character(output_path) | substr(output_path, nchar(output_path), nchar(output_path)) != "/") {
-      abort("`output_path` argument but be a string ending in '/'")
+      abort("`output_path` argument must be a string ending in '/'")
     } else if (!dir.exists(output_path)) {
       abort("The directory specified by `output_path` does not exist")
     }
@@ -149,7 +151,6 @@ build_email <- function(alerts_data, email_list, template_path, cache_path, outp
   }
 
   #unlink("./cache", recursive = TRUE)
-
 }
 
 
@@ -185,6 +186,36 @@ build_email <- function(alerts_data, email_list, template_path, cache_path, outp
 #' @export
 
 build_gt_table <- function(df, cache_path){
+
+  ##### Defensive Programming #####
+  # df
+  if (!("data.frame" %in% class(df))) {
+    abort("`df` argument must be a data.frame or tibble")
+  } else if (nrow(df) == 0) {
+    abort("`df` requires at least one row to compile a table")
+  } else if (!(
+    c(
+      "recordId", "eventDate", "cl22", "creator", "url", "correct_name",
+      "verbatimScientificName", "common_name", "decimalLatitude",
+      "decimalLongitude", "dataResourceName",  "download_path"
+      )
+    %in% colnames(df))) {
+    cols_needed <- c(
+      "recordId", "eventDate", "cl22", "creator", "url", "correct_name",
+      "verbatimScientificName", "common_name", "decimalLatitude",
+      "decimalLongitude", "dataResourceName",  "download_path"
+    )
+    abort(paste0("`df` requires a column named ",
+                 cols_needed(which(!(cols_needed %in% col_names(df))))[1]))
+  }
+  # cache_path
+  if (!is.character(cache_path) | substr(cache_path, nchar(cache_path), nchar(cache_path)) != "/") {
+    abort("`cache_path` argument must be a string ending in '/'")
+  } else if (!(substr(cache_path, 1, 2) == "./" || substr(cache_path, 1, 1) == "/")) {
+    abort("`cache_path` argument must be a string beginning with '/' or './'")
+  } else if (!dir.exists(cache_path)) {
+    abort("The directory specified by `cache_path` does not exist")
+  }
 
   ##### Function Implementation #####
   # get first image per record
