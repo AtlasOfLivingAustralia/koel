@@ -69,8 +69,6 @@ build_email <- function(alerts_data, email_list, template_path, cache_path, outp
   # cache_path
   if (!is.character(cache_path) | substr(cache_path, nchar(cache_path), nchar(cache_path)) != "/") {
     abort("`cache_path` argument must be a string ending in '/'")
-  } else if (!(substr(cache_path, 1, 2) == "./" || substr(cache_path, 1, 1) == "/")) {
-    abort("`cache_path` argument must be a string beginning with '/' or './'")
   } else if (!dir.exists(cache_path)) {
     abort("The directory specified by `cache_path` does not exist")
   }
@@ -107,8 +105,9 @@ build_email <- function(alerts_data, email_list, template_path, cache_path, outp
 
   if (nrow(alerts_data) > 0) {
 
-    # identify list names from alerts_data
-    list_names <- colnames(alerts_data)[(which(colnames(alerts_data) == "correct_name") + 1):
+    # identify list names from alerts_dataz
+    list_names <- colnames(alerts_data)[(which(colnames(alerts_data) == "
+                                               correct_name") + 1):
                                           (which(colnames(alerts_data) == "common_name") - 1)]
 
     map(.x = list_names,
@@ -428,27 +427,4 @@ build_map_thumbnail <- function(list_row, cache_path){
 #'
 #' @examples
 
-send_email <- function(recipients, output_file, subject = "ALA Biosecurity Alert") {
 
-  ##### Function Implementation #####
-  if (length(recipients) == 0) {
-    inform("No email recipients for this list. Email not sent but the html table has been saved.")
-  } else {
-    email <- envelope() |>
-      from("biosecurity@ala.org.au") |>
-      to(recipients) |>
-      #bcc(recipients) |>
-      subject(subject) |>
-      html(read_html(output_file))
-    # render("email_template.Rmd", include_css = "rmd")
-
-    smtp <- server(
-      host = "smtp-relay.gmail.com",
-      port = 587,
-      username = "biosecurity@ala.org.au",
-      password = "Pshz27HDhQJs3y"
-    )
-
-    smtp(email, verbose = TRUE)
-  }
-}
