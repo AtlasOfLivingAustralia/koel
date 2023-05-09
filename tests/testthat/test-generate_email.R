@@ -1,3 +1,15 @@
-test_that("multiplication works", {
-  expect_equal(2 * 2, 4)
-})
+# tests for functions in `generate_email.R`
+
+##### build_email() #####
+
+
+
+##### build_gt_table() #####
+
+
+
+##### build_map_thumbnail() ######
+
+
+
+##### send_email() #####
