@@ -186,9 +186,9 @@ download_records <- function(species_list, common_names, filter_df, path) {
       # does show_all_media need an `n` arg?
       # join back with original ('correct' and 'common') names
       left_join(species_list,
-                by = join_by(verbatimScientificName = search_term)) |>
+                by = join_by(verbatimScientificName == search_term)) |>
       left_join(common_names,
-                by = join_by(verbatimScientificName = correct_name)) |>
+                by = join_by(verbatimScientificName == correct_name)) |>
       mutate(common_name = replace_na(common_name, "[Common Name Unknown]")) |>
       select(-counts)
 
@@ -213,9 +213,11 @@ download_records <- function(species_list, common_names, filter_df, path) {
 #'    passed to `lookup_species_counts()` and `download_records()` to search and
 #'    download species occurrences within the filter.
 #'
-#' @param start_days_ago A `dbl` indicating how many days prior to search from
 #' @param lat_bounds A `numeric` vector indicating lower and upper latitude bounds
 #' @param lng_bounds A `numeric` vector indicating lower and upper longitude bounds
+#' @param start_days_ago A `dbl` indicating how many days prior to search from
+#' @param end_days_ago A `dbl` indicating how many days prior to search up to.
+#'    Defaults to 0 (up to current time).
 #'
 #' @return A tibble containing parameters for filtering counts and records, with
 #'    columns of `variable`, `logical`, `value`, and `query`.
@@ -223,7 +225,7 @@ download_records <- function(species_list, common_names, filter_df, path) {
 #' @importFrom galah galah_filter
 #' @export
 
-build_galah_query <- function(start_days_ago, lat_bounds, lng_bounds) {
+build_galah_query <- function(lat_bounds, lng_bounds, start_days_ago, end_days_ago = 0) {
 
   ##### Defensive Programming #####
   # start_days_ago
@@ -244,7 +246,7 @@ build_galah_query <- function(start_days_ago, lat_bounds, lng_bounds) {
   }
 
   ##### Function Implementation #####
-  start_date <- as.character(Sys.Date() - start_days_ago) |>
+  start_date <- as.character(Sys.Date() - end_days_ago - start_days_ago) |>
     paste0("T00:00:00Z")
 
   filter_df <- galah_filter(decimalLongitude >= 0,
@@ -254,6 +256,11 @@ build_galah_query <- function(start_days_ago, lat_bounds, lng_bounds) {
 
   filter_df$query[1] <- paste0("decimalLongitude:[", lng_bounds[1], " TO ", lng_bounds[2], "]")
   filter_df$query[2] <- paste0("decimalLatitude:[", lat_bounds[1], " TO ", lat_bounds[2], "]")
+  if (end_days_ago != 0) {
+    end_date <- as.character(Sys.Date() - end_days_ago) |>
+      paste0("T00:00:00Z")
+    filter_df$query[3] <- paste0("eventDate:[", start_date, " TO ", end_date, "]")
+  }
 
   return(filter_df)
 }
