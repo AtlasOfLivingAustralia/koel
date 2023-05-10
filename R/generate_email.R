@@ -37,8 +37,8 @@
 #'
 #' @export
 
-build_email <- function(alerts_data, email_list, email_subject,
-                        email_send, email_password,
+build_email <- function(alerts_data, email_list,
+                        email_subject, email_send, email_password,
                         template_path, cache_path, output_path = NULL) {
 
   ##### Defensive Programming #####
