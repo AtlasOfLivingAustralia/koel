@@ -37,7 +37,8 @@
 #'
 #' @export
 
-build_email <- function(alerts_data, email_list, email_send, email_password,
+build_email <- function(alerts_data, email_list, email_subject,
+                        email_send, email_password,
                         template_path, cache_path, output_path = NULL) {
 
   ##### Defensive Programming #####
@@ -126,7 +127,7 @@ build_email <- function(alerts_data, email_list, email_send, email_password,
               as.vector()
             send_email(recipients, output_file,
                        email_send, email_password,
-                       subject = "[TEST] ALA Biosecurity Alert")
+                       subject = email_subject)
             } else {
               cat(paste0("No alert sent for list: ", list_name, "\n"))
             }
