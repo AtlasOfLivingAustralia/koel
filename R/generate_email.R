@@ -111,7 +111,7 @@ build_email <- function(alerts_data, email_list, email_send, email_password,
                                           (which(colnames(alerts_data) == "common_name") - 1)]
 
     map(.x = list_names,
-        .f = function(list_name) {
+       .f = function(list_name) {
           list_col <- alerts_data[[list_name]]
           if (any(list_col)) {
             cat(paste0("Writing email for list: ", list_name, "\n"))
@@ -125,7 +125,7 @@ build_email <- function(alerts_data, email_list, email_send, email_password,
             rmarkdown::render(template_path, output_file = output_file)
 
             recipients <- email_list |>
-              filter(list == list_name) |>
+              filter(list == list_name | list == "universal") |>
               select(email) |>
               as.vector()
             send_email(recipients, output_file,
@@ -261,7 +261,7 @@ build_gt_table <- function(df, cache_path){
       location = map(
         glue("
           <a href='https://www.google.com/maps/search/?api=1&query={decimalLatitude}%2C{decimalLongitude}' target='_blank'>
-            <img src='{cache_path}maps/{recordID}.png' style='height:150px;width:150px; object-fit:cover;'>
+            <img src='{cache_path}maps/{recordID}.html' style='height:150px;width:150px; object-fit:cover;'>
           </a>"),
         gt::html
       ),
@@ -300,6 +300,8 @@ build_gt_table <- function(df, cache_path){
 #'    "./" and end  with "/". When this function it is called it should contain
 #'    a 'species_images' and a 'maps'. This function saves images in `cache_path/maps/`
 #'
+#' @importFrom maptiles get_tiles
+#' @importFrom maptiles plot_tiles
 #' @importFrom leaflet leafelt
 #' @importFrom leaflet leafletOptions
 #' @importFrom leaflet leafletCRS
@@ -358,42 +360,42 @@ build_map_thumbnail <- function(list_row, cache_path){
   dev.off()
 }
 
-build_map_thumbnail <- function(list_row, cache_path){
-
-  ##### Defensive Programming #####
-  # list row
-  if (!("data.frame" %in% class(list_row))) {
-    abort("`list_row` argument must be a data.frame or tibble")
-  } else if (nrow(list_row) != 1) {
-    abort("`list_row` requires exactly one row to compile a map")
-  } else if (
-    !(all(c("recordID", "decimalLatitude", "decimalLongitude") %in%
-          colnames(list_row)))) {
-    cols_needed <- c("recordID", "decimalLatitude", "decimalLongitude")
-    abort(paste0("`list_row` requires a column named ",
-                 cols_needed(which(!(cols_needed %in% col_names(list_row))))[1]))
-  }
-  # cache_path
-  if (!is.character(cache_path) | substr(cache_path, nchar(cache_path), nchar(cache_path)) != "/") {
-    abort("`cache_path` argument must be a string ending in '/'")
-  } else if (!dir.exists(cache_path)) {
-    abort("The directory specified by `cache_path` does not exist")
-  } else if (!("maps" %in% list.files(cache_path))) {
-    inform("No 'maps' directory exists in the provided `cache_path`. One has been created.")
-    dir.create(paste0(cache_path, "maps"))
-  }
-  ##### Function Implementation #####
-  # need to add defensive programming + check for existence of the maps directory
-  location_data <- list_row |> st_as_sf(
-    coords = c("decimalLongitude", "decimalLatitude"),
-    crs = "WGS84")
-  occurrence_map <- leaflet(options = leafletOptions(crs = leafletCRS(code = "WGS84"))) |>
-    addTiles() |>
-    setView(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude, zoom = 10) |>
-    addCircleMarkers(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude,
-                     opacity = 0.75, color = "darkblue")
-  mapshot(occurrence_map, file = paste0(cache_path, "maps/", list_row$recordID, ".png"))
-}
+# build_map_thumbnail <- function(list_row, cache_path){
+#
+#   ##### Defensive Programming #####
+#   # list row
+#   if (!("data.frame" %in% class(list_row))) {
+#     abort("`list_row` argument must be a data.frame or tibble")
+#   } else if (nrow(list_row) != 1) {
+#     abort("`list_row` requires exactly one row to compile a map")
+#   } else if (
+#     !(all(c("recordID", "decimalLatitude", "decimalLongitude") %in%
+#           colnames(list_row)))) {
+#     cols_needed <- c("recordID", "decimalLatitude", "decimalLongitude")
+#     abort(paste0("`list_row` requires a column named ",
+#                  cols_needed(which(!(cols_needed %in% col_names(list_row))))[1]))
+#   }
+#   # cache_path
+#   if (!is.character(cache_path) | substr(cache_path, nchar(cache_path), nchar(cache_path)) != "/") {
+#     abort("`cache_path` argument must be a string ending in '/'")
+#   } else if (!dir.exists(cache_path)) {
+#     abort("The directory specified by `cache_path` does not exist")
+#   } else if (!("maps" %in% list.files(cache_path))) {
+#     inform("No 'maps' directory exists in the provided `cache_path`. One has been created.")
+#     dir.create(paste0(cache_path, "maps"))
+#   }
+#   ##### Function Implementation #####
+#   # need to add defensive programming + check for existence of the maps directory
+#   location_data <- list_row |> st_as_sf(
+#     coords = c("decimalLongitude", "decimalLatitude"),
+#     crs = "WGS84")
+#   occurrence_map <- leaflet(options = leafletOptions(crs = leafletCRS(code = "WGS84"))) |>
+#     addTiles() |>
+#     setView(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude, zoom = 12) |>
+#     addCircleMarkers(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude,
+#                      opacity = 0.75, color = "darkblue", radius = 15)
+#   mapshot(occurrence_map, url = paste0(cache_path, "maps/", list_row$recordID, ".html"))
+# }
 
 #' Function to send html tables of occurrences in emails to stakeholders
 #'
@@ -435,9 +437,9 @@ send_email <- function(recipients, output_file, email_send, email_password, subj
     inform("No email recipients for this list. Email not sent but the html table has been saved.")
   } else {
     email <- envelope() |>
-      from("biosecurity@ala.org.au") |>
-      to(recipients) |>
-      #bcc(recipients) |>
+      from(email_send) |>
+      to(email_send) |>
+      bcc(recipients) |>
       subject(subject) |>
       html(read_html(output_file))
     # render("email_template.Rmd", include_css = "rmd")
