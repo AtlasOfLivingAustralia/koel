@@ -2,19 +2,26 @@
 % Please edit documentation in R/get_species_lists2.R
 \name{get_species_lists2}
 \alias{get_species_lists2}
-\title{Import user-supplied species lists}
+\title{Import user-supplied species lists from a single directory}
 \usage{
 get_species_lists2(lists_df)
 }
 \arguments{
-\item{df}{A data.frame containing columns named 'path' and 'label'}
+\item{lists_df}{A data.frame preferably produced by `collate_lists()`
+containing at minimum two columns named 'path' and 'label' which denote
+respectively the path to and name of each list being searched.}
 }
 \value{
 A data.frame of unique scientific names, the search term used to
   match those names to the ALA taxonomy, a common name for each species, and
   a column for each imported list. Each column associated with an imported
-  list contains information on whether or not a species appears on the list.
+  list contains logical information on whether or not a species appears on
+  the list. This data.frame may be passed to `assign_common_names()` and
+  `lookup_species_count()`.
 }
 \description{
-Import user-supplied species lists
+This function takes a small `data.frame` produced by `collate_lists()` and
+   facilitates the import of species list files described there. The rest of
+   the function utilises {dplyr} and {tidyr} functions to clean and combine
+   the species lists into a single data.frame suitable for use with {ala}.
 }
