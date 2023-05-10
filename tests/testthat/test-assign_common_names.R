@@ -1,17 +1,14 @@
-<<<<<<< HEAD:tests/testthat/test-assign_common_names.R
 # tests for assign_common_names
 
 # test format of input
-=======
->>>>>>> 2d6d67de08247db737a96a3452030065ef4532e9:tests/testthat/test-common_names_assigned.R
-test_that("test format of dataframe input", {
+test_that("dataframe argument is supplied correctly", {
   # throw an error if argument is not a data.frame or tibble
   expect_error(assign_common_names(list(12)))
   # throw an error if the argument does not have the correct columns
   expect_error(get_species_list2(data.frame(correct_name = NULL, search_term = NULL)))
 })
 
-test_that("test format of dataframe output", {
+test_that("assign_common_names returns the correct data.frame output", {
   # set up lists_df object
   dir_path <- withr::local_tempdir()
   {write.csv(data.frame(correct_name = c("Eudynamys orientalis", "Eolophus roseicapilla"),
@@ -44,7 +41,7 @@ test_that("test format of dataframe output", {
 })
 
 # Test characteristics of output - unique common_names
-test_that("correct names have unique common names", {
+test_that("outputted correct names each have unique common names", {
   # set up test dataframe
   species_list <- data.frame(
     correct_name = c("Eudynamys orientalis", "Eudynamys orientalis", "Eolophus roseicapilla", "Dicrurus bracteatus"),
@@ -62,7 +59,7 @@ test_that("correct names have unique common names", {
 })
 
 # test ability to handle species with common_name NAs for some search terms
-test_that("handle common_name NAs correctly", {
+test_that("assign_common_names handles common_name NAs correctly", {
   # set up test dataframe with all NAs for common_name
   species_list <- data.frame(
     correct_name = c("Eudynamys orientalis", "Eudynamys orientalis"),
@@ -88,13 +85,4 @@ test_that("handle common_name NAs correctly", {
                              common_name = "Eastern Koel")
   )
 })
-
-
-
-
-
-
-
-
-
 

@@ -1,7 +1,7 @@
 # tests for get_species_lists2
 
 # inputs must be in the correct format - df, correct columns
-test_that("input is in the correct dataframe format",{
+test_that("argument is supplied correctly",{
   # throw an error if argument is not a data.frame or tibble
   expect_error(get_species_lists2(12))
   # throw an error if the argument does not have the correct form
@@ -9,7 +9,7 @@ test_that("input is in the correct dataframe format",{
 })
 
 # test that the output is of the correct form
-test_that("output is in the correct dataframe format",{
+test_that("get_species_lists2 returns the correct data.frame output",{
   # set up lists_df object
   dir_path <- withr::local_tempdir()
   {write.csv(data.frame(correct_name = c("Eudynamys orientalis", "Eolophus roseicapilla"),

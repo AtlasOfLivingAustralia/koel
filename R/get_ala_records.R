@@ -26,42 +26,44 @@
 
 lookup_species_count <- function(species_list, filter_df, max_counts) {
 
+  ##### Defensive Programming #####
   if (!("data.frame" %in% class(species_list))) {
-    stop("`species_list` argument must be a data.frame or tibble")
+    abort("`species_list` argument must be a data.frame or tibble")
   } else if (!all(c("correct_name", "search_term", "common_name") %in% colnames(species_list))) {
-    stop("`species_list` must have the following columns: `correct_name`, `search_term`, `common_name`")
+    abort("`species_list` must have the following columns: `correct_name`, `search_term`, `common_name`")
   }
 
   if (!("data.frame" %in% class(filter_df))) {
-    stop("`filter_df` argument must be a data.frame or tibble")
+    abort("`filter_df` argument must be a data.frame or tibble")
   } else if (any(colnames(filter_df) != c("variable", "logical", "value", "query"))) {
-    stop("`filter_df` must be a dataframe created by 'galah_filter()'")
+    abort("`filter_df` must be a dataframe created by 'galah_filter()'")
   }
 
   if (class(max_counts) != "numeric" || length(max_counts) > 1) {
-    stop("`max_counts` must be a numeric value of length 1")
+    abort("`max_counts` must be a numeric value of length 1")
   }
 
+  ##### Function Implementation #####
   species_list <- species_list |>
     select(-common_name) |>
     distinct()
 
   # iterate search of Atlas for each search term. Store counts
-  species_counts <- map(.x = species_list$search_term,
-                        .f = function(search_term) {
-                          cat(search_term)
-                          filter_tmp <- filter_df
-                          filter_tmp$query[4] <-
-                            sub("none", search_term, filter_df$query[4])
-                          ala_search <- atlas_counts(filter = filter_tmp)
-                          if (any(colnames(ala_search) == "count")) {
-                            number_out <- ala_search$count[1]
-                          } else {
-                            number_out <- 0
-                          }
-                          cat(paste0(": ", number_out, "\n"))
-                          return(number_out)
-                        }) |>
+  species_counts <- map(
+    .x = species_list$search_term,
+    .f = function(search_term) {
+      cat(search_term)
+      filter_tmp <- filter_df
+      filter_tmp$query[4] <- sub("none", search_term, filter_df$query[4])
+      ala_search <- atlas_counts(filter = filter_tmp)
+      if (any(colnames(ala_search) == "count")) {
+        number_out <- ala_search$count[1]
+      } else {
+        number_out <- 0
+      }
+      cat(paste0(": ", number_out, "\n"))
+      return(number_out)
+      }) |>
     unlist()
 
   species_list <- species_list |>
@@ -119,35 +121,37 @@ lookup_species_count <- function(species_list, filter_df, max_counts) {
 
 download_records <- function(species_list, common_names, filter_df, path) {
 
+  ##### Defensive Programming #####
   if (!("data.frame" %in% class(species_list))) {
-    stop("`species_list` argument must be a data.frame or tibble")
+    abort("`species_list` argument must be a data.frame or tibble")
   } else if (!all(c("correct_name", "search_term") %in% colnames(species_list))) {
-    stop("`species_list` must at least have columns `correct_name` and `search_term`")
+    abort("`species_list` must at least have columns `correct_name` and `search_term`")
   }
 
   if (!("data.frame" %in% class(common_names))) {
-    stop("`species_list` argument must be a data.frame or tibble")
+    abort("`species_list` argument must be a data.frame or tibble")
   } else if (!all(c("correct_name", "common_name") %in% colnames(common_names))) {
-    stop("`species_list` must at least have columns `correct_name` and `common_name`")
+    abort("`species_list` must at least have columns `correct_name` and `common_name`")
   }
 
   if (!("data.frame" %in% class(filter_df))) {
-    stop("`filter_df` argument must be a data.frame or tibble")
+    abort("`filter_df` argument must be a data.frame or tibble")
   } else if (any(colnames(filter_df) != c("variable", "logical", "value", "query"))) {
-    stop("`filter_df` must be a dataframe created by 'galah_filter()'")
+    abort("`filter_df` must be a dataframe created by 'galah_filter()'")
   }
 
   if (!is.character(path) | substr(path, nchar(path), nchar(path)) != "/") {
-    stop("`path` argument but be a string ending in '/'")
+    abort("`path` argument but be a string ending in '/'")
   } else if (!dir.exists(path)) {
-    stop("The directory specified by `path` does not exist")
+    abort("The directory specified by `path` does not exist")
   }
 
   if (!("species_images" %in% list.files(path))) {
-    message("No 'species_images' directory exists in the provided path. One has been created.")
+    inform("No 'species_images' directory exists in the provided path. One has been created.")
     dir.create(paste0(path, "species_images"))
   }
 
+  ##### Function Implementation #####
   if (nrow(species_list) > 0) {
     cat(paste0("Downloading records for ", nrow(species_list), " species\n"))
 
@@ -156,23 +160,22 @@ download_records <- function(species_list, common_names, filter_df, path) {
       run_checks = FALSE,
       verbose = TRUE)
 
-    occ_list <- map(.x = species_list$search_term,
-                    .f = function(search_term) {
-                      cat(search_term)
-                      filter_tmp <- filter_df
-                      filter_tmp$query[4] <-
-                        sub("none", search_term, filter_df$query[4])
-                      select_tmp <- galah_select(raw_scientificName,
-                                                 decimalLatitude,
-                                                 decimalLongitude,
-                                                 cl22,
-                                                 cl1048,
-                                                 cl966,
-                                                 basisOfRecord,
-                                                 group = c("basic", "media"))
-                      atlas_occurrences(filter = filter_tmp,
-                                        select = select_tmp)
-                    }) |>
+    occ_list <- map(
+      .x = species_list$search_term,
+      .f = function(search_term) {
+        cat(search_term)
+        filter_tmp <- filter_df
+        filter_tmp$query[4] <- sub("none", search_term, filter_df$query[4])
+        select_tmp <- galah_select(raw_scientificName,
+                                   decimalLatitude,
+                                   decimalLongitude,
+                                   cl22,
+                                   cl1048,
+                                   cl966,
+                                   basisOfRecord,
+                                   group = c("basic", "media"))
+        atlas_occurrences(filter = filter_tmp, select = select_tmp)
+        }) |>
       list_rbind() |>
       search_media() |>
       filter(!duplicated(recordID),
@@ -183,9 +186,9 @@ download_records <- function(species_list, common_names, filter_df, path) {
       # does show_all_media need an `n` arg?
       # join back with original ('correct' and 'common') names
       left_join(species_list,
-                by = join_by(verbatimScientificName = search_term)) |>
+                by = join_by(verbatimScientificName == search_term)) |>
       left_join(common_names,
-                by = join_by(verbatimScientificName = correct_name)) |>
+                by = join_by(verbatimScientificName == correct_name)) |>
       mutate(common_name = replace_na(common_name, "[Common Name Unknown]")) |>
       select(-counts)
 
@@ -210,9 +213,11 @@ download_records <- function(species_list, common_names, filter_df, path) {
 #'    passed to `lookup_species_counts()` and `download_records()` to search and
 #'    download species occurrences within the filter.
 #'
-#' @param start_days_ago A `dbl` indicating how many days prior to search from
 #' @param lat_bounds A `numeric` vector indicating lower and upper latitude bounds
 #' @param lng_bounds A `numeric` vector indicating lower and upper longitude bounds
+#' @param start_days_ago A `dbl` indicating how many days prior to search from
+#' @param end_days_ago A `dbl` indicating how many days prior to search up to.
+#'    Defaults to 0 (up to current time).
 #'
 #' @return A tibble containing parameters for filtering counts and records, with
 #'    columns of `variable`, `logical`, `value`, and `query`.
@@ -220,9 +225,28 @@ download_records <- function(species_list, common_names, filter_df, path) {
 #' @importFrom galah galah_filter
 #' @export
 
-build_galah_query <- function(start_days_ago, lat_bounds, lng_bounds) {
+build_galah_query <- function(lat_bounds, lng_bounds, start_days_ago, end_days_ago = 0) {
 
-  start_date <- as.character(Sys.Date() - start_days_ago) |>
+  ##### Defensive Programming #####
+  # start_days_ago
+  if (!is.numeric(start_days_ago) ||
+      length(start_days_ago) != 1 ||
+      start_days_ago < 0) {
+    abort("`start_days_ago` must be a single, positive numeric value")
+  }
+  # lat_bounds
+  if (!is.numeric(lat_bounds) ||
+      length(lat_bounds) != 2) {
+    abort("`lat_bounds` must be a numeric vector of length 2")
+  }
+  # lng_bounds
+  if (!is.numeric(lng_bounds) ||
+      length(lng_bounds) != 2) {
+    abort("`lng_bounds` must be a numeric vector of length 2")
+  }
+
+  ##### Function Implementation #####
+  start_date <- as.character(Sys.Date() - end_days_ago - start_days_ago) |>
     paste0("T00:00:00Z")
 
   filter_df <- galah_filter(decimalLongitude >= 0,
@@ -232,6 +256,11 @@ build_galah_query <- function(start_days_ago, lat_bounds, lng_bounds) {
 
   filter_df$query[1] <- paste0("decimalLongitude:[", lng_bounds[1], " TO ", lng_bounds[2], "]")
   filter_df$query[2] <- paste0("decimalLatitude:[", lat_bounds[1], " TO ", lat_bounds[2], "]")
+  if (end_days_ago != 0) {
+    end_date <- as.character(Sys.Date() - end_days_ago) |>
+      paste0("T00:00:00Z")
+    filter_df$query[3] <- paste0("eventDate:[", start_date, " TO ", end_date, "]")
+  }
 
   return(filter_df)
 }

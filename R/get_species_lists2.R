@@ -1,10 +1,20 @@
-#' Import user-supplied species lists
+#' Import user-supplied species lists from a single directory
 #'
-#' @param df A data.frame containing columns named 'path' and 'label'
+#' This function takes a small `data.frame` produced by `collate_lists()` and
+#'    facilitates the import of species list files described there. The rest of
+#'    the function utilises {dplyr} and {tidyr} functions to clean and combine
+#'    the species lists into a single data.frame suitable for use with {ala}.
+#'
+#' @param lists_df A data.frame preferably produced by `collate_lists()`
+#'    containing at minimum two columns named 'path' and 'label' which denote
+#'    respectively the path to and name of each list being searched.
+#'
 #' @return A data.frame of unique scientific names, the search term used to
 #'   match those names to the ALA taxonomy, a common name for each species, and
 #'   a column for each imported list. Each column associated with an imported
-#'   list contains information on whether or not a species appears on the list.
+#'   list contains logical information on whether or not a species appears on
+#'   the list. This data.frame may be passed to `assign_common_names()` and
+#'   `lookup_species_count()`.
 #'
 #' @importFrom readr read_csv
 #' @importFrom purrr pmap
@@ -24,12 +34,14 @@
 
 get_species_lists2 <- function(lists_df){
 
+  ##### Defensive Programming #####
   if (!("data.frame" %in% class(lists_df))) {
     stop("`lists_df` argument must be a data.frame or tibble")
   } else if (!all(c("label", "path") %in% colnames(lists_df))) {
     stop("`lists_df` must have columns `label` and `path`")
   }
 
+  ##### Function Implementation #####
   combined_df <- lists_df |>
     pmap(.f = \(path, label, ...)
          read_csv(path, show_col_types = FALSE) |>
@@ -67,7 +79,7 @@ get_species_lists2 <- function(lists_df){
   combined_df_joined <- combined_df_clean |>
     left_join(unique_species, by = "correct_name") |>
     select(-list_name) |>
-    mutate(common_name = tools::toTitleCase(common_name)) |>
+    mutate(common_name = toTitleCase(common_name)) |>
     distinct()
 
   return(combined_df_joined)

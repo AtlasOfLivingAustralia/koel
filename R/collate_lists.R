@@ -14,6 +14,7 @@
 
 collate_lists <- function(path, list_suffix = "_list") {
 
+  ##### Defensive Programming #####
   if (!is.character(path) || !is.character(list_suffix)) {
     stop("`path` and 'list_suffix` arguments must be character strings.")
   }
@@ -22,6 +23,7 @@ collate_lists <- function(path, list_suffix = "_list") {
     stop("Invalid path. Must be a character string ending in `/`")
   }
 
+  ##### Function Implementation #####
   file_names <- list.files(path)
   file_paths <- paste0(path, file_names)
   labels <- gsub(paste0(list_suffix, ".csv"), "", file_names, ignore.case = T)
