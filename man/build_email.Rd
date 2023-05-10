@@ -7,6 +7,7 @@
 build_email(
   alerts_data,
   email_list,
+  email_subject,
   email_send,
   email_password,
   template_path,
