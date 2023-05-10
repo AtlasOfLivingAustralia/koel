@@ -125,7 +125,7 @@ build_email <- function(alerts_data, email_list, email_send, email_password,
             rmarkdown::render(template_path, output_file = output_file)
 
             recipients <- email_list |>
-              filter(list == list_name) |>
+              filter(list == list_name | list == "universal") |>
               select(email) |>
               as.vector()
             send_email(recipients, output_file,
@@ -261,7 +261,7 @@ build_gt_table <- function(df, cache_path){
       location = map(
         glue("
           <a href='https://www.google.com/maps/search/?api=1&query={decimalLatitude}%2C{decimalLongitude}' target='_blank'>
-            <img src='{cache_path}maps/{recordID}.png' style='height:150px;width:150px; object-fit:cover;'>
+            <img src='{cache_path}maps/{recordID}.html' style='height:150px;width:150px; object-fit:cover;'>
           </a>"),
         gt::html
       ),
@@ -389,10 +389,10 @@ build_map_thumbnail <- function(list_row, cache_path){
     crs = "WGS84")
   occurrence_map <- leaflet(options = leafletOptions(crs = leafletCRS(code = "WGS84"))) |>
     addTiles() |>
-    setView(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude, zoom = 10) |>
+    setView(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude, zoom = 12) |>
     addCircleMarkers(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude,
-                     opacity = 0.75, color = "darkblue")
-  mapshot(occurrence_map, file = paste0(cache_path, "maps/", list_row$recordID, ".png"))
+                     opacity = 0.75, color = "darkblue", radius = 15)
+  mapshot(occurrence_map, url = paste0(cache_path, "maps/", list_row$recordID, ".html"))
 }
 
 #' Function to send html tables of occurrences in emails to stakeholders
@@ -435,7 +435,7 @@ send_email <- function(recipients, output_file, email_send, email_password, subj
     inform("No email recipients for this list. Email not sent but the html table has been saved.")
   } else {
     email <- envelope() |>
-      from("biosecurity@ala.org.au") |>
+      from(email_send) |>
       to(recipients) |>
       #bcc(recipients) |>
       subject(subject) |>
