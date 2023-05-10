@@ -416,7 +416,6 @@ build_map_thumbnail <- function(list_row, cache_path){
 #' @importFrom emayili to
 #' @importFrom emayili bcc
 #' @importFrom emayili subject
-# @importFrom emayili html
 #' @importFrom emayili server
 #' @importFrom xml2 read_html
 #'
