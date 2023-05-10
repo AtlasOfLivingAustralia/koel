@@ -124,8 +124,7 @@ build_email <- function(alerts_data, email_list,
 
             recipients <- email_list |>
               filter(list == list_name | list == "universal") |>
-              select(email) |>
-              pull()
+              pull(email)
             send_email(recipients, output_file,
                        email_send, email_password,
                        subject = email_subject)
