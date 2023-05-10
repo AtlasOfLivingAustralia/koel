@@ -29,8 +29,6 @@
 #'    with "/". Should contain a 'html' and a 'csv' directory, however these
 #'    will be created if they do not exist.
 #'
-#' @return
-#'
 #' @importFrom purrr map
 #' @importFrom dplyr filter
 #' @importFrom dplyr select
@@ -38,8 +36,6 @@
 #' @importFrom readr write_csv
 #'
 #' @export
-#'
-#' @examples
 
 build_email <- function(alerts_data, email_list, email_send, email_password,
                         template_path, cache_path, output_path = NULL) {
@@ -302,7 +298,7 @@ build_gt_table <- function(df, cache_path){
 #'
 #' @importFrom maptiles get_tiles
 #' @importFrom maptiles plot_tiles
-#' @importFrom leaflet leafelt
+#' @importFrom leaflet leaflet
 #' @importFrom leaflet leafletOptions
 #' @importFrom leaflet leafletCRS
 #' @importFrom leaflet addTiles
@@ -427,8 +423,6 @@ build_map_thumbnail <- function(list_row, cache_path){
 #'    containing the relevant tables for a biosecurity alert.
 #'
 #' @export
-#'
-#' @examples
 
 send_email <- function(recipients, output_file, email_send, email_password, subject = "ALA Biosecurity Alert") {
 
@@ -441,7 +435,7 @@ send_email <- function(recipients, output_file, email_send, email_password, subj
       to(email_send) |>
       bcc(recipients) |>
       subject(subject) |>
-      html(read_html(output_file))
+      emayili::html(read_html(output_file))
     # render("email_template.Rmd", include_css = "rmd")
 
     smtp <- server(

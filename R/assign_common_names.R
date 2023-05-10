@@ -19,9 +19,6 @@
 #'    This object can be passed onto `record_download()`.
 #'
 #' @export
-#'
-#' @examples
-#'
 
 assign_common_names <- function(species_list) {
 
