@@ -41,7 +41,8 @@
 #'
 #' @examples
 
-build_email <- function(alerts_data, email_list, template_path, cache_path, output_path = NULL) {
+build_email <- function(alerts_data, email_list, email_send, email_password,
+                        template_path, cache_path, output_path = NULL) {
 
   ##### Defensive Programming #####
   # alerts_data
@@ -106,8 +107,7 @@ build_email <- function(alerts_data, email_list, template_path, cache_path, outp
   if (nrow(alerts_data) > 0) {
 
     # identify list names from alerts_dataz
-    list_names <- colnames(alerts_data)[(which(colnames(alerts_data) == "
-                                               correct_name") + 1):
+    list_names <- colnames(alerts_data)[(which(colnames(alerts_data) == "correct_name") + 1):
                                           (which(colnames(alerts_data) == "common_name") - 1)]
 
     map(.x = list_names,
@@ -129,6 +129,7 @@ build_email <- function(alerts_data, email_list, template_path, cache_path, outp
               select(email) |>
               as.vector()
             send_email(recipients, output_file,
+                       email_send, email_password,
                        subject = "[TEST] ALA Biosecurity Alert")
             } else {
               cat(paste0("No alert sent for list: ", list_name, "\n"))
