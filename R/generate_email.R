@@ -258,7 +258,7 @@ build_gt_table <- function(df, cache_path){
       location = map(
         glue("
           <a href='https://www.google.com/maps/search/?api=1&query={decimalLatitude}%2C{decimalLongitude}' target='_blank'>
-            <img src='{cache_path}maps/{recordID}.html' style='height:150px;width:150px; object-fit:cover;'>
+            <img src='{cache_path}maps/{recordID}.png' style='height:150px;width:150px; object-fit:cover;'>
           </a>"),
         gt::html
       ),
@@ -416,7 +416,7 @@ build_map_thumbnail <- function(list_row, cache_path){
 #' @importFrom emayili to
 #' @importFrom emayili bcc
 #' @importFrom emayili subject
-#' @importFrom emayili html
+# @importFrom emayili html
 #' @importFrom emayili server
 #' @importFrom xml2 read_html
 #'
