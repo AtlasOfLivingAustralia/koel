@@ -32,6 +32,7 @@
 #' @importFrom purrr map
 #' @importFrom dplyr filter
 #' @importFrom dplyr select
+#' @importFrom dplyr pull
 #' @importFrom rmarkdown render
 #' @importFrom readr write_csv
 #'
@@ -124,7 +125,7 @@ build_email <- function(alerts_data, email_list,
             recipients <- email_list |>
               filter(list == list_name | list == "universal") |>
               select(email) |>
-              as.vector()
+              pull()
             send_email(recipients, output_file,
                        email_send, email_password,
                        subject = email_subject)
