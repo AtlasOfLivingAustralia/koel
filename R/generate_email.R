@@ -263,11 +263,15 @@ build_gt_table <- function(df, cache_path){
         gt::html
       ),
       image = map(
-        glue("
-          <a href={image_url} target='_blank'>
-            <img src='{download_path}' style='height:150px; width:150px; object-fit:cover;'>
-          </a>"
-        ),
+        ifelse(is.na(url),
+               glue("
+                 <b>NO MEDIA AVAILABLE</b>"
+                 ),
+               glue("
+                 <a href={image_url} target='_blank'>
+                   <img src='{download_path}' style='height:150px; width:150px; object-fit:cover;'>
+                 </a>"
+               )),
         gt::html
       )
     ) |>
@@ -391,7 +395,7 @@ build_map_thumbnail <- function(list_row, cache_path){
 #     setView(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude, zoom = 12) |>
 #     addCircleMarkers(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude,
 #                      opacity = 0.75, color = "darkblue", radius = 15)
-#   mapshot(occurrence_map, url = paste0(cache_path, "maps/", list_row$recordID, ".html"))
+#   mapshot(occurrence_map, file = paste0(cache_path, "maps/", list_row$recordID, ".png"))
 # }
 
 #' Function to send html tables of occurrences in emails to stakeholders

@@ -93,7 +93,7 @@ lookup_species_count <- function(species_list, filter_df, max_counts) {
 #'   `common_names_assigned()`.
 #' @param filter_df A tibble specifying {galah} query parameters, as produced
 #'    by `galah::galah_filter()`. May be produced by `build_galah_query()`.
-#' @param path A character string specifying the (temporary) cache directory to
+#' @param cache_path A character string specifying the (temporary) cache directory to
 #'    save downloaded media files for each occurrence, and the downloaded occurrence
 #'    data. The string must end in "/". The path must describe an existing directory,
 #'    and if no 'species_images' folder exists within this directory then one will
@@ -119,7 +119,7 @@ lookup_species_count <- function(species_list, filter_df, max_counts) {
 #' @importFrom tidyr replace_na
 #' @export
 
-download_records <- function(species_list, common_names, filter_df, path) {
+download_records <- function(species_list, common_names, filter_df, cache_path) {
 
   ##### Defensive Programming #####
   if (!("data.frame" %in% class(species_list))) {
@@ -140,15 +140,15 @@ download_records <- function(species_list, common_names, filter_df, path) {
     abort("`filter_df` must be a dataframe created by 'galah_filter()'")
   }
 
-  if (!is.character(path) | substr(path, nchar(path), nchar(path)) != "/") {
-    abort("`path` argument but be a string ending in '/'")
-  } else if (!dir.exists(path)) {
-    abort("The directory specified by `path` does not exist")
+  if (!is.character(cache_path) | substr(cache_path, nchar(cache_path), nchar(cache_path)) != "/") {
+    abort("`cache_path` argument but be a string ending in '/'")
+  } else if (!dir.exists(cache_path)) {
+    abort("The directory specified by `cache_path` does not exist")
   }
 
-  if (!("species_images" %in% list.files(path))) {
-    inform("No 'species_images' directory exists in the provided path. One has been created.")
-    dir.create(paste0(path, "species_images"))
+  if (!("species_images" %in% list.files(cache_path))) {
+    inform("No 'species_images' directory exists in the provided cache path. One has been created.")
+    dir.create(paste0(cache_path, "species_images"))
   }
 
   ##### Function Implementation #####
@@ -175,15 +175,17 @@ download_records <- function(species_list, common_names, filter_df, path) {
                                    basisOfRecord,
                                    group = c("basic", "media"))
         atlas_occurrences(filter = filter_tmp, select = select_tmp)
-        }) |>
+      }) |>
       list_rbind() |>
       search_media() |>
       filter(!duplicated(recordID),
-             !is.na(cl966) | !is.na(cl1048)) |>
-      collect_media(path = paste0(path, "species_images"),
+             !is.na(cl966) | !is.na(cl1048))
+
+    occ_media <- occ_list |>
+      collect_media(path = paste0(cache_path, "species_images"),
                     type = "thumbnail") |>
-      # n = 1 - is this working? I.e. are we getting as many images as records?
-      # does show_all_media need an `n` arg?
+      select(recordID, url, download_path) |>
+      right_join(occ_list, by = "recordID") |>
       # join back with original ('correct' and 'common') names
       left_join(species_list,
                 by = join_by(verbatimScientificName == search_term)) |>
@@ -192,14 +194,14 @@ download_records <- function(species_list, common_names, filter_df, path) {
       mutate(common_name = replace_na(common_name, "[Common Name Unknown]")) |>
       select(-counts)
 
-    write.csv(occ_list,
-              file = paste0(path, "alerts_data.csv"),
+    write.csv(occ_media,
+              file = paste0(cache_path, "alerts_data.csv"),
               row.names = F)
   } else {
-    write.csv(tibble(), file = paste0(path, "alerts_data.csv"))
+    write.csv(tibble(), file = paste0(cache_path, "alerts_data.csv"))
   }
 
-  return(occ_list)
+  return(occ_media)
 }
 
 
