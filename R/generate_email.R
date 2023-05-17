@@ -440,7 +440,6 @@ send_email <- function(recipients, output_file, email_send, email_password, subj
       to(email_send) |>
       bcc(recipients) |>
       subject(subject) |>
-      attachment(output_file) |>
       emayili::html(read_html(output_file))
     # render("email_template.Rmd", include_css = "rmd")
 
