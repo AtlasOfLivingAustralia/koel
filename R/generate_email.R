@@ -105,7 +105,7 @@ build_email <- function(alerts_data, email_list,
   if (nrow(alerts_data) > 0) {
 
     # identify list names from alerts_dataz
-    list_names <- colnames(alerts_data)[(which(colnames(alerts_data) == "correct_name") + 1):
+    list_names <- colnames(alerts_data)[(which(colnames(alerts_data) == "jurisdiction") + 1):
                                           (which(colnames(alerts_data) == "common_name") - 1)]
 
     map(.x = list_names,
@@ -258,18 +258,19 @@ build_gt_table <- function(df, cache_path){
       location = map(
         glue("
           <a href='https://www.google.com/maps/search/?api=1&query={decimalLatitude}%2C{decimalLongitude}' target='_blank'>
-            <img src='{cache_path}maps/{recordID}.png' style='height:150px;width:150px; object-fit:cover;'>
+            <img src='{cache_path}maps/{recordID}.png' width='267' height='200'
+                 style='max-width:267;height:100%;max-height:200;'/>
           </a>"),
         gt::html
       ),
       image = map(
         ifelse(is.na(url),
                glue("
-                 <b>NO MEDIA AVAILABLE</b>"
-                 ),
+                    <b>NO MEDIA AVAILABLE</b>"
+               ),
                glue("
                  <a href={image_url} target='_blank'>
-                   <img src='{download_path}' style='height:150px; width:150px; object-fit:cover;'>
+                    <img src='{download_path}' style='max-width:267;height:100%;max-height:200;'>
                  </a>"
                )),
         gt::html
@@ -317,50 +318,6 @@ build_gt_table <- function(df, cache_path){
 #'
 #' @export
 
-build_map_thumbnail <- function(list_row, cache_path){
-
-  ##### Defensive Programming #####
-  # list row
-  if (!("data.frame" %in% class(list_row))) {
-    abort("`list_row` argument must be a data.frame or tibble")
-  } else if (nrow(list_row) != 1) {
-    abort("`list_row` requires exactly one row to compile a map")
-  } else if (
-    !(all(c("recordID", "decimalLatitude", "decimalLongitude") %in%
-          colnames(list_row)))) {
-    cols_needed <- c("recordID", "decimalLatitude", "decimalLongitude")
-    abort(paste0("`list_row` requires a column named ",
-                 cols_needed(which(!(cols_needed %in% col_names(list_row))))[1]))
-  }
-  # cache_path
-  if (!is.character(cache_path) | substr(cache_path, nchar(cache_path), nchar(cache_path)) != "/") {
-    abort("`cache_path` argument must be a string ending in '/'")
-  } else if (!dir.exists(cache_path)) {
-    abort("The directory specified by `cache_path` does not exist")
-  } else if (!("maps" %in% list.files(cache_path))) {
-    inform("No 'maps' directory exists in the provided `cache_path`. One has been created.")
-    dir.create(paste0(cache_path, "maps"))
-  }
-  ##### Function Implementation #####
-  # need to add defensive programming + check for existence of the maps directory
-  box_size <- 0.15
-  x <- list_row |> st_as_sf(
-    coords = c("decimalLongitude", "decimalLatitude"),
-    crs = "WGS84")
-  x_box <- st_bbox(c(
-    xmin = list_row$decimalLongitude - box_size,
-    xmax = list_row$decimalLongitude + box_size,
-    ymin = list_row$decimalLatitude - box_size,
-    ymax = list_row$decimalLatitude + box_size),
-    crs = "WGS84"
-  )
-  y <- get_tiles(x_box, zoom = 10, crop = TRUE)
-  png(filename = paste0(cache_path, "maps/", list_row$recordID, ".png"))
-  plot_tiles(y)
-  plot(x, col = "black", cex = 5, pch = 16, add = TRUE) # errors here
-  dev.off()
-}
-
 # build_map_thumbnail <- function(list_row, cache_path){
 #
 #   ##### Defensive Programming #####
@@ -387,16 +344,61 @@ build_map_thumbnail <- function(list_row, cache_path){
 #   }
 #   ##### Function Implementation #####
 #   # need to add defensive programming + check for existence of the maps directory
-#   location_data <- list_row |> st_as_sf(
+#   box_size <- 0.15
+#   x <- list_row |> st_as_sf(
 #     coords = c("decimalLongitude", "decimalLatitude"),
 #     crs = "WGS84")
-#   occurrence_map <- leaflet(options = leafletOptions(crs = leafletCRS(code = "WGS84"))) |>
-#     addTiles() |>
-#     setView(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude, zoom = 12) |>
-#     addCircleMarkers(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude,
-#                      opacity = 0.75, color = "darkblue", radius = 15)
-#   mapshot(occurrence_map, file = paste0(cache_path, "maps/", list_row$recordID, ".png"))
+#   x_box <- st_bbox(c(
+#     xmin = list_row$decimalLongitude - box_size,
+#     xmax = list_row$decimalLongitude + box_size,
+#     ymin = list_row$decimalLatitude - box_size,
+#     ymax = list_row$decimalLatitude + box_size),
+#     crs = "WGS84"
+#   )
+#   y <- get_tiles(x_box, zoom = 10, crop = TRUE)
+#   png(filename = paste0(cache_path, "maps/", list_row$recordID, ".png"))
+#   plot_tiles(y)
+#   plot(x, col = "black", cex = 5, pch = 16, add = TRUE) # errors here
+#   dev.off()
 # }
+
+build_map_thumbnail <- function(list_row, cache_path){
+
+  ##### Defensive Programming #####
+  # list row
+  if (!("data.frame" %in% class(list_row))) {
+    abort("`list_row` argument must be a data.frame or tibble")
+  } else if (nrow(list_row) != 1) {
+    abort("`list_row` requires exactly one row to compile a map")
+  } else if (
+    !(all(c("recordID", "decimalLatitude", "decimalLongitude") %in%
+          colnames(list_row)))) {
+    cols_needed <- c("recordID", "decimalLatitude", "decimalLongitude")
+    abort(paste0("`list_row` requires a column named ",
+                 cols_needed(which(!(cols_needed %in% col_names(list_row))))[1]))
+  }
+  # cache_path
+  if (!is.character(cache_path) | substr(cache_path, nchar(cache_path), nchar(cache_path)) != "/") {
+    abort("`cache_path` argument must be a string ending in '/'")
+  } else if (!dir.exists(cache_path)) {
+    abort("The directory specified by `cache_path` does not exist")
+  } else if (!("maps" %in% list.files(cache_path))) {
+    inform("No 'maps' directory exists in the provided `cache_path`. One has been created.")
+    dir.create(paste0(cache_path, "maps"))
+  }
+  ##### Function Implementation #####
+  # need to add defensive programming + check for existence of the maps directory
+  location_data <- list_row |> st_as_sf(
+    coords = c("decimalLongitude", "decimalLatitude"),
+    crs = "WGS84")
+  occurrence_map <- leaflet(options = leafletOptions(crs = leafletCRS(code = "WGS84"))) |>
+    addTiles() |>
+    #addProviderTiles(providers$Esri.WorldTopoMap) |>
+    setView(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude, zoom = 14) |>
+    addCircleMarkers(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude,
+                     opacity = 0.75, color = "darkblue", radius = 25)
+  mapshot(occurrence_map, file = paste0(cache_path, "maps/", list_row$recordID, ".png"))
+}
 
 #' Function to send html tables of occurrences in emails to stakeholders
 #'

@@ -48,23 +48,18 @@ get_species_lists2 <- function(lists_df){
            mutate(list_name = label)) |>
     list_rbind() |>
     distinct() |>
-    mutate(correct_name = gsub("\\(.+\\)", "  ", correct_name), # text in brackets
-           correct_name = gsub("\\s{2,}", " ", correct_name),   # successive spaces
-           correct_name = gsub(",", "", correct_name),          # commas
-           correct_name = gsub("\\:.+", "", correct_name))      # colons & subsequent text
+    mutate(correct_name = gsub("\\s{2,}", " ", correct_name),   # successive spaces
+           correct_name = gsub(",", "", correct_name))          # colons & subsequent text
 
   combined_df_clean <- combined_df |>
-    mutate(correct_name_long = correct_name,
-           correct_name_short =  map_chr(.x = correct_name, .f = shorten_names),
-           correct_name = correct_name_short) |>
-    pivot_longer(c(correct_name_short, correct_name_long, provided_name, synonyms),
+    separate_longer_delim(synonyms, ", ") |>
+    mutate(correct_name2 = correct_name) |>
+    pivot_longer(c(correct_name2, synonyms),
                  names_to = "type_of",
                  values_to = "search_term") |>
     select(-type_of) |>
-    relocate(search_term, .after = correct_name) |>
+    relocate(search_term, .after = provided_name) |>
     filter(!is.na(search_term)) |>
-    mutate(search_term = gsub(",", "", search_term),
-           search_term = gsub("[ \t]+$", "", search_term)) |>
     distinct()
 
   unique_species <- combined_df_clean |>
@@ -83,28 +78,4 @@ get_species_lists2 <- function(lists_df){
     distinct()
 
   return(combined_df_joined)
-}
-
-
-
-#' Shorten character string
-#'
-#' Shortens the first element of a character vector to comprise, at most, the
-#'   first two components separated by whitespace. If the first element has only
-#'   one component, it is returned without modification.
-#'
-#' @param x A string
-#' @return The first element of the input character vector
-#'
-#' @noRd
-
-shorten_names <- function(x) {
-
-  if (!is.character(x)) {stop("`x` must be a string")}
-
-  a <- strsplit(x, split = " ")[[1]]
-
-  ifelse(length(a) >= 2,
-         paste0(a[1], " ", a[2]),
-         a[1])
 }
