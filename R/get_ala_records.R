@@ -63,7 +63,7 @@ lookup_species_count <- function(species_list, filter_df, max_counts) {
       }
       cat(paste0(": ", number_out, "\n"))
       return(number_out)
-      }) |>
+    }) |>
     unlist()
 
   species_list <- species_list |>
@@ -190,7 +190,7 @@ download_records <- function(species_list, common_names, filter_df, cache_path) 
       left_join(species_list,
                 by = join_by(verbatimScientificName == search_term)) |>
       left_join(common_names,
-                by = join_by(verbatimScientificName == correct_name)) |>
+                by = join_by("correct_name")) |>
       mutate(common_name = replace_na(common_name, "[Common Name Unknown]")) |>
       select(-counts)
 

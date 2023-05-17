@@ -105,7 +105,7 @@ build_email <- function(alerts_data, email_list,
   if (nrow(alerts_data) > 0) {
 
     # identify list names from alerts_dataz
-    list_names <- colnames(alerts_data)[(which(colnames(alerts_data) == "correct_name") + 1):
+    list_names <- colnames(alerts_data)[(which(colnames(alerts_data) == "jurisdiction") + 1):
                                           (which(colnames(alerts_data) == "common_name") - 1)]
 
     map(.x = list_names,
@@ -265,11 +265,11 @@ build_gt_table <- function(df, cache_path){
       image = map(
         ifelse(is.na(url),
                glue("
-                 <b>NO MEDIA AVAILABLE</b>"
-                 ),
+                    <b>NO MEDIA AVAILABLE</b>"
+               ),
                glue("
                  <a href={image_url} target='_blank'>
-                   <img src='{download_path}' style='height:150px; width:150px; object-fit:cover;'>
+                    <img src='{download_path}' style='height:150px; width:150px; object-fit:cover;'>
                  </a>"
                )),
         gt::html
@@ -360,7 +360,7 @@ build_map_thumbnail <- function(list_row, cache_path){
   plot(x, col = "black", cex = 5, pch = 16, add = TRUE) # errors here
   dev.off()
 }
-
+#
 # build_map_thumbnail <- function(list_row, cache_path){
 #
 #   ##### Defensive Programming #####
@@ -392,9 +392,10 @@ build_map_thumbnail <- function(list_row, cache_path){
 #     crs = "WGS84")
 #   occurrence_map <- leaflet(options = leafletOptions(crs = leafletCRS(code = "WGS84"))) |>
 #     addTiles() |>
-#     setView(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude, zoom = 12) |>
+#     #addProviderTiles(providers$Esri.WorldTopoMap) |>
+#     setView(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude, zoom = 14) |>
 #     addCircleMarkers(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude,
-#                      opacity = 0.75, color = "darkblue", radius = 15)
+#                      opacity = 0.75, color = "darkblue", radius = 25)
 #   mapshot(occurrence_map, file = paste0(cache_path, "maps/", list_row$recordID, ".png"))
 # }
 
