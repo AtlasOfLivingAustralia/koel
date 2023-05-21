@@ -42,6 +42,7 @@ get_species_lists2 <- function(lists_df){
   }
 
   ##### Function Implementation #####
+
   combined_df <- lists_df |>
     pmap(.f = \(path, label, ...)
          read_csv(path, show_col_types = FALSE) |>
@@ -63,16 +64,16 @@ get_species_lists2 <- function(lists_df){
     distinct()
 
   unique_species <- combined_df_clean |>
-    select(correct_name, list_name) |>
+    select(correct_name, jurisdiction, list_name) |>
     distinct() |>
     mutate(dummy_values = TRUE) |>
-    pivot_wider(id_cols = correct_name,
+    pivot_wider(id_cols = c(correct_name, jurisdiction),
                 names_from = list_name,
                 values_from = dummy_values,
                 values_fill = FALSE)
 
   combined_df_joined <- combined_df_clean |>
-    left_join(unique_species, by = "correct_name") |>
+    left_join(unique_species, by = c("correct_name", "jurisdiction")) |>
     select(-list_name) |>
     mutate(common_name = toTitleCase(common_name)) |>
     distinct()

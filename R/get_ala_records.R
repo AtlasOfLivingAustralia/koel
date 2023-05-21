@@ -24,7 +24,8 @@
 #' @importFrom dplyr filter
 #' @export
 
-lookup_species_count <- function(species_list, filter_df, max_counts) {
+lookup_species_count <- function(species_list, filter_df, max_counts,
+                                 start_days_ago, end_days_ago = 0) {
 
   ##### Defensive Programming #####
   if (!("data.frame" %in% class(species_list))) {
@@ -43,6 +44,9 @@ lookup_species_count <- function(species_list, filter_df, max_counts) {
     abort("`max_counts` must be a numeric value of length 1")
   }
 
+  start_date <- as.character(Sys.Date() - end_days_ago - start_days_ago) |>
+    paste0("T00:00:00Z")
+
   ##### Function Implementation #####
   species_list <- species_list |>
     select(-common_name) |>
@@ -50,24 +54,27 @@ lookup_species_count <- function(species_list, filter_df, max_counts) {
 
   # iterate search of Atlas for each search term. Store counts
   species_counts <- map(
-    .x = species_list$search_term,
+    .x = unique(species_list$search_term),
     .f = function(search_term) {
       cat(search_term)
-      filter_tmp <- filter_df
-      filter_tmp$query[4] <- sub("none", search_term, filter_df$query[4])
-      ala_search <- atlas_counts(filter = filter_tmp)
+      ala_search <- galah_call() |>
+        galah_filter(eventDate >= start_date,
+                     raw_scientificName == search_term) |>
+        # when galah is updated at OR condition for IBRA, IMCRA
+        atlas_counts()
+      # Ask Martin about this if-else statement
       if (any(colnames(ala_search) == "count")) {
         number_out <- ala_search$count[1]
       } else {
         number_out <- 0
       }
       cat(paste0(": ", number_out, "\n"))
-      return(number_out)
+      return(data.frame(search_term = search_term, counts = number_out))
     }) |>
-    unlist()
+    list_rbind()
 
   species_list <- species_list |>
-    mutate(counts = species_counts) |>
+    left_join(species_counts, by = "search_term") |>
     filter(counts > 0 & counts < max_counts)
 
   return(species_list)
@@ -119,7 +126,8 @@ lookup_species_count <- function(species_list, filter_df, max_counts) {
 #' @importFrom tidyr replace_na
 #' @export
 
-download_records <- function(species_list, common_names, filter_df, cache_path) {
+download_records <- function(species_list, common_names, filter_df, cache_path,
+                             start_days_ago, end_days_ago = 0) {
 
   ##### Defensive Programming #####
   if (!("data.frame" %in% class(species_list))) {
@@ -152,6 +160,10 @@ download_records <- function(species_list, common_names, filter_df, cache_path) 
   }
 
   ##### Function Implementation #####
+
+  start_date <- as.character(Sys.Date() - end_days_ago - start_days_ago) |>
+    paste0("T00:00:00Z")
+
   if (nrow(species_list) > 0) {
     cat(paste0("Downloading records for ", nrow(species_list), " species\n"))
 
@@ -164,35 +176,50 @@ download_records <- function(species_list, common_names, filter_df, cache_path) 
       .x = species_list$search_term,
       .f = function(search_term) {
         cat(search_term)
-        filter_tmp <- filter_df
-        filter_tmp$query[4] <- sub("none", search_term, filter_df$query[4])
-        select_tmp <- galah_select(raw_scientificName,
-                                   decimalLatitude,
-                                   decimalLongitude,
-                                   cl22,
-                                   cl1048,
-                                   cl966,
-                                   basisOfRecord,
-                                   group = c("basic", "media"))
-        atlas_occurrences(filter = filter_tmp, select = select_tmp)
+        galah_call() |>
+          galah_filter(eventDate >= start_date,
+                       raw_scientificName == search_term) |>
+          # when galah is updated at OR condition for IBRA, IMCRA
+          galah_select(raw_scientificName,
+                       decimalLatitude, decimalLongitude,
+                       cl22, cl1048, cl966,
+                       basisOfRecord,
+                       group = c("basic", "media")) |>
+          atlas_occurrences()
       }) |>
       list_rbind() |>
       search_media() |>
+      distinct() |>
       filter(!duplicated(recordID),
-             !is.na(cl966) | !is.na(cl1048))
+             !is.na(cl966) | !is.na(cl1048)) |>
+      left_join(species_list,
+                by = join_by("verbatimScientificName" == "search_term"),
+                relationship = "many-to-many") |>
+      left_join(common_names,
+                by = join_by("correct_name")) |>
+      mutate(common_name = replace_na(common_name, "[Common Name Unknown]")) |>
+      filter(!duplicated(recordID, jurisdiction)) |>
+      st_as_sf(coords = c("decimalLongitude", "decimalLatitude"),
+               crs = st_crs(coastal_waters_shp),
+               remove = FALSE) |>
+      mutate(intersection = st_intersects(geometry, coastal_waters_shp) |>
+               as.integer(),
+             cw_state = if_else(is.na(intersection),
+                                NA,
+                                coastal_waters_shp$state_abbr[intersection])
+      ) |>
+      select(-c(counts, intersection)) |>
+      st_drop_geometry() |>
+      mutate(flagged_state = str_detect(jurisdiction, cw_state)) |>
+      filter(jurisdiction == "AUS" | flagged_state) |>
+      select(-flagged_state) |>
+      as_tibble()
 
     occ_media <- occ_list |>
       collect_media(path = paste0(cache_path, "species_images"),
                     type = "thumbnail") |>
       select(recordID, url, download_path) |>
-      right_join(occ_list, by = "recordID") |>
-      # join back with original ('correct' and 'common') names
-      left_join(species_list,
-                by = join_by(verbatimScientificName == search_term)) |>
-      left_join(common_names,
-                by = join_by("correct_name")) |>
-      mutate(common_name = replace_na(common_name, "[Common Name Unknown]")) |>
-      select(-counts)
+      right_join(occ_list, by = "recordID")
 
     write.csv(occ_media,
               file = paste0(cache_path, "alerts_data.csv"),
