@@ -9,22 +9,27 @@
 #'   'search_term', and 'common_name' for each species, and logical columns for
 #'   each alerts list indicating whether or not the species appears on a list.
 #'   May be produced by `get_species_list2()`.
-#' @param filter_df A tibble specifying {galah} query parameters, as produced
-#'    by `galah::galah_filter()`. May be produced by `build_galah_query()`.
 #' @param max_counts A numeric upper bound. Species with record counts greater
 #'   then this value will be excluded from the final output.
+#' @param start_days_ago A `dbl` indicating how many days prior to search from
+#' @param end_days_ago A `dbl` indicating how many days prior to search up to.
+#'    Defaults to 0 (up to current time).
 #' @return A tibble based on the input `species_list`, with an additional column
 #'   named `counts`
 #'
 #' @importFrom galah atlas_counts
+#' @importFrom galah galah_call
+#' @importFrom galah galah_filter
 #' @importFrom purrr map
 #' @importFrom dplyr mutate
 #' @importFrom dplyr select
 #' @importFrom dplyr distinct
 #' @importFrom dplyr filter
+#' @importFrom dplyr left_join
+#' @importFrom purrr list_rbind
 #' @export
 
-lookup_species_count <- function(species_list, filter_df, max_counts,
+lookup_species_count <- function(species_list, max_counts,
                                  start_days_ago, end_days_ago = 0) {
 
   ##### Defensive Programming #####
@@ -34,14 +39,20 @@ lookup_species_count <- function(species_list, filter_df, max_counts,
     abort("`species_list` must have the following columns: `correct_name`, `search_term`, `common_name`")
   }
 
-  if (!("data.frame" %in% class(filter_df))) {
-    abort("`filter_df` argument must be a data.frame or tibble")
-  } else if (any(colnames(filter_df) != c("variable", "logical", "value", "query"))) {
-    abort("`filter_df` must be a dataframe created by 'galah_filter()'")
-  }
-
   if (class(max_counts) != "numeric" || length(max_counts) > 1) {
     abort("`max_counts` must be a numeric value of length 1")
+  }
+
+  if (!is.numeric(start_days_ago) ||
+      length(start_days_ago) != 1 ||
+      start_days_ago < 0) {
+    abort("`start_days_ago` must be a single, non-negative numeric value")
+  }
+
+  if (!is.numeric(end_days_ago) ||
+      length(end_days_ago) != 1 ||
+      end_days_ago < 0) {
+    abort("`end_days_ago` must be a single, positive numeric value")
   }
 
   start_date <- as.character(Sys.Date() - end_days_ago - start_days_ago) |>
@@ -98,13 +109,14 @@ lookup_species_count <- function(species_list, filter_df, max_counts,
 #'   'correct_name' and 'common_name', and rows indicating the accepted common
 #'   name for each "correct" species name. May be produced by
 #'   `common_names_assigned()`.
-#' @param filter_df A tibble specifying {galah} query parameters, as produced
-#'    by `galah::galah_filter()`. May be produced by `build_galah_query()`.
 #' @param cache_path A character string specifying the (temporary) cache directory to
 #'    save downloaded media files for each occurrence, and the downloaded occurrence
 #'    data. The string must end in "/". The path must describe an existing directory,
 #'    and if no 'species_images' folder exists within this directory then one will
 #'    be created, in which the media output will be saved.
+#' @param start_days_ago A `dbl` indicating how many days prior to search from
+#' @param end_days_ago A `dbl` indicating how many days prior to search up to.
+#'    Defaults to 0 (up to current time).
 #'
 #' @return A tibble containing the downloaded data for each occurrence record.
 #'    Contains 30 ALA-specific columns with data regarding location, media,
@@ -112,7 +124,9 @@ lookup_species_count <- function(species_list, filter_df, max_counts,
 #'    and logical columns for each list indicating the presence of a species
 #'    on that list.
 #'
+#' @importFrom galah galah_call
 #' @importFrom galah galah_config
+#' @importFrom galah galah_filter
 #' @importFrom galah galah_select
 #' @importFrom galah atlas_occurrences
 #' @importFrom galah search_media
@@ -122,11 +136,19 @@ lookup_species_count <- function(species_list, filter_df, max_counts,
 #' @importFrom dplyr mutate
 #' @importFrom dplyr filter
 #' @importFrom dplyr left_join
+#' @importFrom dplyr right_join
 #' @importFrom dplyr join_by
+#' @importFrom dplyr distinct
+#' @importFrom tidyr as_tibble
 #' @importFrom tidyr replace_na
+#' @importFrom sf st_as_sf
+#' @importFrom sf st_crs
+#' @importFrom sf st_intersects
+#' @importFrom sf st_drop_geometry
+#' @importFrom stringr str_detect
 #' @export
 
-download_records <- function(species_list, common_names, filter_df, cache_path,
+download_records <- function(species_list, common_names, cache_path,
                              start_days_ago, end_days_ago = 0) {
 
   ##### Defensive Programming #####
@@ -142,12 +164,6 @@ download_records <- function(species_list, common_names, filter_df, cache_path,
     abort("`species_list` must at least have columns `correct_name` and `common_name`")
   }
 
-  if (!("data.frame" %in% class(filter_df))) {
-    abort("`filter_df` argument must be a data.frame or tibble")
-  } else if (any(colnames(filter_df) != c("variable", "logical", "value", "query"))) {
-    abort("`filter_df` must be a dataframe created by 'galah_filter()'")
-  }
-
   if (!is.character(cache_path) | substr(cache_path, nchar(cache_path), nchar(cache_path)) != "/") {
     abort("`cache_path` argument but be a string ending in '/'")
   } else if (!dir.exists(cache_path)) {
@@ -157,6 +173,18 @@ download_records <- function(species_list, common_names, filter_df, cache_path,
   if (!("species_images" %in% list.files(cache_path))) {
     inform("No 'species_images' directory exists in the provided cache path. One has been created.")
     dir.create(paste0(cache_path, "species_images"))
+  }
+
+  if (!is.numeric(start_days_ago) ||
+      length(start_days_ago) != 1 ||
+      start_days_ago < 0) {
+    abort("`start_days_ago` must be a single, non-negative numeric value")
+  }
+
+  if (!is.numeric(end_days_ago) ||
+      length(end_days_ago) != 1 ||
+      end_days_ago < 0) {
+    abort("`end_days_ago` must be a single, positive numeric value")
   }
 
   ##### Function Implementation #####
@@ -193,10 +221,10 @@ download_records <- function(species_list, common_names, filter_df, cache_path,
       filter(!duplicated(recordID),
              !is.na(cl966) | !is.na(cl1048)) |>
       left_join(species_list,
-                by = join_by("verbatimScientificName" == "search_term"),
+                by = c("verbatimScientificName" == "search_term"),
                 relationship = "many-to-many") |>
       left_join(common_names,
-                by = join_by("correct_name")) |>
+                by = c("correct_name")) |>
       mutate(common_name = replace_na(common_name, "[Common Name Unknown]")) |>
       filter(!duplicated(recordID, jurisdiction)) |>
       st_as_sf(coords = c("decimalLongitude", "decimalLatitude"),
