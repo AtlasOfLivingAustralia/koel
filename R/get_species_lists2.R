@@ -8,12 +8,16 @@
 #' @param lists_df A data.frame preferably produced by `collate_lists()`
 #'    containing at minimum two columns named 'path' and 'label' which denote
 #'    respectively the path to and name of each list being searched.
+#' @param synonym_delimiter An optional character string detailing the delimiter
+#'    used for multiple synonyms in the synonym columns of the lists. Defaults
+#'    to ", ".
 #'
 #' @return A data.frame of unique scientific names, the search term used to
-#'   match those names to the ALA taxonomy, a common name for each species, and
-#'   a column for each imported list. Each column associated with an imported
-#'   list contains logical information on whether or not a species appears on
-#'   the list. This data.frame may be passed to `assign_common_names()` and
+#'   match those names to the ALA taxonomy, a common name for each species, the
+#'   state jurisdictions of interest for each species, and a column for each
+#'   imported list. Each column associated with an imported list contains
+#'   logical information on whether or not a species appears on the list. This
+#'   data.frame may be passed to `assign_common_names()` and
 #'   `lookup_species_count()`.
 #'
 #' @importFrom readr read_csv
@@ -27,18 +31,26 @@
 #' @importFrom dplyr relocate
 #' @importFrom dplyr left_join
 #' @importFrom dplyr distinct
+#' @importFrom dplyr filter
 #' @importFrom tidyr pivot_longer
 #' @importFrom tidyr pivot_wider
+#' @importfrom tidyr separate_longer_delim
 #' @importFrom tools toTitleCase
 #' @export
 
-get_species_lists2 <- function(lists_df){
+get_species_lists2 <- function(lists_df, synonym_delimiter = ", "){
 
   ##### Defensive Programming #####
   if (!("data.frame" %in% class(lists_df))) {
-    stop("`lists_df` argument must be a data.frame or tibble")
+    abort("`lists_df` argument must be a data.frame or tibble")
   } else if (!all(c("label", "path") %in% colnames(lists_df))) {
-    stop("`lists_df` must have columns `label` and `path`")
+    abort("`lists_df` must have columns `label` and `path`")
+  }
+
+  if (class(synonym_delimiter) != "class") {
+    abort("'`synonym_delimiter` argument must be a character string.")
+  } (length(synonym_delimiter) > 1) {
+    abort("`synonym_delimiter` must be a single character object of length 1.")
   }
 
   ##### Function Implementation #####
@@ -53,7 +65,7 @@ get_species_lists2 <- function(lists_df){
            correct_name = gsub(",", "", correct_name))          # colons & subsequent text
 
   combined_df_clean <- combined_df |>
-    separate_longer_delim(synonyms, ", ") |>
+    separate_longer_delim(synonyms, synonym_delimiter) |>
     mutate(correct_name2 = correct_name) |>
     pivot_longer(c(correct_name2, synonyms),
                  names_to = "type_of",
