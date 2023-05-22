@@ -4,7 +4,13 @@
 \alias{download_records}
 \title{Download ALA records for species identified with `lookup_species_count()`}
 \usage{
-download_records(species_list, common_names, filter_df, path)
+download_records(
+  species_list,
+  common_names,
+  cache_path,
+  start_days_ago,
+  end_days_ago = 0
+)
 }
 \arguments{
 \item{species_list}{A data.frame or tibble containing information on species
@@ -18,14 +24,16 @@ May be produced by `get_species_list2()`.}
 name for each "correct" species name. May be produced by
 `common_names_assigned()`.}
 
-\item{filter_df}{A tibble specifying {galah} query parameters, as produced
-by `galah::galah_filter()`. May be produced by `build_galah_query()`.}
-
-\item{path}{A character string specifying the (temporary) cache directory to
+\item{cache_path}{A character string specifying the (temporary) cache directory to
 save downloaded media files for each occurrence, and the downloaded occurrence
 data. The string must end in "/". The path must describe an existing directory,
 and if no 'species_images' folder exists within this directory then one will
 be created, in which the media output will be saved.}
+
+\item{start_days_ago}{A `dbl` indicating how many days prior to search from}
+
+\item{end_days_ago}{A `dbl` indicating how many days prior to search up to.
+Defaults to 0 (up to current time).}
 }
 \value{
 A tibble containing the downloaded data for each occurrence record.

@@ -4,7 +4,12 @@
 \alias{lookup_species_count}
 \title{Look up and append counts of species records}
 \usage{
-lookup_species_count(species_list, filter_df, max_counts)
+lookup_species_count(
+  species_list,
+  max_counts,
+  start_days_ago,
+  end_days_ago = 0
+)
 }
 \arguments{
 \item{species_list}{A data.frame or tibble containing information on species
@@ -13,11 +18,13 @@ of biosecurity interest. Must contain character columns 'correct_name',
 each alerts list indicating whether or not the species appears on a list.
 May be produced by `get_species_list2()`.}
 
-\item{filter_df}{A tibble specifying {galah} query parameters, as produced
-by `galah::galah_filter()`. May be produced by `build_galah_query()`.}
-
 \item{max_counts}{A numeric upper bound. Species with record counts greater
 then this value will be excluded from the final output.}
+
+\item{start_days_ago}{A `dbl` indicating how many days prior to search from}
+
+\item{end_days_ago}{A `dbl` indicating how many days prior to search up to.
+Defaults to 0 (up to current time).}
 }
 \value{
 A tibble based on the input `species_list`, with an additional column

@@ -34,7 +34,7 @@
 #' @importFrom dplyr filter
 #' @importFrom tidyr pivot_longer
 #' @importFrom tidyr pivot_wider
-#' @importfrom tidyr separate_longer_delim
+#' @importFrom tidyr separate_longer_delim
 #' @importFrom tools toTitleCase
 #' @importFrom rlang abort
 #' @importFrom rlang inform
@@ -51,7 +51,7 @@ get_species_lists2 <- function(lists_df, synonym_delimiter = ", "){
 
   if (class(synonym_delimiter) != "class") {
     abort("'`synonym_delimiter` argument must be a character string.")
-  } (length(synonym_delimiter) > 1) {
+  } else if (length(synonym_delimiter) > 1) {
     abort("`synonym_delimiter` must be a single character object of length 1.")
   }
 
