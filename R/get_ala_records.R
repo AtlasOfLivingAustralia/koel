@@ -27,6 +27,8 @@
 #' @importFrom dplyr filter
 #' @importFrom dplyr left_join
 #' @importFrom purrr list_rbind
+#' @importFrom rlang abort
+#' @importFrom rlang inform
 #' @export
 
 lookup_species_count <- function(species_list, max_counts,
@@ -35,8 +37,10 @@ lookup_species_count <- function(species_list, max_counts,
   ##### Defensive Programming #####
   if (!("data.frame" %in% class(species_list))) {
     abort("`species_list` argument must be a data.frame or tibble")
-  } else if (!all(c("correct_name", "search_term", "common_name") %in% colnames(species_list))) {
-    abort("`species_list` must have the following columns: `correct_name`, `search_term`, `common_name`")
+  } else if (!all(c("correct_name", "search_term", "common_name", "jurisdiction")
+                  %in% colnames(species_list))) {
+    abort("`species_list` must have the following columns:
+          `correct_name`, `search_term`, `common_name`, `jurisdiction`")
   }
 
   if (class(max_counts) != "numeric" || length(max_counts) > 1) {
@@ -146,6 +150,8 @@ lookup_species_count <- function(species_list, max_counts,
 #' @importFrom sf st_intersects
 #' @importFrom sf st_drop_geometry
 #' @importFrom stringr str_detect
+#' @importFrom rlang abort
+#' @importFrom rlang inform
 #' @export
 
 download_records <- function(species_list, common_names, cache_path,
@@ -154,14 +160,17 @@ download_records <- function(species_list, common_names, cache_path,
   ##### Defensive Programming #####
   if (!("data.frame" %in% class(species_list))) {
     abort("`species_list` argument must be a data.frame or tibble")
-  } else if (!all(c("correct_name", "search_term") %in% colnames(species_list))) {
-    abort("`species_list` must at least have columns `correct_name` and `search_term`")
+  } else if (!all(c("correct_name", "search_term", "jurisdiction")
+                  %in% colnames(species_list))) {
+    abort("`species_list` must have the following columns:
+          `correct_name`, `search_term`, `jurisdiction`")
   }
 
   if (!("data.frame" %in% class(common_names))) {
     abort("`species_list` argument must be a data.frame or tibble")
   } else if (!all(c("correct_name", "common_name") %in% colnames(common_names))) {
-    abort("`species_list` must at least have columns `correct_name` and `common_name`")
+    abort("`species_list` must have the following columns:
+          `correct_name`, `common_name`")
   }
 
   if (!is.character(cache_path) | substr(cache_path, nchar(cache_path), nchar(cache_path)) != "/") {

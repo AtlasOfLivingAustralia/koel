@@ -36,6 +36,8 @@
 #' @importFrom tidyr pivot_wider
 #' @importfrom tidyr separate_longer_delim
 #' @importFrom tools toTitleCase
+#' @importFrom rlang abort
+#' @importFrom rlang inform
 #' @export
 
 get_species_lists2 <- function(lists_df, synonym_delimiter = ", "){

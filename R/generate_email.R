@@ -35,6 +35,8 @@
 #' @importFrom dplyr pull
 #' @importFrom rmarkdown render
 #' @importFrom readr write_csv
+#' @importFrom rlang abort
+#' @importFrom rlang inform
 #'
 #' @export
 
@@ -175,6 +177,8 @@ build_email <- function(alerts_data, email_list,
 #' @importFrom purrr map
 #' @importFrom purrr pmap
 #' @importFrom here here
+#' @importFrom rlang abort
+#' @importFrom rlang inform
 #'
 #' @return A `data.frame` that is passed on to some RMarkdown (.Rmd) to be
 #'    rendered as a gt table. Contains four columns: 'species', 'observation',
@@ -314,55 +318,57 @@ build_gt_table <- function(df, cache_path){
 #' @importFrom leaflet addCircleMarkers
 #' @importFrom mapview mapshot
 #' @importFrom sf st_as_sf
+#' @importFrom rlang abort
+#' @importFrom rlang inform
 #'
 #' @return No returned file. Instead, a .png version of the produced thumbnail i
 #'    is saved in the 'maps' directory of 'cache_path'.
 #'
 #' @export
 
-build_map_thumbnail <- function(list_row, cache_path){
-
-  ##### Defensive Programming #####
-  # list row
-  if (!("data.frame" %in% class(list_row))) {
-    abort("`list_row` argument must be a data.frame or tibble")
-  } else if (nrow(list_row) != 1) {
-    abort("`list_row` requires exactly one row to compile a map")
-  } else if (
-    !(all(c("recordID", "decimalLatitude", "decimalLongitude") %in%
-          colnames(list_row)))) {
-    cols_needed <- c("recordID", "decimalLatitude", "decimalLongitude")
-    abort(paste0("`list_row` requires a column named ",
-                 cols_needed(which(!(cols_needed %in% col_names(list_row))))[1]))
-  }
-  # cache_path
-  if (!is.character(cache_path) | substr(cache_path, nchar(cache_path), nchar(cache_path)) != "/") {
-    abort("`cache_path` argument must be a string ending in '/'")
-  } else if (!dir.exists(cache_path)) {
-    abort("The directory specified by `cache_path` does not exist")
-  } else if (!("maps" %in% list.files(cache_path))) {
-    inform("No 'maps' directory exists in the provided `cache_path`. One has been created.")
-    dir.create(paste0(cache_path, "maps"))
-  }
-  ##### Function Implementation #####
-  # need to add defensive programming + check for existence of the maps directory
-  box_size <- 0.15
-  x <- list_row |> st_as_sf(
-    coords = c("decimalLongitude", "decimalLatitude"),
-    crs = "WGS84")
-  x_box <- st_bbox(c(
-    xmin = list_row$decimalLongitude - box_size,
-    xmax = list_row$decimalLongitude + box_size,
-    ymin = list_row$decimalLatitude - box_size,
-    ymax = list_row$decimalLatitude + box_size),
-    crs = "WGS84"
-  )
-  y <- get_tiles(x_box, zoom = 10, crop = TRUE)
-  png(filename = paste0(cache_path, "maps/", list_row$recordID, ".png"))
-  plot_tiles(y)
-  plot(x, col = "black", cex = 5, pch = 16, add = TRUE) # errors here
-  dev.off()
-}
+# build_map_thumbnail <- function(list_row, cache_path){
+#
+#   ##### Defensive Programming #####
+#   # list row
+#   if (!("data.frame" %in% class(list_row))) {
+#     abort("`list_row` argument must be a data.frame or tibble")
+#   } else if (nrow(list_row) != 1) {
+#     abort("`list_row` requires exactly one row to compile a map")
+#   } else if (
+#     !(all(c("recordID", "decimalLatitude", "decimalLongitude") %in%
+#           colnames(list_row)))) {
+#     cols_needed <- c("recordID", "decimalLatitude", "decimalLongitude")
+#     abort(paste0("`list_row` requires a column named ",
+#                  cols_needed(which(!(cols_needed %in% col_names(list_row))))[1]))
+#   }
+#   # cache_path
+#   if (!is.character(cache_path) | substr(cache_path, nchar(cache_path), nchar(cache_path)) != "/") {
+#     abort("`cache_path` argument must be a string ending in '/'")
+#   } else if (!dir.exists(cache_path)) {
+#     abort("The directory specified by `cache_path` does not exist")
+#   } else if (!("maps" %in% list.files(cache_path))) {
+#     inform("No 'maps' directory exists in the provided `cache_path`. One has been created.")
+#     dir.create(paste0(cache_path, "maps"))
+#   }
+#   ##### Function Implementation #####
+#   # need to add defensive programming + check for existence of the maps directory
+#   box_size <- 0.15
+#   x <- list_row |> st_as_sf(
+#     coords = c("decimalLongitude", "decimalLatitude"),
+#     crs = "WGS84")
+#   x_box <- st_bbox(c(
+#     xmin = list_row$decimalLongitude - box_size,
+#     xmax = list_row$decimalLongitude + box_size,
+#     ymin = list_row$decimalLatitude - box_size,
+#     ymax = list_row$decimalLatitude + box_size),
+#     crs = "WGS84"
+#   )
+#   y <- get_tiles(x_box, zoom = 10, crop = TRUE)
+#   png(filename = paste0(cache_path, "maps/", list_row$recordID, ".png"))
+#   plot_tiles(y)
+#   plot(x, col = "black", cex = 5, pch = 16, add = TRUE) # errors here
+#   dev.off()
+# }
 
 build_map_thumbnail <- function(list_row, cache_path){
 
@@ -423,6 +429,8 @@ build_map_thumbnail <- function(list_row, cache_path){
 #' @importFrom emayili subject
 #' @importFrom emayili server
 #' @importFrom xml2 read_html
+#' @importFrom rlang abort
+#' @importFrom rlang inform
 #'
 #' @return No object is returned. This function exists only to send an email
 #'    containing the relevant tables for a biosecurity alert.
