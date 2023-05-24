@@ -8,8 +8,8 @@ download_records(
   species_list,
   common_names,
   cache_path,
-  start_days_ago,
-  end_days_ago = 0
+  start_date,
+  end_date = 0
 )
 }
 \arguments{
@@ -30,10 +30,16 @@ data. The string must end in "/". The path must describe an existing directory,
 and if no 'species_images' folder exists within this directory then one will
 be created, in which the media output will be saved.}
 
-\item{start_days_ago}{A `dbl` indicating how many days prior to search from}
+\item{start_date}{Date to begin search of ALA occurrences. May be in one of
+two forms: either a `dbl` indicating how many days prior from the current
+date to begin the search, or a `character` vector indicating the date to
+search from in "dd-mm-yyyy" format.}
 
-\item{end_days_ago}{A `dbl` indicating how many days prior to search up to.
-Defaults to 0 (up to current time).}
+\item{end_date}{Date to end search of ALA occurrences. May be in one of
+two forms: either a `dbl` indicating how many days prior from the current
+date to end the search, or a `character` vector indicating the date to
+search to in "dd-mm-yyyy" format. Default value is 0 i.e. search up to
+the current date.}
 }
 \value{
 A tibble containing the downloaded data for each occurrence record.

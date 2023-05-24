@@ -39,7 +39,7 @@
 #' @export
 
 lookup_species_count <- function(species_list, max_counts,
-                                 start_days_ago, end_days_ago = 0) {
+                                 start_date, end_date = 0) {
 
   ##### Defensive Programming #####
   if (!("data.frame" %in% class(species_list))) {
