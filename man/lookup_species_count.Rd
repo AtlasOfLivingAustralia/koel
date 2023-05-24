@@ -4,12 +4,7 @@
 \alias{lookup_species_count}
 \title{Look up and append counts of species records}
 \usage{
-lookup_species_count(
-  species_list,
-  max_counts,
-  start_days_ago,
-  end_days_ago = 0
-)
+lookup_species_count(species_list, max_counts, start_date, end_date = 0)
 }
 \arguments{
 \item{species_list}{A data.frame or tibble containing information on species
@@ -21,10 +16,16 @@ May be produced by `get_species_list2()`.}
 \item{max_counts}{A numeric upper bound. Species with record counts greater
 then this value will be excluded from the final output.}
 
-\item{start_days_ago}{A `dbl` indicating how many days prior to search from}
+\item{start_date}{Date to begin search of ALA occurrences. May be in one of
+two forms: either a `dbl` indicating how many days prior from the current
+date to begin the search, or a `character` vector indicating the date to
+search from in "ddmmyyyy" format.}
 
-\item{end_days_ago}{A `dbl` indicating how many days prior to search up to.
-Defaults to 0 (up to current time).}
+\item{end_date}{Date to end search of ALA occurrences. May be in one of
+two forms: either a `dbl` indicating how many days prior from the current
+date to end the search, or a `character` vector indicating the date to
+search to in "ddmmyyyy" format. Default value is 0 i.e. search up to
+the current date}
 }
 \value{
 A tibble based on the input `species_list`, with an additional column
