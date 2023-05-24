@@ -13,14 +13,17 @@ test_that("assign_common_names returns the correct data.frame output", {
   dir_path <- withr::local_tempdir()
   {write.csv(data.frame(correct_name = c("Eudynamys orientalis", "Eolophus roseicapilla"),
                         provided_name = c("Eudynamys orientalis (Linnaeus, 1766)","Cacatua roseicapilla (Vieillot, 1817)"),
-                        synonyms = c("Eudynamys orientalis cyanocephalus", "Cacatua roseicapilla Vieillot, 1817"),
-                        common_name = c("Eastern Koel", "Galah")),
+                        synonyms = c("Eudynamys orientalis cyanocephalus, Eudynamys orientalis subcyanocephalus",
+                                     "Cacatua roseicapilla"),
+                        common_name = c("Eastern Koel", "Galah"),
+                        jurisdiction = c("AUS", "ACT, QLD, SA")),
              paste0(dir_path, "/list1_list.csv"),
              row.names = FALSE)
     write.csv(data.frame(correct_name = c("Eudynamys orientalis", "Dicrurus bracteatus"),
                          provided_name = c("Eudynamys orientalis", "Dicrurus bracteatus Gould, 1843"),
                          synonyms = c("Eudynamys orientalis cyanocephalus", NA),
-                         common_name = c("Eastern Koel", "Spangled Drongo")),
+                         common_name = c("Eastern Koel", "Spangled Drongo"),
+                         jurisdiction = c("QLD", "NT, QLD, SA")),
               paste0(dir_path, "/list2_list.csv"),
               row.names = FALSE)}
   df <- collate_lists(paste0(dir_path, "/"))
@@ -45,17 +48,19 @@ test_that("outputted correct names each have unique common names", {
   # set up test dataframe
   species_list <- data.frame(
     correct_name = c("Eudynamys orientalis", "Eudynamys orientalis", "Eolophus roseicapilla", "Dicrurus bracteatus"),
-    search_term = c("Eudynamys orientalis", "Eudynamys orientalis (Linnaeus, 1766)", "Eolophus roseicapilla", "Dicrurus bracteatus"),
+    provided_name = c("Eudynamys orientalis", "Eudynamys orientalis", "Eolophus roseicapilla", "Dicrurus bracteatus"),
+    search_term = c("Eudynamys orientalis", "Eudynamys orientalis", "Eolophus roseicapilla", "Dicrurus bracteatus"),
     common_name = c("Eastern Koel", "Pacific Koel", "Galah", "Spangled Drongo"),
+    jurisdiction = "AUS",
     list1 = c(TRUE, TRUE, TRUE, TRUE)
   )
   # generate output for assign_common_names
-  common_names <- assign_common_names(species_list)
+  acn_output <- assign_common_names(species_list)
 
   # test that there is one row per correct_name in the input
-  expect_equal(length(unique(species_list$correct_name)), dim(common_names)[1])
+  expect_equal(length(unique(species_list$correct_name)), dim(acn_output)[1])
   # test that there is one row per correct_name in the output
-  expect_equal(length(unique(common_names$correct_name)), dim(common_names)[1])
+  expect_equal(length(unique(acn_output$correct_name)), dim(acn_output)[1])
 })
 
 # test ability to handle species with common_name NAs for some search terms
@@ -63,8 +68,10 @@ test_that("assign_common_names handles common_name NAs correctly", {
   # set up test dataframe with all NAs for common_name
   species_list <- data.frame(
     correct_name = c("Eudynamys orientalis", "Eudynamys orientalis"),
-    search_term = c("Eudynamys orientalis", "Eudynamys orientalis (Linnaeus, 1766)"),
+    provided_name = c("Eudynamys orientalis", "Eudynamys orientalis"),
+    search_term = c("Eudynamys orientalis", "Eudynamys orientalis cyanocephalus"),
     common_name = c(NA, NA),
+    jurisdiction = "AUS",
     list1 = c(TRUE, TRUE)
   )
   # test that common_name is recorded as NA
@@ -75,8 +82,10 @@ test_that("assign_common_names handles common_name NAs correctly", {
   # set up test dataframe with first common_name an NA
   species_list <- data.frame(
     correct_name = c("Eudynamys orientalis", "Eudynamys orientalis"),
-    search_term = c("Eudynamys orientalis", "Eudynamys orientalis (Linnaeus, 1766)"),
+    provided_name = c("Eudynamys orientalis", "Eudynamys orientalis"),
+    search_term = c("Eudynamys orientalis", "Eudynamys orientalis cyanocephalus"),
     common_name = c(NA, "Eastern Koel"),
+    jurisdiction = "AUS",
     list1 = c(TRUE, TRUE)
   )
   # test that common_name is recorded as "Eastern Koel"

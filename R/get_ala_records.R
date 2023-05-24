@@ -11,9 +11,15 @@
 #'   May be produced by `get_species_list2()`.
 #' @param max_counts A numeric upper bound. Species with record counts greater
 #'   then this value will be excluded from the final output.
-#' @param start_days_ago A `dbl` indicating how many days prior to search from
-#' @param end_days_ago A `dbl` indicating how many days prior to search up to.
-#'    Defaults to 0 (up to current time).
+#' @param start_date Date to begin search of ALA occurrences. May be in one of
+#'    two forms: either a `dbl` indicating how many days prior from the current
+#'    date to begin the search, or a `character` vector indicating the date to
+#'    search from in "ddmmyyyy" format.
+#' @param end_date Date to end search of ALA occurrences. May be in one of
+#'    two forms: either a `dbl` indicating how many days prior from the current
+#'    date to end the search, or a `character` vector indicating the date to
+#'    search to in "ddmmyyyy" format. Default value is 0 i.e. search up to
+#'    the current date
 #' @return A tibble based on the input `species_list`, with an additional column
 #'   named `counts`
 #'
@@ -27,6 +33,7 @@
 #' @importFrom dplyr filter
 #' @importFrom dplyr left_join
 #' @importFrom purrr list_rbind
+#' @importFrom lubridate dmy
 #' @importFrom rlang abort
 #' @importFrom rlang inform
 #' @export
@@ -47,22 +54,50 @@ lookup_species_count <- function(species_list, max_counts,
     abort("`max_counts` must be a numeric value of length 1")
   }
 
-  if (!is.numeric(start_days_ago) ||
-      length(start_days_ago) != 1 ||
-      start_days_ago < 0) {
-    abort("`start_days_ago` must be a single, non-negative numeric value")
+  if (!(is.numeric(start_date) | is.character(start_date))) {
+    abort("`start_date` must be either a single numeric value or a character date in format 'ddmmyyyy'")
+  }
+  if (is.numeric(start_date)) {
+    if (length(start_date) != 1 || start_date < 0) {
+      abort("`start_date` should be of length one and non-negative if numeric")
+    }
+  } else if (is.character(start_date)) {
+    if (length(start_date) != 1) {
+      abort("`start_date` should be of length one")
+    }
   }
 
-  if (!is.numeric(end_days_ago) ||
-      length(end_days_ago) != 1 ||
-      end_days_ago < 0) {
-    abort("`end_days_ago` must be a single, positive numeric value")
+  if (!(is.numeric(end_date) | is.character(end_date))) {
+    abort("`end_date` must be either a single numeric value or a character date in format 'ddmmyyyy'")
   }
-
-  start_date <- as.character(Sys.Date() - end_days_ago - start_days_ago) |>
-    paste0("T00:00:00Z")
+  if (is.numeric(end_date)) {
+    if (length(end_date) != 1 || end_date < 0) {
+      abort("`end_date` should be of length one and non-negative if numeric")
+    }
+  } else if (is.character(end_date)) {
+    if (length(end_date) != 1) {
+      abort("`end_date` should be of length one")
+    }
+  }
 
   ##### Function Implementation #####
+  # manipulate date objects to create correct window
+  if (is.numeric(start_date)) {
+    start_date <- as.character(Sys.Date() - start_date) |>
+      paste0("T00:00:00Z")
+  } else if (is.character(start_date)) {
+    start_date <- dmy(start_date) |>
+      paste0("T00:00:00Z")
+  }
+  if (is.numeric(end_date)) {
+    end_date <- as.character(Sys.Date() - end_date + 1) |>
+      paste0("T00:00:00Z")
+  } else if (is.character(end_date)) {
+    end_date <- (dmy(end_date) + 1) |>
+      paste0("T00:00:00Z")
+  }
+
+  # record counts
   species_list <- species_list |>
     select(-common_name) |>
     distinct()
@@ -74,7 +109,8 @@ lookup_species_count <- function(species_list, max_counts,
       cat(search_term)
       ala_search <- galah_call() |>
         galah_filter(eventDate >= start_date,
-                     raw_scientificName == search_term) |>
+                     eventDate <= end_date,
+                     scientificName == search_term) |>
         # when galah is updated at OR condition for IBRA, IMCRA
         atlas_counts()
       # Ask Martin about this if-else statement
@@ -118,9 +154,15 @@ lookup_species_count <- function(species_list, max_counts,
 #'    data. The string must end in "/". The path must describe an existing directory,
 #'    and if no 'species_images' folder exists within this directory then one will
 #'    be created, in which the media output will be saved.
-#' @param start_days_ago A `dbl` indicating how many days prior to search from
-#' @param end_days_ago A `dbl` indicating how many days prior to search up to.
-#'    Defaults to 0 (up to current time).
+#' @param start_date Date to begin search of ALA occurrences. May be in one of
+#'    two forms: either a `dbl` indicating how many days prior from the current
+#'    date to begin the search, or a `character` vector indicating the date to
+#'    search from in "dd-mm-yyyy" format.
+#' @param end_date Date to end search of ALA occurrences. May be in one of
+#'    two forms: either a `dbl` indicating how many days prior from the current
+#'    date to end the search, or a `character` vector indicating the date to
+#'    search to in "dd-mm-yyyy" format. Default value is 0 i.e. search up to
+#'    the current date.
 #'
 #' @return A tibble containing the downloaded data for each occurrence record.
 #'    Contains 30 ALA-specific columns with data regarding location, media,
@@ -150,12 +192,13 @@ lookup_species_count <- function(species_list, max_counts,
 #' @importFrom sf st_intersects
 #' @importFrom sf st_drop_geometry
 #' @importFrom stringr str_detect
+#' @importFrom lubridate dmy
 #' @importFrom rlang abort
 #' @importFrom rlang inform
 #' @export
 
 download_records <- function(species_list, common_names, cache_path,
-                             start_days_ago, end_days_ago = 0) {
+                             start_date, end_date = 0) {
 
   ##### Defensive Programming #####
   if (!("data.frame" %in% class(species_list))) {
@@ -184,23 +227,50 @@ download_records <- function(species_list, common_names, cache_path,
     dir.create(paste0(cache_path, "species_images"))
   }
 
-  if (!is.numeric(start_days_ago) ||
-      length(start_days_ago) != 1 ||
-      start_days_ago < 0) {
-    abort("`start_days_ago` must be a single, non-negative numeric value")
+  if (!(is.numeric(start_date) | is.character(start_date))) {
+    abort("`start_date` must be either a single numeric value or a character date in format 'ddmmyyyy'")
+  }
+  if (is.numeric(start_date)) {
+    if (length(start_date) != 1 || start_date < 0) {
+      abort("`start_date` should be of length one and non-negative if numeric")
+    }
+  } else if (is.character(start_date)) {
+    if (length(start_date) != 1) {
+      abort("`start_date` should be of length one")
+    }
   }
 
-  if (!is.numeric(end_days_ago) ||
-      length(end_days_ago) != 1 ||
-      end_days_ago < 0) {
-    abort("`end_days_ago` must be a single, positive numeric value")
+  if (!(is.numeric(end_date) | is.character(end_date))) {
+    abort("`end_date` must be either a single numeric value or a character date in format 'ddmmyyyy'")
+  }
+  if (is.numeric(end_date)) {
+    if (length(end_date) != 1 || end_date < 0) {
+      abort("`end_date` should be of length one and non-negative if numeric")
+    }
+  } else if (is.character(end_date)) {
+    if (length(end_date) != 1) {
+      abort("`end_date` should be of length one")
+    }
   }
 
   ##### Function Implementation #####
+  # manipulate date objects to create correct window
+  if (is.numeric(start_date)) {
+    start_date <- as.character(Sys.Date() - start_date) |>
+      paste0("T00:00:00Z")
+  } else if (is.character(start_date)) {
+    start_date <- dmy(start_date) |>
+      paste0("T00:00:00Z")
+  }
+  if (is.numeric(end_date)) {
+    end_date <- as.character(Sys.Date() - end_date + 1) |>
+      paste0("T00:00:00Z")
+  } else if (is.character(end_date)) {
+    end_date <- (dmy(end_date) + 1) |>
+      paste0("T00:00:00Z")
+  }
 
-  start_date <- as.character(Sys.Date() - end_days_ago - start_days_ago) |>
-    paste0("T00:00:00Z")
-
+  # record downloads
   if (nrow(species_list) > 0) {
     cat(paste0("Downloading records for ", nrow(species_list), " species\n"))
 
@@ -215,7 +285,8 @@ download_records <- function(species_list, common_names, cache_path,
         cat(search_term)
         galah_call() |>
           galah_filter(eventDate >= start_date,
-                       raw_scientificName == search_term) |>
+                       eventDate <= end_date,
+                       scientificName == search_term) |>
           # when galah is updated at OR condition for IBRA, IMCRA
           galah_select(raw_scientificName,
                        decimalLatitude, decimalLongitude,
@@ -230,7 +301,7 @@ download_records <- function(species_list, common_names, cache_path,
       filter(!duplicated(recordID),
              !is.na(cl966) | !is.na(cl1048)) |>
       left_join(species_list,
-                by = c("verbatimScientificName" == "search_term"),
+                by = c("scientificName" = "search_term"),
                 relationship = "many-to-many") |>
       left_join(common_names,
                 by = c("correct_name")) |>

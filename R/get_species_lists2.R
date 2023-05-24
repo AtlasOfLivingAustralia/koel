@@ -34,6 +34,7 @@
 #' @importFrom dplyr filter
 #' @importFrom tidyr pivot_longer
 #' @importFrom tidyr pivot_wider
+#' @importFrom tidyr replace_na
 #' @importFrom tidyr separate_longer_delim
 #' @importFrom tools toTitleCase
 #' @importFrom rlang abort
@@ -49,7 +50,7 @@ get_species_lists2 <- function(lists_df, synonym_delimiter = ", "){
     abort("`lists_df` must have columns `label` and `path`")
   }
 
-  if (class(synonym_delimiter) != "class") {
+  if (class(synonym_delimiter) != "character") {
     abort("'`synonym_delimiter` argument must be a character string.")
   } else if (length(synonym_delimiter) > 1) {
     abort("`synonym_delimiter` must be a single character object of length 1.")
@@ -64,7 +65,8 @@ get_species_lists2 <- function(lists_df, synonym_delimiter = ", "){
     list_rbind() |>
     distinct() |>
     mutate(correct_name = gsub("\\s{2,}", " ", correct_name),   # successive spaces
-           correct_name = gsub(",", "", correct_name))          # colons & subsequent text
+           correct_name = gsub(",", "", correct_name)) |>       # commas
+    mutate(jurisdiction = replace_na(jurisdiction, "AUS"))
 
   combined_df_clean <- combined_df |>
     separate_longer_delim(synonyms, synonym_delimiter) |>
