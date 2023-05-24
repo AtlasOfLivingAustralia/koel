@@ -109,7 +109,7 @@ lookup_species_count <- function(species_list, max_counts,
       cat(search_term)
       ala_search <- galah_call() |>
         galah_filter(eventDate >= start_date,
-                     eventDate <= end_date,
+                     # eventDate <= end_date,
                      scientificName == search_term) |>
         # when galah is updated at OR condition for IBRA, IMCRA
         atlas_counts()
