@@ -13,6 +13,8 @@
 #' @importFrom dplyr select
 #' @importFrom dplyr group_by
 #' @importFrom dplyr summarise
+#' @importFrom rlang abort
+#' @importFrom rlang inform
 #'
 #' @return A single data.frame with a 'correct_name' and 'common_name' column.
 #'    Each correct_name is unique and has a single common name assigned to it.
@@ -24,9 +26,9 @@ assign_common_names <- function(species_list) {
 
   ##### Defensive Programming #####
   if (!("data.frame" %in% class(species_list))) {
-    stop("`species_list` argument must be a data.frame or tibble")
+    abort("`species_list` argument must be a data.frame or tibble")
   } else if (!all(c("correct_name", "common_name") %in% colnames(species_list))) {
-    stop("`species_list` must at least have columns `correct_name` and `common_name`")
+    abort("`species_list` must at least have columns `correct_name` and `common_name`")
   }
 
   ##### Function Implementation #####

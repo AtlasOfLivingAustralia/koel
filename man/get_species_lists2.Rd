@@ -4,19 +4,24 @@
 \alias{get_species_lists2}
 \title{Import user-supplied species lists from a single directory}
 \usage{
-get_species_lists2(lists_df)
+get_species_lists2(lists_df, synonym_delimiter = ", ")
 }
 \arguments{
 \item{lists_df}{A data.frame preferably produced by `collate_lists()`
 containing at minimum two columns named 'path' and 'label' which denote
 respectively the path to and name of each list being searched.}
+
+\item{synonym_delimiter}{An optional character string detailing the delimiter
+used for multiple synonyms in the synonym columns of the lists. Defaults
+to ", ".}
 }
 \value{
 A data.frame of unique scientific names, the search term used to
-  match those names to the ALA taxonomy, a common name for each species, and
-  a column for each imported list. Each column associated with an imported
-  list contains logical information on whether or not a species appears on
-  the list. This data.frame may be passed to `assign_common_names()` and
+  match those names to the ALA taxonomy, a common name for each species, the
+  state jurisdictions of interest for each species, and a column for each
+  imported list. Each column associated with an imported list contains
+  logical information on whether or not a species appears on the list. This
+  data.frame may be passed to `assign_common_names()` and
   `lookup_species_count()`.
 }
 \description{

@@ -10,17 +10,20 @@
 #' @return A data.frame containing four columns, with information about the
 #'   source and location of user-supplied lists.
 #'
+#' @importFrom rlang abort
+#' @importFrom rlang inform
+#'
 #' @export
 
 collate_lists <- function(path, list_suffix = "_list") {
 
   ##### Defensive Programming #####
   if (!is.character(path) || !is.character(list_suffix)) {
-    stop("`path` and 'list_suffix` arguments must be character strings.")
+    abort("`path` and 'list_suffix` arguments must be character strings.")
   }
 
   if (substr(path, nchar(path), nchar(path)) != "/") {
-    stop("Invalid path. Must be a character string ending in `/`")
+    abort("Invalid path. Must be a character string ending in `/`")
   }
 
   ##### Function Implementation #####

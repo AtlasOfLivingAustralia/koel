@@ -8,12 +8,16 @@
 #' @param lists_df A data.frame preferably produced by `collate_lists()`
 #'    containing at minimum two columns named 'path' and 'label' which denote
 #'    respectively the path to and name of each list being searched.
+#' @param synonym_delimiter An optional character string detailing the delimiter
+#'    used for multiple synonyms in the synonym columns of the lists. Defaults
+#'    to ", ".
 #'
 #' @return A data.frame of unique scientific names, the search term used to
-#'   match those names to the ALA taxonomy, a common name for each species, and
-#'   a column for each imported list. Each column associated with an imported
-#'   list contains logical information on whether or not a species appears on
-#'   the list. This data.frame may be passed to `assign_common_names()` and
+#'   match those names to the ALA taxonomy, a common name for each species, the
+#'   state jurisdictions of interest for each species, and a column for each
+#'   imported list. Each column associated with an imported list contains
+#'   logical information on whether or not a species appears on the list. This
+#'   data.frame may be passed to `assign_common_names()` and
 #'   `lookup_species_count()`.
 #'
 #' @importFrom readr read_csv
@@ -27,21 +31,33 @@
 #' @importFrom dplyr relocate
 #' @importFrom dplyr left_join
 #' @importFrom dplyr distinct
+#' @importFrom dplyr filter
 #' @importFrom tidyr pivot_longer
 #' @importFrom tidyr pivot_wider
+#' @importFrom tidyr replace_na
+#' @importFrom tidyr separate_longer_delim
 #' @importFrom tools toTitleCase
+#' @importFrom rlang abort
+#' @importFrom rlang inform
 #' @export
 
-get_species_lists2 <- function(lists_df){
+get_species_lists2 <- function(lists_df, synonym_delimiter = ", "){
 
   ##### Defensive Programming #####
   if (!("data.frame" %in% class(lists_df))) {
-    stop("`lists_df` argument must be a data.frame or tibble")
+    abort("`lists_df` argument must be a data.frame or tibble")
   } else if (!all(c("label", "path") %in% colnames(lists_df))) {
-    stop("`lists_df` must have columns `label` and `path`")
+    abort("`lists_df` must have columns `label` and `path`")
+  }
+
+  if (class(synonym_delimiter) != "character") {
+    abort("'`synonym_delimiter` argument must be a character string.")
+  } else if (length(synonym_delimiter) > 1) {
+    abort("`synonym_delimiter` must be a single character object of length 1.")
   }
 
   ##### Function Implementation #####
+
   combined_df <- lists_df |>
     pmap(.f = \(path, label, ...)
          read_csv(path, show_col_types = FALSE) |>
@@ -49,10 +65,11 @@ get_species_lists2 <- function(lists_df){
     list_rbind() |>
     distinct() |>
     mutate(correct_name = gsub("\\s{2,}", " ", correct_name),   # successive spaces
-           correct_name = gsub(",", "", correct_name))          # colons & subsequent text
+           correct_name = gsub(",", "", correct_name)) |>       # commas
+    mutate(jurisdiction = replace_na(jurisdiction, "AUS"))
 
   combined_df_clean <- combined_df |>
-    separate_longer_delim(synonyms, ", ") |>
+    separate_longer_delim(synonyms, synonym_delimiter) |>
     mutate(correct_name2 = correct_name) |>
     pivot_longer(c(correct_name2, synonyms),
                  names_to = "type_of",
@@ -63,16 +80,16 @@ get_species_lists2 <- function(lists_df){
     distinct()
 
   unique_species <- combined_df_clean |>
-    select(correct_name, list_name) |>
+    select(correct_name, jurisdiction, list_name) |>
     distinct() |>
     mutate(dummy_values = TRUE) |>
-    pivot_wider(id_cols = correct_name,
+    pivot_wider(id_cols = c(correct_name, jurisdiction),
                 names_from = list_name,
                 values_from = dummy_values,
                 values_fill = FALSE)
 
   combined_df_joined <- combined_df_clean |>
-    left_join(unique_species, by = "correct_name") |>
+    left_join(unique_species, by = c("correct_name", "jurisdiction")) |>
     select(-list_name) |>
     mutate(common_name = toTitleCase(common_name)) |>
     distinct()
