@@ -445,9 +445,8 @@ send_email <- function(recipients, output_file, email_send, email_password, subj
   } else {
     email <- envelope() |>
       from(email_send) |>
-      to(recipients) |>
-      # to(email_send) |>
-      # bcc(recipients) |>
+      to(email_send) |>
+      bcc(recipients) |>
       subject(subject) |>
       emayili::html(read_html(output_file))
     # render("email_template.Rmd", include_css = "rmd")
