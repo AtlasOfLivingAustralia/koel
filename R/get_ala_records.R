@@ -325,8 +325,8 @@ download_records <- function(species_list, common_names, cache_path,
     occ_media <- occ_list |>
       collect_media(path = paste0(cache_path, "species_images"),
                     type = "thumbnail") |>
-      select(recordID, url, download_path) |>
-      right_join(occ_list, by = "recordID")
+      select(recordID, jurisdiction, url, download_path) |>
+      right_join(occ_list, by = c("recordID", "jurisdiction"))
 
     write.csv(occ_media,
               file = paste0(cache_path, "alerts_data.csv"),
