@@ -306,7 +306,6 @@ download_records <- function(species_list, common_names, cache_path,
       left_join(common_names,
                 by = c("correct_name")) |>
       mutate(common_name = replace_na(common_name, "[Common Name Unknown]")) |>
-      filter(!duplicated(recordID, jurisdiction)) |>
       st_as_sf(coords = c("decimalLongitude", "decimalLatitude"),
                crs = st_crs(coastal_waters_shp),
                remove = FALSE) |>
