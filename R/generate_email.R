@@ -15,6 +15,19 @@
 #' @param email_list A `data.frame` of email details for each list. Should
 #'    contain at least two columns, one named 'email' containing email addresses,
 #'    and one named 'list' containing the lists each email is associated with.
+#' @param email_send A `character string` providing the email address from which
+#'    the alerts are to be sent.
+#' @param email_password A `charatcer_string` providing the password for the
+#'    provided email address (`email_send` argument)
+#' @param email_host A `character_string` providing the email server host to be
+#'    fed to the `{emayili}` function `server()`. Defaults to
+#'    "smtp-relay.gmail.com" which supports the offocial ALA biosecurity alerts
+#'    email address.
+#' @param email_port A `numeric` value providing the email server port to be
+#'    fed to the `{emayili}` function `server()`. Defaults to `587` which
+#'    supports the offocial ALA biosecurity alerts  email address.
+#' @param email_subject An optional `character string` of the subject of the email.
+#'    If not provided, default subject is "ALA Biosecurity Alerts".
 #' @param template_path A `character string` containing the path to the R
 #'    markdown template to be rendered with the html table produced by
 #'    `build_gt_table()`
@@ -42,6 +55,7 @@
 
 build_email <- function(alerts_data, email_list,
                         email_subject, email_send, email_password,
+                        email_host = "smtp-relay.gmail.com", email_port = 587,
                         template_path, cache_path, output_path = NULL) {
 
   ##### Defensive Programming #####
@@ -129,6 +143,7 @@ build_email <- function(alerts_data, email_list,
               pull(email)
             send_email(recipients, output_file,
                        email_send, email_password,
+                       email_host = email_host, email_port = email_port,
                        email_subject = email_subject)
             } else {
               cat(paste0("No alert sent for list: ", list_name, "\n"))
