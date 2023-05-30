@@ -30,10 +30,26 @@ To begin, the user must possess at least one list of species of interest compile
 The function workflow from .csv list files through to sending of emails is summarised by the below diagram.
 
 ```{r}
-install.packages("diagrammeR")
+install.packages("DiagrammeR")
+library(DiagrammeR)
+
+nodes <- create_node_df(
+  n = 10,
+  type = "lower",
+  label = c("lists csv folder", "collate_lists()", "get_species_lists2()",
+            "assign_common_names()", "lookup_species_counts()",
+            "download_records()", "build_email()",
+            "build_gt_tables()", "build_map_thumbnail()", "send_email()")
+)
 ```
 
-The path to the folder containing all the list .csv files is the argument for the first function in the workflow, `collate_lists()`, which summarises the list names and paths for import and tidying with `get_species_lists2()`. `assign_common_names()` summarises duplicate common names and the outputs pass through to `lookup_species_count()`, which identifies species occurrences in the timeframe, and then `download_records()`, which downloads occurrence data and media.
+The path to the folder containing all the list .csv files is the argument for the first function in the workflow, `collate_lists()`, which summarises the list names and paths for import and tidying with `get_species_lists2()`. `assign_common_names()` summarises duplicate common names and the outputs pass through to `lookup_species_count()`, which identifies species occurrences in the timeframe, and then `download_records()`, which downloads occurrence data and media. `build_email()` is the final function called in the workflow, and it facilitates the creation and sending of biosecurity alert emails to and from pre-specified email addresses.
+
+An example workflow may look
+
+#### Email sending
+
+Emails are sent using the R package `{emayili}` and require the provision of an email address and password in the `build_email()` and `send_email()` functions. Currently there is only support for the use an official ALA biosecurity alerts email given the requirement to provide server host and port information.
 
 #### List Formatting
 

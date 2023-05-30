@@ -129,7 +129,7 @@ build_email <- function(alerts_data, email_list,
               pull(email)
             send_email(recipients, output_file,
                        email_send, email_password,
-                       subject = email_subject)
+                       email_subject = email_subject)
             } else {
               cat(paste0("No alert sent for list: ", list_name, "\n"))
             }
@@ -419,8 +419,19 @@ build_map_thumbnail <- function(list_row, cache_path){
 #' @param output_file A `character string` providing the path to the outputted
 #'    html file containing the {gt} table to be rendered in the email. This
 #'    path is produced in `build_email()` but can be provided separately too.
-#' @param subject An optional `character string` of the subject of the email.
-#'    If not provided, defaults to "ALA Biosecurity Alerts".
+#' @param email_send A `character string` providing the email address from which
+#'    the alerts are to be sent.
+#' @param email_password A `charatcer_string` providing the password for the
+#'    provided email address (`email_send` argument)
+#' @param email_host A `character_string` providing the email server host to be
+#'    fed to the `{emayili}` function `server()`. Defaults to
+#'    "smtp-relay.gmail.com" which supports the offocial ALA biosecurity alerts
+#'    email address.
+#' @param email_port A `numeric` value providing the email server port to be
+#'    fed to the `{emayili}` function `server()`. Defaults to `587` which
+#'    supports the offocial ALA biosecurity alerts  email address.
+#' @param email_subject An optional `character string` of the subject of the email.
+#'    If not provided, default subject is "ALA Biosecurity Alerts".
 #'
 #' @importFrom emayili envelope
 #' @importFrom emayili from
@@ -437,7 +448,9 @@ build_map_thumbnail <- function(list_row, cache_path){
 #'
 #' @export
 
-send_email <- function(recipients, output_file, email_send, email_password, subject = "ALA Biosecurity Alert") {
+send_email <- function(recipients, output_file, email_send, email_password,
+                       email_host = "smtp-relay.gmail.com", email_port = 587,
+                       email_subject = "ALA Biosecurity Alert") {
 
   ##### Function Implementation #####
   if (length(recipients) == 0) {
@@ -447,7 +460,7 @@ send_email <- function(recipients, output_file, email_send, email_password, subj
       from(email_send) |>
       to(email_send) |>
       bcc(recipients) |>
-      subject(subject) |>
+      subject(email_subject) |>
       emayili::html(read_html(output_file))
     # render("email_template.Rmd", include_css = "rmd")
 
