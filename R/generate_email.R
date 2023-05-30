@@ -465,8 +465,8 @@ send_email <- function(recipients, output_file, email_send, email_password,
     # render("email_template.Rmd", include_css = "rmd")
 
     smtp <- server(
-      host = "smtp-relay.gmail.com",
-      port = 587,
+      host = email_host,
+      port = email_port,
       username = email_send,
       password = email_password
     )
