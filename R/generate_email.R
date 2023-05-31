@@ -41,6 +41,12 @@
 #'    saved if a file path is provided instead. Must begin with "./" and end
 #'    with "/". Should contain a 'html' and a 'csv' directory, however these
 #'    will be created if they do not exist.
+#' @param test A `logical` argument which indicates whether the email should be
+#'    sent as a test email (TRUE) or as an official email (FALSE). If the email
+#'    is a test then it is addressed to recipients directly and not to the
+#'    sending email address. If the email is not a test then it is bcc'd to all
+#'    recipients and is also addressed to the sending email address. Defaults to
+#'    TRUE.
 #'
 #' @importFrom purrr map
 #' @importFrom dplyr filter
@@ -56,7 +62,8 @@
 build_email <- function(alerts_data, email_list,
                         email_subject, email_send, email_password,
                         email_host = "smtp-relay.gmail.com", email_port = 587,
-                        template_path, cache_path, output_path = NULL) {
+                        template_path, cache_path, output_path = NULL,
+                        test = TRUE) {
 
   ##### Defensive Programming #####
   # alerts_data
@@ -144,7 +151,8 @@ build_email <- function(alerts_data, email_list,
             send_email(recipients, output_file,
                        email_send, email_password,
                        email_host = email_host, email_port = email_port,
-                       email_subject = email_subject)
+                       email_subject = email_subject,
+                       test = TRUE)
             } else {
               cat(paste0("No alert sent for list: ", list_name, "\n"))
             }
@@ -447,6 +455,12 @@ build_map_thumbnail <- function(list_row, cache_path){
 #'    supports the offocial ALA biosecurity alerts  email address.
 #' @param email_subject An optional `character string` of the subject of the email.
 #'    If not provided, default subject is "ALA Biosecurity Alerts".
+#' @param test A `logical` argument which indicates whether the email should be
+#'    sent as a test email (TRUE) or as an official email (FALSE). If the email
+#'    is a test then it is addressed to recipients directly and not to the
+#'    sending email address. If the email is not a test then it is bcc'd to all
+#'    recipients and is also addressed to the sending email address. Defaults to
+#'    TRUE.
 #'
 #' @importFrom emayili envelope
 #' @importFrom emayili from
@@ -465,19 +479,29 @@ build_map_thumbnail <- function(list_row, cache_path){
 
 send_email <- function(recipients, output_file, email_send, email_password,
                        email_host = "smtp-relay.gmail.com", email_port = 587,
-                       email_subject = "ALA Biosecurity Alert") {
+                       email_subject = "ALA Biosecurity Alert",
+                       test = TRUE) {
 
   ##### Function Implementation #####
   if (length(recipients) == 0) {
     inform("No email recipients for this list. Email not sent but the html table has been saved.")
   } else {
-    email <- envelope() |>
-      from(email_send) |>
-      to(email_send) |>
-      bcc(recipients) |>
-      subject(email_subject) |>
-      emayili::html(read_html(output_file))
-    # render("email_template.Rmd", include_css = "rmd")
+    if (test == TRUE) {
+      email <- envelope() |>
+        from(email_send) |>
+        to(recipients) |>
+        subject(email_subject) |>
+        emayili::html(read_html(output_file))
+      # render("email_template.Rmd", include_css = "rmd")
+    } else {
+      email <- envelope() |>
+        from(email_send) |>
+        to(email_send) |>
+        bcc(recipients) |>
+        subject(email_subject) |>
+        emayili::html(read_html(output_file))
+      # render("email_template.Rmd", include_css = "rmd")
+    }
 
     smtp <- server(
       host = email_host,
