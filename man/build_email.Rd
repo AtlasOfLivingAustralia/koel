@@ -14,7 +14,8 @@ build_email(
   email_port = 587,
   template_path,
   cache_path,
-  output_path = NULL
+  output_path = NULL,
+  test = TRUE
 )
 }
 \arguments{
@@ -60,6 +61,13 @@ for record-keeping purposes. Default value is `NULL`, and files are only
 saved if a file path is provided instead. Must begin with "./" and end
 with "/". Should contain a 'html' and a 'csv' directory, however these
 will be created if they do not exist.}
+
+\item{test}{A `logical` argument which indicates whether the email should be
+sent as a test email (TRUE) or as an official email (FALSE). If the email
+is a test then it is addressed to recipients directly and not to the
+sending email address. If the email is not a test then it is bcc'd to all
+recipients and is also addressed to the sending email address. Defaults to
+TRUE.}
 }
 \description{
 This function compiles the downloaded ALA species occurrences into an

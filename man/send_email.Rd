@@ -11,7 +11,8 @@ send_email(
   email_password,
   email_host = "smtp-relay.gmail.com",
   email_port = 587,
-  email_subject = "ALA Biosecurity Alert"
+  email_subject = "ALA Biosecurity Alert",
+  test = TRUE
 )
 }
 \arguments{
@@ -40,6 +41,13 @@ supports the offocial ALA biosecurity alerts  email address.}
 
 \item{email_subject}{An optional `character string` of the subject of the email.
 If not provided, default subject is "ALA Biosecurity Alerts".}
+
+\item{test}{A `logical` argument which indicates whether the email should be
+sent as a test email (TRUE) or as an official email (FALSE). If the email
+is a test then it is addressed to recipients directly and not to the
+sending email address. If the email is not a test then it is bcc'd to all
+recipients and is also addressed to the sending email address. Defaults to
+TRUE.}
 }
 \value{
 No object is returned. This function exists only to send an email
