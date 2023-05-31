@@ -26,7 +26,7 @@ path is produced in `build_email()` but can be provided separately too.}
 \item{email_send}{A `character string` providing the email address from which
 the alerts are to be sent.}
 
-\item{email_password}{A `charatcer_string` providing the password for the
+\item{email_password}{A `character_string` providing the password for the
 provided email address (`email_send` argument)}
 
 \item{email_host}{A `character_string` providing the email server host to be

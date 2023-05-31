@@ -39,8 +39,16 @@ nodes <- create_node_df(
   label = c("lists csv folder", "collate_lists()", "get_species_lists2()",
             "assign_common_names()", "lookup_species_counts()",
             "download_records()", "build_email()",
-            "build_gt_tables()", "build_map_thumbnail()", "send_email()")
+            "build_gt_tables()", "build_map_thumbnail()", "send_email()"),
+  color = "cyan"
 )
+edges <- create_edge_df(
+  from = c(1, 2, 3, 3, 4, 5, 6),
+  to = c(2, 3, 4, 5, 6, 6, 7),
+  colour = "black"
+)
+
+graph <- create_graph(nodes_df = nodes, edges_df = edges)
 ```
 
 The path to the folder containing all the list .csv files is the argument for the first function in the workflow, `collate_lists()`, which summarises the list names and paths for import and tidying with `get_species_lists2()`. `assign_common_names()` summarises duplicate common names and the outputs pass through to `lookup_species_count()`, which identifies species occurrences in the timeframe, and then `download_records()`, which downloads occurrence data and media. `build_email()` is the final function called in the workflow, and it facilitates the creation and sending of biosecurity alert emails to and from pre-specified email addresses.
@@ -49,9 +57,32 @@ An example workflow may look
 
 #### Email sending
 
-Emails are sent using the R package `{emayili}` and require the provision of an email address and password in the `build_email()` and `send_email()` functions. Currently there is only support for the use an official ALA biosecurity alerts email given the requirement to provide server host and port information.
+Emails are sent using the R package `{emayili}` and require the provision of an email address and password in the `build_email()` and `send_email()` functions. Currently there is only support for emails such as the official ALA biosecurity alerts email which can be interfaced with the `emayili::server()` function by way of the `host` and `port` arguments.
+
+The email sending functions utilise an R Markdown template to create a summary document of all species occurrences. This template should be created and saved by the user in the working directory prior to use of the function. `build_email()` requests an argument specifying the path to the template and renders + saves the .Rmd file in-line. The object provided to the template is a data.frame named `table_df` and we recommended using package `{gt}` to render the dataframe.
+
+`table_df` consists of one row per row occurrence, and four columns (`species`, `observation`, `location`, `image`) of html code referencing data and media related to each occurrence. A recommended output style within the markdown using `{gt}` may look something like this:
+
+```{r}
+library(gt)
+
+table_df |>
+  gt::gt() |>
+  gt::cols_label(
+    species = "Species",
+    observation = "Observation",
+    location = "Location",
+    image = "Image"
+  ) |>
+  gt::cols_align(align = c("left"), columns = everything()) |>
+  gt::tab_options(table.width = pct(90))
+```
+
+`build_email()` requires the provision of a data.frame for the `email_list` argument. However, if the user wishes to simply save the .html occurrence tables than the `email_list` argument can be provided as an empty dataframe with the necessary columns i.e. `email_list <- data.frame(email = character(), list = character())`. By then specifying an output folder path (default value of `output_path` argument is `NULL`, the rendered markdown files will be saved to that directory without sending any emails.
 
 #### List Formatting
+
+The following points outline the five key columns required for provided species lists to proceed through the entire workflow. All lists should be stored in the same directory with no other files.
 
 -   `"correct_name"` is the accepted scientific name of a species, for example `"Urodynamis taitensis"`. The correct name should not contain authorities, commas, or double spaces.
 

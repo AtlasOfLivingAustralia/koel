@@ -10,6 +10,8 @@ build_email(
   email_subject,
   email_send,
   email_password,
+  email_host = "smtp-relay.gmail.com",
+  email_port = 587,
   template_path,
   cache_path,
   output_path = NULL
@@ -24,6 +26,24 @@ logical column for each list in the dataset.}
 \item{email_list}{A `data.frame` of email details for each list. Should
 contain at least two columns, one named 'email' containing email addresses,
 and one named 'list' containing the lists each email is associated with.}
+
+\item{email_subject}{An optional `character string` of the subject of the email.
+If not provided, default subject is "ALA Biosecurity Alerts".}
+
+\item{email_send}{A `character string` providing the email address from which
+the alerts are to be sent.}
+
+\item{email_password}{A `character_string` providing the password for the
+provided email address (`email_send` argument)}
+
+\item{email_host}{A `character_string` providing the email server host to be
+fed to the `{emayili}` function `server()`. Defaults to
+"smtp-relay.gmail.com" which supports the offocial ALA biosecurity alerts
+email address.}
+
+\item{email_port}{A `numeric` value providing the email server port to be
+fed to the `{emayili}` function `server()`. Defaults to `587` which
+supports the offocial ALA biosecurity alerts  email address.}
 
 \item{template_path}{A `character string` containing the path to the R
 markdown template to be rendered with the html table produced by

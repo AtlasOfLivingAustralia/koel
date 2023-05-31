@@ -17,7 +17,7 @@
 #'    and one named 'list' containing the lists each email is associated with.
 #' @param email_send A `character string` providing the email address from which
 #'    the alerts are to be sent.
-#' @param email_password A `charatcer_string` providing the password for the
+#' @param email_password A `character_string` providing the password for the
 #'    provided email address (`email_send` argument)
 #' @param email_host A `character_string` providing the email server host to be
 #'    fed to the `{emayili}` function `server()`. Defaults to
@@ -436,7 +436,7 @@ build_map_thumbnail <- function(list_row, cache_path){
 #'    path is produced in `build_email()` but can be provided separately too.
 #' @param email_send A `character string` providing the email address from which
 #'    the alerts are to be sent.
-#' @param email_password A `charatcer_string` providing the password for the
+#' @param email_password A `character_string` providing the password for the
 #'    provided email address (`email_send` argument)
 #' @param email_host A `character_string` providing the email server host to be
 #'    fed to the `{emayili}` function `server()`. Defaults to
