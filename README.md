@@ -30,6 +30,7 @@ To begin, the user must possess at least one list of species of interest compile
 The function workflow from .csv list files through to sending of emails is summarised by the below diagram.
 
 ```{r}
+#| echo = FALSE
 install.packages("DiagrammeR")
 library(DiagrammeR)
 
@@ -49,6 +50,7 @@ edges <- create_edge_df(
 )
 
 graph <- create_graph(nodes_df = nodes, edges_df = edges)
+graph |> render_graph()
 ```
 
 The path to the folder containing all the list .csv files is the argument for the first function in the workflow, `collate_lists()`, which summarises the list names and paths for import and tidying with `get_species_lists2()`. `assign_common_names()` summarises duplicate common names and the outputs pass through to `lookup_species_count()`, which identifies species occurrences in the timeframe, and then `download_records()`, which downloads occurrence data and media. `build_email()` is the final function called in the workflow, and it facilitates the creation and sending of biosecurity alert emails to and from pre-specified email addresses.
