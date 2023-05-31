@@ -128,7 +128,7 @@ build_email <- function(alerts_data, email_list,
   if (nrow(alerts_data) > 0) {
 
     # identify list names from alerts_dataz
-    list_names <- colnames(alerts_data)[(which(colnames(alerts_data) == "jurisdiction") + 1):
+    list_names <- colnames(alerts_data)[(which(colnames(alerts_data) == "provided_name") + 1):
                                           (which(colnames(alerts_data) == "common_name") - 1)]
 
     map(.x = list_names,
@@ -486,7 +486,7 @@ send_email <- function(recipients, output_file, email_send, email_password,
   if (length(recipients) == 0) {
     inform("No email recipients for this list. Email not sent but the html table has been saved.")
   } else {
-    if (test == TRUE) {
+    if (test) {
       email <- envelope() |>
         from(email_send) |>
         to(recipients) |>
