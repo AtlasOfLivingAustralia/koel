@@ -41,7 +41,7 @@
 #' @importFrom rlang inform
 #' @export
 
-get_species_lists2 <- function(lists_df, synonym_delimiter = ", "){
+get_species_lists2 <- function(lists_df, synonym_delimiter = ","){
 
   ##### Defensive Programming #####
   if (!("data.frame" %in% class(lists_df))) {
@@ -64,21 +64,28 @@ get_species_lists2 <- function(lists_df, synonym_delimiter = ", "){
            mutate(list_name = label)) |>
     list_rbind() |>
     distinct() |>
-    mutate(correct_name = gsub("\\s{2,}", " ", correct_name),   # successive spaces
-           correct_name = gsub(",", "", correct_name)) |>       # commas
+    # to clean columns for searching
+    mutate(
+      correct_name = clean_names(correct_name),
+      synonyms = clean_names(synonyms)) |>
+    # empty jurisdiction rows default to "AUS"
     mutate(jurisdiction = replace_na(jurisdiction, "AUS"))
 
   combined_df_clean <- combined_df |>
+    # split multiple synonyms
     separate_longer_delim(synonyms, synonym_delimiter) |>
     mutate(correct_name2 = correct_name) |>
+    # create column for search-terms
     pivot_longer(c(correct_name2, synonyms),
                  names_to = "type_of",
                  values_to = "search_term") |>
     select(-type_of) |>
     relocate(search_term, .after = provided_name) |>
     filter(!is.na(search_term)) |>
+    mutate(search_term = clean_names(search_term)) |>
     distinct()
 
+  # group unique species+jurisdictions together from multiple lists
   unique_species <- combined_df_clean |>
     select(correct_name, jurisdiction, list_name) |>
     distinct() |>
@@ -95,4 +102,33 @@ get_species_lists2 <- function(lists_df, synonym_delimiter = ", "){
     distinct()
 
   return(combined_df_joined)
+}
+
+
+#' Clean up name columns
+#'
+#' Internal function to perform numerous regex substitution that clean up
+#'    name columns to be suitable for searching with galah
+#'
+#' @param name `character string` object or column/vector to be cleaned
+#'
+#' @return A cleaned `character string` of the same type and length as `name`.
+#'
+#' @importFrom magrittr %>%
+
+clean_names <- function(name) {
+  cleaned_name <- name %>%
+    gsub("\u00A0", " ", .) %>%      # remove non-ASCII whitespaces
+    gsub("\n", " ", .) %>%          # replace line breaks with spaces
+    gsub(";", ",", .) %>%           # replace semi-colons with commas
+    gsub(" ,", ",", .) %>%          # remove spaces before commas
+    gsub("\\s{2,}", " ", .) %>%     # remove multiple spaces
+    gsub(",$", "", .) %>%           # remove trailing commas
+    gsub(" +$", "", .) %>%          # remove trailing spaces
+    gsub(",(\\w)", ", \\1", .) %>%  # add spaces between commas and text
+    gsub(" sp.", "", .) %>%
+    gsub(" spp.", "", .) %>%        # remove spp. and sp. abbreviations
+    str_squish(.)
+
+  return(cleaned_name)
 }
