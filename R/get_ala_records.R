@@ -259,14 +259,24 @@ get_occurrences <- function(species_list, common_names, cache_path,
     filter(jurisdiction == "AUS" | flagged_state) |>
     select(-flagged_state) |>
     as_tibble()
-    # download records
 
-  occ_media <- species_records |>
-    collect_media(path = paste0(cache_path, "species_images"),
-                  type = "thumbnail") |>
-    select(recordID, jurisdiction, url, download_path) |>
-    right_join(species_records, by = c("recordID", "jurisdiction")) |>
-    relocate(jurisdiction, .before = common_name)
+  # download records and save temp files in cache_path
+  if (nrow(species_records) > 0) {
+    occ_media <- species_records |>
+      collect_media(path = paste0(cache_path, "species_images"),
+                    type = "thumbnail") |>
+      select(recordID, jurisdiction, url, download_path) |>
+      right_join(species_records, by = c("recordID", "jurisdiction")) |>
+      relocate(jurisdiction, .before = common_name)
+
+    write.csv(occ_media,
+              file = paste0(cache_path, "alerts_data.csv"),
+              row.names = F)
+  } else {
+    write.csv(tibble(), file = paste0(cache_path, "alerts_data.csv"))
+  }
+
+  return(occ_media)
 
 }
 
