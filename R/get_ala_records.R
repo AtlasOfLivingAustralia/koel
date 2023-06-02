@@ -10,6 +10,11 @@
 #'    is stored in the provided directory, as are the relevant media files
 #'    (one per occurrence).
 #'
+#' The searches are performed for each block of 100 search terms, and
+#'    relevant text output (in between `"Checking queue"` outputs) indicate the
+#'    number of records downloaded for each block of 100 terms, followed by the
+#'    number of media files downloaded.
+#'
 #' @param species_list A data.frame or tibble containing information on species
 #'   of biosecurity interest. Must contain character columns 'correct_name',
 #'   'search_term', and 'common_name' for each species, and logical columns for
@@ -218,7 +223,9 @@ get_occurrences <- function(species_list, common_names, cache_path,
       # ala_search <- ala_search |>
       #   filter(!duplicated(ala_search |> dplyr::select(-match)))
       # informative output of no. of occurrences
-      cat(paste0("Names ", num, "-", num + 99, ": ", nrow(ala_search), "\n"))
+      cat(paste0("Names ", num, "-",
+                 min(num + 99, length(unique(species_df$search_term))), ": ",
+                 nrow(ala_search), " records", "\n"))
       return(ala_search)
     }, .progress = TRUE) |>
     # turn all columns into character columns in case dfs are empty
