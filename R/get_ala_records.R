@@ -227,8 +227,8 @@ get_occurrences <- function(species_list, common_names, cache_path,
       # ala_search <- ala_search |>
       #   filter(!duplicated(ala_search |> dplyr::select(-match)))
       # informative output of no. of occurrences
-      cat(paste0("Names ", num, "-",
-                 min(num + 99, length(unique(species_df$search_term))), ": ",
+      cat(paste0("Names ", divisions[num], "-",
+                 min(divisions[num] + 99, length(unique(species_df$search_term))), ": ",
                  nrow(ala_search), " records", "\n"))
       return(ala_search)
     }, .progress = TRUE) |>
