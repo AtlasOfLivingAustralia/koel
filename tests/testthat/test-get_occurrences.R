@@ -258,5 +258,8 @@ test_that("get_occurrences() works if all occurrences lack media", {
   go_output <- get_occurrences(species_list, common_names, cache_path, start_date, end_date)
 
   expect_equal(nrow(go_output), 41)
+
+  # provide a set of sighitngs with and without media
+
 })
 

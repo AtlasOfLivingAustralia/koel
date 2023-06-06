@@ -272,6 +272,7 @@ get_occurrences <- function(species_list, common_names, cache_path,
 
     if (nrow(occ_list) > 0) {
       occ_media <- occ_list |>
+        # only collect_media if we have images present
         (\(.) if (any(!is.na(.$multimedia))) {
             collect_media(.,
                           path = paste0(cache_path, "species_images"),
