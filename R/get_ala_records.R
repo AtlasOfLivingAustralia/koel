@@ -106,6 +106,10 @@ get_occurrences <- function(species_list, common_names, cache_path,
   } else if (!dir.exists(cache_path)) {
     abort("The directory specified by `cache_path` does not exist")
   }
+  if (!("species_images" %in% list.files(cache_path))) {
+    inform("No 'species_images' directory exists in the provided cache path. One has been created.")
+    dir.create(paste0(cache_path, "species_images"))
+  }
 
   if (!(is.numeric(start_date) | is.character(start_date))) {
     abort("`start_date` must be either a single numeric value or a character date in format 'ddmmyyyy'")
@@ -163,7 +167,7 @@ get_occurrences <- function(species_list, common_names, cache_path,
   tmp_select <- galah_select(raw_scientificName, scientificName, vernacularName,
                              genus, species, subspecies,
                              decimalLatitude, decimalLongitude,
-                             cl22, cl1048, cl966,
+                             cl22, cl1048, cl966, cl21,
                              basisOfRecord,
                              group = c("basic", "media"))
   # set up divisions of 100 to search with
@@ -230,56 +234,88 @@ get_occurrences <- function(species_list, common_names, cache_path,
     }, .progress = TRUE) |>
     # turn all columns into character columns in case dfs are empty
     map(~mutate(., across(everything(), as.character))) |>
-    list_rbind() |>
-    # introduce media data (if exists) for each occurrence (time sink)
-    search_media() |>
-    # remove duplicates of the same record for the same search term
-    distinct(recordID, search_term, .keep_all = TRUE) |>
-    # filter by IBRA and IMCRA regions
-    filter(!is.na(cl966) | !is.na(cl1048)) |>
-    # add on list-specific data and common names
-    left_join(species_df,
-              by = "search_term",
-              relationship = "many-to-many") |>
-    left_join(common_names,
-              by = c("correct_name")) |>
-    mutate(common_name = replace_na(common_name, "[Common Name Unknown]")) |>
-    # state-based filtering
-    st_as_sf(coords = c("decimalLongitude", "decimalLatitude"),
-             crs = st_crs(coastal_waters_shp),
-             remove = FALSE) |>
-    mutate(intersection = st_intersects(geometry, coastal_waters_shp) |>
-             as.integer(),
-           cw_state = if_else(is.na(intersection),
-                              NA,
-                              coastal_waters_shp$state_abbr[intersection])) |>
-    select(-intersection) |>
-    st_drop_geometry() |>
-    mutate(flagged_state = str_detect(jurisdiction, cw_state)) |>
-    filter(jurisdiction == "AUS" | flagged_state) |>
-    select(-flagged_state) |>
-    as_tibble()
+    list_rbind()
 
   # download records and save temp files in cache_path
   if (nrow(species_records) > 0) {
-    occ_media <- species_records |>
-      collect_media(path = paste0(cache_path, "species_images"),
-                    type = "thumbnail") |>
-      select(recordID, jurisdiction, url, download_path) |>
-      right_join(species_records, by = c("recordID", "jurisdiction")) |>
-      relocate(jurisdiction, .before = common_name)
+    occ_list <- species_records |>
+      # introduce media data (if exists) for each occurrence (time sink)
+      #search_media() |>
+      (\(.) if (any(!is.na(.$multimedia))) search_media(.) else .)() |>
+      # remove duplicates of the same record for the same search term
+      distinct(recordID, search_term, .keep_all = TRUE) |>
+      # add on list-specific data and common names
+      left_join(species_df,
+                by = "search_term",
+                relationship = "many-to-many") |>
+      left_join(common_names,
+                by = "correct_name") |>
+      mutate(common_name = replace_na(common_name, "[Common Name Unknown]")) |>
+      # state-based filtering
+      st_as_sf(coords = c("decimalLongitude", "decimalLatitude"),
+               crs = st_crs(coastal_waters_shp),
+               remove = FALSE) |>
+      mutate(intersection = st_intersects(geometry, coastal_waters_shp) |>
+               as.integer(),
+             cw_state = if_else(is.na(intersection),
+                                NA,
+                                coastal_waters_shp$state_abbr[intersection])) |>
+      select(-intersection) |>
+      st_drop_geometry() |>
+      mutate(flagged_state = str_detect(jurisdiction, cw_state)) |>
+      filter(jurisdiction == "AUS" | flagged_state) |>
+      select(-flagged_state) |>
+      # filter by IBRA and IMCRA regions - may shift this line around a bit
+      filter(!is.na(cl966) | !is.na(cl1048) | !is.na(cl21)) |>
+      as_tibble()
 
-    write.csv(occ_media,
-              file = paste0(cache_path, "alerts_data.csv"),
-              row.names = F)
+
+    if (nrow(occ_list) > 0) {
+      occ_media <- occ_list |>
+        (\(.) if (any(!is.na(.$multimedia))) {
+            collect_media(.,
+                          path = paste0(cache_path, "species_images"),
+                          type = "thumbnail")
+          } else {
+            mutate(., url = NA, download_path = NA)
+          })() |>
+        # collect_media(path = paste0(cache_path, "species_images"),
+        #               type = "thumbnail") |>
+        select(recordID, jurisdiction, url, download_path) |>
+        right_join(occ_list, by = c("recordID", "jurisdiction")) |>
+        relocate(jurisdiction, .before = common_name)
+
+      write.csv(occ_media,
+                file = paste0(cache_path, "alerts_data.csv"),
+                row.names = FALSE)
+
+      return(occ_media)
+    } else {
+      write.csv(tibble(), file = paste0(cache_path, "alerts_data.csv"))
+
+      return(tibble())
+    }
   } else {
     write.csv(tibble(), file = paste0(cache_path, "alerts_data.csv"))
+
+    return(tibble())
   }
-
-  return(occ_media)
-
 }
 
+#' Helper function to perform galah searches for given search fields
+#'
+#'
+ galah_field_search <- function(field) {
+  search_output <- galah_call() |>
+     galah_filter(eventDate >= start_date, eventDate <= end_date,
+                  scientificName == search_terms) |>
+     atlas_occurrences(select = tmp_select) |>
+     mutate(match = "scientificName",
+            search_term = scientificName,
+            across(everything(), as.character))
+
+  return(search_output)
+ }
 
 
 #' Look up and append counts of species records
@@ -574,7 +610,7 @@ download_records <- function(species_list, common_names, cache_path,
           # when galah is updated at OR condition for IBRA, IMCRA
           galah_select(raw_scientificName,
                        decimalLatitude, decimalLongitude,
-                       cl22, cl1048, cl966,
+                       cl22, cl1048, cl966, cl21,
                        basisOfRecord,
                        group = c("basic", "media")) |>
           atlas_occurrences()
@@ -583,7 +619,7 @@ download_records <- function(species_list, common_names, cache_path,
       search_media() |>
       distinct() |>
       filter(!duplicated(recordID),
-             !is.na(cl966) | !is.na(cl1048)) |>
+             !is.na(cl966) | !is.na(cl1048) | !is.na(cl21)) |>
       left_join(species_list,
                 by = c("scientificName" = "search_term"),
                 relationship = "many-to-many") |>

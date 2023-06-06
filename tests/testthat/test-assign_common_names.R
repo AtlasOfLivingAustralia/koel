@@ -8,7 +8,7 @@ test_that("dataframe argument is supplied correctly", {
   expect_error(get_species_list2(data.frame(correct_name = NULL, search_term = NULL)))
 })
 
-test_that("assign_common_names returns the correct data.frame output", {
+test_that("assign_common_names() returns the correct data.frame output", {
   # set up lists_df object
   dir_path <- withr::local_tempdir()
   {write.csv(data.frame(correct_name = c("Eudynamys orientalis", "Eolophus roseicapilla"),
