@@ -115,6 +115,7 @@ get_species_lists2 <- function(lists_df, synonym_delimiter = ","){
 #' @return A cleaned `character string` of the same type and length as `name`.
 #'
 #' @importFrom magrittr %>%
+#' @importFrom stringr str_squish
 
 clean_names <- function(name) {
   cleaned_name <- name %>%
