@@ -152,7 +152,7 @@ build_email <- function(alerts_data, email_list,
                        email_send, email_password,
                        email_host = email_host, email_port = email_port,
                        email_subject = email_subject,
-                       test = TRUE)
+                       test = test)
             } else {
               cat(paste0("No alert sent for list: ", list_name, "\n"))
             }
@@ -490,7 +490,7 @@ send_email <- function(recipients, output_file, email_send, email_password,
     if (test) {
       email <- envelope() |>
         from(email_send) |>
-        to(recipients) |>
+        bcc(recipients) |>
         subject(email_subject) |>
         emayili::html(read_html(output_file))
       # render("email_template.Rmd", include_css = "rmd")
