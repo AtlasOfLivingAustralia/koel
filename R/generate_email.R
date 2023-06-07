@@ -259,7 +259,7 @@ build_gt_table <- function(df, cache_path){
 
   # build table info
   table_df <- df |>
-    arrange(cl22, creator) |>
+    arrange(scientificName, eventDate, cl22) |>
     mutate(
       path = here(),
       image_url = sub("thumbnail$", "original", url)
