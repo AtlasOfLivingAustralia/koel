@@ -9,7 +9,10 @@ send_email(
   output_file,
   email_send,
   email_password,
-  subject = "ALA Biosecurity Alert"
+  email_host = "smtp-relay.gmail.com",
+  email_port = 587,
+  email_subject = "ALA Biosecurity Alert",
+  test = TRUE
 )
 }
 \arguments{
@@ -21,8 +24,30 @@ be provided separately if needed.}
 html file containing the {gt} table to be rendered in the email. This
 path is produced in `build_email()` but can be provided separately too.}
 
-\item{subject}{An optional `character string` of the subject of the email.
-If not provided, defaults to "ALA Biosecurity Alerts".}
+\item{email_send}{A `character string` providing the email address from which
+the alerts are to be sent.}
+
+\item{email_password}{A `character_string` providing the password for the
+provided email address (`email_send` argument)}
+
+\item{email_host}{A `character_string` providing the email server host to be
+fed to the `{emayili}` function `server()`. Defaults to
+"smtp-relay.gmail.com" which supports the offocial ALA biosecurity alerts
+email address.}
+
+\item{email_port}{A `numeric` value providing the email server port to be
+fed to the `{emayili}` function `server()`. Defaults to `587` which
+supports the offocial ALA biosecurity alerts  email address.}
+
+\item{email_subject}{An optional `character string` of the subject of the email.
+If not provided, default subject is "ALA Biosecurity Alerts".}
+
+\item{test}{A `logical` argument which indicates whether the email should be
+sent as a test email (TRUE) or as an official email (FALSE). If the email
+is a test then it is addressed to recipients directly and not to the
+sending email address. If the email is not a test then it is bcc'd to all
+recipients and is also addressed to the sending email address. Defaults to
+TRUE.}
 }
 \value{
 No object is returned. This function exists only to send an email

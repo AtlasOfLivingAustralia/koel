@@ -4,7 +4,13 @@
 \alias{download_records}
 \title{Download ALA records for species identified with `lookup_species_count()`}
 \usage{
-download_records(species_list, common_names, filter_df, path)
+download_records(
+  species_list,
+  common_names,
+  cache_path,
+  start_date,
+  end_date = 0
+)
 }
 \arguments{
 \item{species_list}{A data.frame or tibble containing information on species
@@ -18,14 +24,22 @@ May be produced by `get_species_list2()`.}
 name for each "correct" species name. May be produced by
 `common_names_assigned()`.}
 
-\item{filter_df}{A tibble specifying {galah} query parameters, as produced
-by `galah::galah_filter()`. May be produced by `build_galah_query()`.}
-
-\item{path}{A character string specifying the (temporary) cache directory to
+\item{cache_path}{A character string specifying the (temporary) cache directory to
 save downloaded media files for each occurrence, and the downloaded occurrence
 data. The string must end in "/". The path must describe an existing directory,
 and if no 'species_images' folder exists within this directory then one will
 be created, in which the media output will be saved.}
+
+\item{start_date}{Date to begin search of ALA occurrences. May be in one of
+two forms: either a `dbl` indicating how many days prior from the current
+date to begin the search, or a `character` vector indicating the date to
+search from in "dd-mm-yyyy" format.}
+
+\item{end_date}{Date to end search of ALA occurrences. May be in one of
+two forms: either a `dbl` indicating how many days prior from the current
+date to end the search, or a `character` vector indicating the date to
+search to in "dd-mm-yyyy" format. Default value is 0 i.e. search up to
+the current date.}
 }
 \value{
 A tibble containing the downloaded data for each occurrence record.

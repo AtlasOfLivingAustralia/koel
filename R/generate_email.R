@@ -15,6 +15,19 @@
 #' @param email_list A `data.frame` of email details for each list. Should
 #'    contain at least two columns, one named 'email' containing email addresses,
 #'    and one named 'list' containing the lists each email is associated with.
+#' @param email_send A `character string` providing the email address from which
+#'    the alerts are to be sent.
+#' @param email_password A `character_string` providing the password for the
+#'    provided email address (`email_send` argument)
+#' @param email_host A `character_string` providing the email server host to be
+#'    fed to the `{emayili}` function `server()`. Defaults to
+#'    "smtp-relay.gmail.com" which supports the offocial ALA biosecurity alerts
+#'    email address.
+#' @param email_port A `numeric` value providing the email server port to be
+#'    fed to the `{emayili}` function `server()`. Defaults to `587` which
+#'    supports the offocial ALA biosecurity alerts  email address.
+#' @param email_subject An optional `character string` of the subject of the email.
+#'    If not provided, default subject is "ALA Biosecurity Alerts".
 #' @param template_path A `character string` containing the path to the R
 #'    markdown template to be rendered with the html table produced by
 #'    `build_gt_table()`
@@ -28,6 +41,12 @@
 #'    saved if a file path is provided instead. Must begin with "./" and end
 #'    with "/". Should contain a 'html' and a 'csv' directory, however these
 #'    will be created if they do not exist.
+#' @param test A `logical` argument which indicates whether the email should be
+#'    sent as a test email (TRUE) or as an official email (FALSE). If the email
+#'    is a test then it is addressed to recipients directly and not to the
+#'    sending email address. If the email is not a test then it is bcc'd to all
+#'    recipients and is also addressed to the sending email address. Defaults to
+#'    TRUE.
 #'
 #' @importFrom purrr map
 #' @importFrom dplyr filter
@@ -35,12 +54,16 @@
 #' @importFrom dplyr pull
 #' @importFrom rmarkdown render
 #' @importFrom readr write_csv
+#' @importFrom rlang abort
+#' @importFrom rlang inform
 #'
 #' @export
 
 build_email <- function(alerts_data, email_list,
                         email_subject, email_send, email_password,
-                        template_path, cache_path, output_path = NULL) {
+                        email_host = "smtp-relay.gmail.com", email_port = 587,
+                        template_path, cache_path, output_path = NULL,
+                        test = TRUE) {
 
   ##### Defensive Programming #####
   # alerts_data
@@ -104,9 +127,9 @@ build_email <- function(alerts_data, email_list,
 
   if (nrow(alerts_data) > 0) {
 
-    # identify list names from alerts_dataz
-    list_names <- colnames(alerts_data)[(which(colnames(alerts_data) == "correct_name") + 1):
-                                          (which(colnames(alerts_data) == "common_name") - 1)]
+    # identify list names from alerts_data
+    list_names <- colnames(alerts_data)[(which(colnames(alerts_data) == "provided_name") + 1):
+                                          (which(colnames(alerts_data) == "jurisdiction") - 1)]
 
     map(.x = list_names,
        .f = function(list_name) {
@@ -127,7 +150,9 @@ build_email <- function(alerts_data, email_list,
               pull(email)
             send_email(recipients, output_file,
                        email_send, email_password,
-                       subject = email_subject)
+                       email_host = email_host, email_port = email_port,
+                       email_subject = email_subject,
+                       test = TRUE)
             } else {
               cat(paste0("No alert sent for list: ", list_name, "\n"))
             }
@@ -175,6 +200,8 @@ build_email <- function(alerts_data, email_list,
 #' @importFrom purrr map
 #' @importFrom purrr pmap
 #' @importFrom here here
+#' @importFrom rlang abort
+#' @importFrom rlang inform
 #'
 #' @return A `data.frame` that is passed on to some RMarkdown (.Rmd) to be
 #'    rendered as a gt table. Contains four columns: 'species', 'observation',
@@ -238,17 +265,18 @@ build_gt_table <- function(df, cache_path){
     ) |>
     mutate(
       # add common name
-      species = map(glue(
-        "<a href='https://biocache.ala.org.au/occurrences/{recordID}' target='_blank'><b><i>{correct_name}</i></b></a><br>
-          Supplied as: <i>{verbatimScientificName}</i><br>
-          Common name: {common_name}
+      species = map(
+        glue(
+          "<a href='https://biocache.ala.org.au/occurrences/{recordID}' target='_blank'><b><i>{correct_name}</i></b></a><br>
+          Supplied as:<br><i>{provided_name}</i><br>
+          Common name:<br>{common_name}
         "),
         gt::html
       ),
       observation = map(glue("
          <b>{creator}</b><br>
          {date_html}<br>
-         {cl22}<br>(
+         {cw_state}<br>(
          <a href='https://www.google.com/maps/search/?api=1&query={decimalLatitude}%2C{decimalLongitude}' target='_blank'>{decimalLongitude}, {decimalLatitude}
          </a>)<br>
          <i>{dataResourceName}</i>
@@ -258,16 +286,22 @@ build_gt_table <- function(df, cache_path){
       location = map(
         glue("
           <a href='https://www.google.com/maps/search/?api=1&query={decimalLatitude}%2C{decimalLongitude}' target='_blank'>
-            <img src='{cache_path}maps/{recordID}.png' style='height:150px;width:150px; object-fit:cover;'>
+            <img src='{cache_path}maps/{recordID}.png' width='200' height='150'
+                 style='width:200px;max-width:200px;height:150px;max-height:150px;'/>
           </a>"),
         gt::html
       ),
       image = map(
-        glue("
-          <a href={image_url} target='_blank'>
-            <img src='{download_path}' style='height:150px; width:150px; object-fit:cover;'>
-          </a>"
-        ),
+        ifelse(is.na(url),
+               glue("
+                    <b>NO MEDIA AVAILABLE</b>"
+               ),
+               glue("
+                 <a href={image_url} target='_blank'>
+                    <img src='{download_path}' height = '200'
+                         style='max-width:267px;height:100%;max-height:200px;'>
+                 </a>"
+               )),
         gt::html
       )
     ) |>
@@ -307,55 +341,13 @@ build_gt_table <- function(df, cache_path){
 #' @importFrom leaflet addCircleMarkers
 #' @importFrom mapview mapshot
 #' @importFrom sf st_as_sf
+#' @importFrom rlang abort
+#' @importFrom rlang inform
 #'
 #' @return No returned file. Instead, a .png version of the produced thumbnail i
 #'    is saved in the 'maps' directory of 'cache_path'.
 #'
 #' @export
-
-build_map_thumbnail <- function(list_row, cache_path){
-
-  ##### Defensive Programming #####
-  # list row
-  if (!("data.frame" %in% class(list_row))) {
-    abort("`list_row` argument must be a data.frame or tibble")
-  } else if (nrow(list_row) != 1) {
-    abort("`list_row` requires exactly one row to compile a map")
-  } else if (
-    !(all(c("recordID", "decimalLatitude", "decimalLongitude") %in%
-          colnames(list_row)))) {
-    cols_needed <- c("recordID", "decimalLatitude", "decimalLongitude")
-    abort(paste0("`list_row` requires a column named ",
-                 cols_needed(which(!(cols_needed %in% col_names(list_row))))[1]))
-  }
-  # cache_path
-  if (!is.character(cache_path) | substr(cache_path, nchar(cache_path), nchar(cache_path)) != "/") {
-    abort("`cache_path` argument must be a string ending in '/'")
-  } else if (!dir.exists(cache_path)) {
-    abort("The directory specified by `cache_path` does not exist")
-  } else if (!("maps" %in% list.files(cache_path))) {
-    inform("No 'maps' directory exists in the provided `cache_path`. One has been created.")
-    dir.create(paste0(cache_path, "maps"))
-  }
-  ##### Function Implementation #####
-  # need to add defensive programming + check for existence of the maps directory
-  box_size <- 0.15
-  x <- list_row |> st_as_sf(
-    coords = c("decimalLongitude", "decimalLatitude"),
-    crs = "WGS84")
-  x_box <- st_bbox(c(
-    xmin = list_row$decimalLongitude - box_size,
-    xmax = list_row$decimalLongitude + box_size,
-    ymin = list_row$decimalLatitude - box_size,
-    ymax = list_row$decimalLatitude + box_size),
-    crs = "WGS84"
-  )
-  y <- get_tiles(x_box, zoom = 10, crop = TRUE)
-  png(filename = paste0(cache_path, "maps/", list_row$recordID, ".png"))
-  plot_tiles(y)
-  plot(x, col = "black", cex = 5, pch = 16, add = TRUE) # errors here
-  dev.off()
-}
 
 # build_map_thumbnail <- function(list_row, cache_path){
 #
@@ -383,16 +375,58 @@ build_map_thumbnail <- function(list_row, cache_path){
 #   }
 #   ##### Function Implementation #####
 #   # need to add defensive programming + check for existence of the maps directory
-#   location_data <- list_row |> st_as_sf(
+#   box_size <- 0.15
+#   x <- list_row |> st_as_sf(
 #     coords = c("decimalLongitude", "decimalLatitude"),
 #     crs = "WGS84")
-#   occurrence_map <- leaflet(options = leafletOptions(crs = leafletCRS(code = "WGS84"))) |>
-#     addTiles() |>
-#     setView(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude, zoom = 12) |>
-#     addCircleMarkers(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude,
-#                      opacity = 0.75, color = "darkblue", radius = 15)
-#   mapshot(occurrence_map, url = paste0(cache_path, "maps/", list_row$recordID, ".html"))
+#   x_box <- st_bbox(c(
+#     xmin = list_row$decimalLongitude - box_size,
+#     xmax = list_row$decimalLongitude + box_size,
+#     ymin = list_row$decimalLatitude - box_size,
+#     ymax = list_row$decimalLatitude + box_size),
+#     crs = "WGS84"
+#   )
+#   y <- get_tiles(x_box, zoom = 10, crop = TRUE)
+#   png(filename = paste0(cache_path, "maps/", list_row$recordID, ".png"))
+#   plot_tiles(y)
+#   plot(x, col = "black", cex = 5, pch = 16, add = TRUE) # errors here
+#   dev.off()
 # }
+
+build_map_thumbnail <- function(list_row, cache_path){
+
+  ##### Defensive Programming #####
+  # list row
+  if (!("data.frame" %in% class(list_row))) {
+    abort("`list_row` argument must be a data.frame or tibble")
+  } else if (nrow(list_row) != 1) {
+    abort("`list_row` requires exactly one row to compile a map")
+  } else if (
+    !(all(c("recordID", "decimalLatitude", "decimalLongitude") %in%
+          colnames(list_row)))) {
+    cols_needed <- c("recordID", "decimalLatitude", "decimalLongitude")
+    abort(paste0("`list_row` requires a column named ",
+                 cols_needed(which(!(cols_needed %in% col_names(list_row))))[1]))
+  }
+  # cache_path
+  if (!is.character(cache_path) | substr(cache_path, nchar(cache_path), nchar(cache_path)) != "/") {
+    abort("`cache_path` argument must be a string ending in '/'")
+  } else if (!dir.exists(cache_path)) {
+    abort("The directory specified by `cache_path` does not exist")
+  } else if (!("maps" %in% list.files(cache_path))) {
+    inform("No 'maps' directory exists in the provided `cache_path`. One has been created.")
+    dir.create(paste0(cache_path, "maps"))
+  }
+  ##### Function Implementation #####
+  # need to add defensive programming + check for existence of the maps directory
+  occurrence_map <- leaflet(options = leafletOptions(crs = leafletCRS(code = "WGS84"))) |>
+    addTiles() |>
+    #addProviderTiles(providers$Esri.WorldTopoMap) |>
+    setView(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude, zoom = 14) |>
+    addCircleMarkers(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude,
+                     opacity = 0.75, color = "darkblue", radius = 25)
+  mapshot(occurrence_map, file = paste0(cache_path, "maps/", list_row$recordID, ".png"))
+}
 
 #' Function to send html tables of occurrences in emails to stakeholders
 #'
@@ -408,8 +442,25 @@ build_map_thumbnail <- function(list_row, cache_path){
 #' @param output_file A `character string` providing the path to the outputted
 #'    html file containing the {gt} table to be rendered in the email. This
 #'    path is produced in `build_email()` but can be provided separately too.
-#' @param subject An optional `character string` of the subject of the email.
-#'    If not provided, defaults to "ALA Biosecurity Alerts".
+#' @param email_send A `character string` providing the email address from which
+#'    the alerts are to be sent.
+#' @param email_password A `character_string` providing the password for the
+#'    provided email address (`email_send` argument)
+#' @param email_host A `character_string` providing the email server host to be
+#'    fed to the `{emayili}` function `server()`. Defaults to
+#'    "smtp-relay.gmail.com" which supports the offocial ALA biosecurity alerts
+#'    email address.
+#' @param email_port A `numeric` value providing the email server port to be
+#'    fed to the `{emayili}` function `server()`. Defaults to `587` which
+#'    supports the offocial ALA biosecurity alerts  email address.
+#' @param email_subject An optional `character string` of the subject of the email.
+#'    If not provided, default subject is "ALA Biosecurity Alerts".
+#' @param test A `logical` argument which indicates whether the email should be
+#'    sent as a test email (TRUE) or as an official email (FALSE). If the email
+#'    is a test then it is addressed to recipients directly and not to the
+#'    sending email address. If the email is not a test then it is bcc'd to all
+#'    recipients and is also addressed to the sending email address. Defaults to
+#'    TRUE.
 #'
 #' @importFrom emayili envelope
 #' @importFrom emayili from
@@ -418,29 +469,43 @@ build_map_thumbnail <- function(list_row, cache_path){
 #' @importFrom emayili subject
 #' @importFrom emayili server
 #' @importFrom xml2 read_html
+#' @importFrom rlang abort
+#' @importFrom rlang inform
 #'
 #' @return No object is returned. This function exists only to send an email
 #'    containing the relevant tables for a biosecurity alert.
 #'
 #' @export
 
-send_email <- function(recipients, output_file, email_send, email_password, subject = "ALA Biosecurity Alert") {
+send_email <- function(recipients, output_file, email_send, email_password,
+                       email_host = "smtp-relay.gmail.com", email_port = 587,
+                       email_subject = "ALA Biosecurity Alert",
+                       test = TRUE) {
 
   ##### Function Implementation #####
   if (length(recipients) == 0) {
     inform("No email recipients for this list. Email not sent but the html table has been saved.")
   } else {
-    email <- envelope() |>
-      from(email_send) |>
-      to(email_send) |>
-      bcc(recipients) |>
-      subject(subject) |>
-      emayili::html(read_html(output_file))
-    # render("email_template.Rmd", include_css = "rmd")
+    if (test) {
+      email <- envelope() |>
+        from(email_send) |>
+        to(recipients) |>
+        subject(email_subject) |>
+        emayili::html(read_html(output_file))
+      # render("email_template.Rmd", include_css = "rmd")
+    } else {
+      email <- envelope() |>
+        from(email_send) |>
+        to(email_send) |>
+        bcc(recipients) |>
+        subject(email_subject) |>
+        emayili::html(read_html(output_file))
+      # render("email_template.Rmd", include_css = "rmd")
+    }
 
     smtp <- server(
-      host = "smtp-relay.gmail.com",
-      port = 587,
+      host = email_host,
+      port = email_port,
       username = email_send,
       password = email_password
     )

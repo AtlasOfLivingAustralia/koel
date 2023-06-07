@@ -8,12 +8,16 @@
 #' @param lists_df A data.frame preferably produced by `collate_lists()`
 #'    containing at minimum two columns named 'path' and 'label' which denote
 #'    respectively the path to and name of each list being searched.
+#' @param synonym_delimiter An optional character string detailing the delimiter
+#'    used for multiple synonyms in the synonym columns of the lists. Defaults
+#'    to ", ".
 #'
 #' @return A data.frame of unique scientific names, the search term used to
-#'   match those names to the ALA taxonomy, a common name for each species, and
-#'   a column for each imported list. Each column associated with an imported
-#'   list contains logical information on whether or not a species appears on
-#'   the list. This data.frame may be passed to `assign_common_names()` and
+#'   match those names to the ALA taxonomy, a common name for each species, the
+#'   state jurisdictions of interest for each species, and a column for each
+#'   imported list. Each column associated with an imported list contains
+#'   logical information on whether or not a species appears on the list. This
+#'   data.frame may be passed to `assign_common_names()` and
 #'   `lookup_species_count()`.
 #'
 #' @importFrom readr read_csv
@@ -27,57 +31,72 @@
 #' @importFrom dplyr relocate
 #' @importFrom dplyr left_join
 #' @importFrom dplyr distinct
+#' @importFrom dplyr filter
 #' @importFrom tidyr pivot_longer
 #' @importFrom tidyr pivot_wider
+#' @importFrom tidyr replace_na
+#' @importFrom tidyr separate_longer_delim
 #' @importFrom tools toTitleCase
+#' @importFrom rlang abort
+#' @importFrom rlang inform
 #' @export
 
-get_species_lists2 <- function(lists_df){
+get_species_lists2 <- function(lists_df, synonym_delimiter = ","){
 
   ##### Defensive Programming #####
   if (!("data.frame" %in% class(lists_df))) {
-    stop("`lists_df` argument must be a data.frame or tibble")
+    abort("`lists_df` argument must be a data.frame or tibble")
   } else if (!all(c("label", "path") %in% colnames(lists_df))) {
-    stop("`lists_df` must have columns `label` and `path`")
+    abort("`lists_df` must have columns `label` and `path`")
+  }
+
+  if (class(synonym_delimiter) != "character") {
+    abort("'`synonym_delimiter` argument must be a character string.")
+  } else if (length(synonym_delimiter) > 1) {
+    abort("`synonym_delimiter` must be a single character object of length 1.")
   }
 
   ##### Function Implementation #####
+
   combined_df <- lists_df |>
     pmap(.f = \(path, label, ...)
          read_csv(path, show_col_types = FALSE) |>
            mutate(list_name = label)) |>
     list_rbind() |>
     distinct() |>
-    mutate(correct_name = gsub("\\(.+\\)", "  ", correct_name), # text in brackets
-           correct_name = gsub("\\s{2,}", " ", correct_name),   # successive spaces
-           correct_name = gsub(",", "", correct_name),          # commas
-           correct_name = gsub("\\:.+", "", correct_name))      # colons & subsequent text
+    # to clean columns for searching
+    mutate(
+      correct_name = clean_names(correct_name),
+      synonyms = clean_names(synonyms)) |>
+    # empty jurisdiction rows default to "AUS"
+    mutate(jurisdiction = replace_na(jurisdiction, "AUS"))
 
   combined_df_clean <- combined_df |>
-    mutate(correct_name_long = correct_name,
-           correct_name_short =  map_chr(.x = correct_name, .f = shorten_names),
-           correct_name = correct_name_short) |>
-    pivot_longer(c(correct_name_short, correct_name_long, provided_name, synonyms),
+    # split multiple synonyms
+    separate_longer_delim(synonyms, synonym_delimiter) |>
+    mutate(correct_name2 = correct_name) |>
+    # create column for search-terms
+    pivot_longer(c(correct_name2, synonyms),
                  names_to = "type_of",
                  values_to = "search_term") |>
     select(-type_of) |>
-    relocate(search_term, .after = correct_name) |>
+    relocate(search_term, .after = provided_name) |>
     filter(!is.na(search_term)) |>
-    mutate(search_term = gsub(",", "", search_term),
-           search_term = gsub("[ \t]+$", "", search_term)) |>
+    mutate(search_term = clean_names(search_term)) |>
     distinct()
 
+  # group unique species+jurisdictions together from multiple lists
   unique_species <- combined_df_clean |>
-    select(correct_name, list_name) |>
+    select(correct_name, jurisdiction, list_name) |>
     distinct() |>
     mutate(dummy_values = TRUE) |>
-    pivot_wider(id_cols = correct_name,
+    pivot_wider(id_cols = c(correct_name, jurisdiction),
                 names_from = list_name,
                 values_from = dummy_values,
                 values_fill = FALSE)
 
   combined_df_joined <- combined_df_clean |>
-    left_join(unique_species, by = "correct_name") |>
+    left_join(unique_species, by = c("correct_name", "jurisdiction")) |>
     select(-list_name) |>
     mutate(common_name = toTitleCase(common_name)) |>
     distinct()
@@ -86,25 +105,30 @@ get_species_lists2 <- function(lists_df){
 }
 
 
-
-#' Shorten character string
+#' Clean up name columns
 #'
-#' Shortens the first element of a character vector to comprise, at most, the
-#'   first two components separated by whitespace. If the first element has only
-#'   one component, it is returned without modification.
+#' Internal function to perform numerous regex substitution that clean up
+#'    name columns to be suitable for searching with galah
 #'
-#' @param x A string
-#' @return The first element of the input character vector
+#' @param name `character string` object or column/vector to be cleaned
 #'
-#' @noRd
+#' @return A cleaned `character string` of the same type and length as `name`.
+#'
+#' @importFrom magrittr %>%
 
-shorten_names <- function(x) {
+clean_names <- function(name) {
+  cleaned_name <- name %>%
+    gsub("\u00A0", " ", .) %>%      # remove non-ASCII whitespaces
+    gsub("\n", " ", .) %>%          # replace line breaks with spaces
+    gsub(";", ",", .) %>%           # replace semi-colons with commas
+    gsub(" ,", ",", .) %>%          # remove spaces before commas
+    gsub("\\s{2,}", " ", .) %>%     # remove multiple spaces
+    gsub(",$", "", .) %>%           # remove trailing commas
+    gsub(" +$", "", .) %>%          # remove trailing spaces
+    gsub(",(\\w)", ", \\1", .) %>%  # add spaces between commas and text
+    gsub(" sp.", "", .) %>%
+    gsub(" spp.", "", .) %>%        # remove spp. and sp. abbreviations
+    str_squish(.)
 
-  if (!is.character(x)) {stop("`x` must be a string")}
-
-  a <- strsplit(x, split = " ")[[1]]
-
-  ifelse(length(a) >= 2,
-         paste0(a[1], " ", a[2]),
-         a[1])
+  return(cleaned_name)
 }
