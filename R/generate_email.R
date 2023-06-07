@@ -195,6 +195,7 @@ build_email <- function(alerts_data, email_list,
 #' @importFrom dplyr mutate
 #' @importFrom dplyr select
 #' @importFrom dplyr filter
+#' @importFrom dplyr tibble
 #' @importFrom glue glue
 #' @importFrom gt html
 #' @importFrom purrr map
