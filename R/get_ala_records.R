@@ -69,6 +69,7 @@
 #' @importFrom dplyr ungroup
 #' @importFrom dplyr as_tibble
 #' @importFrom dplyr relocate
+#' @importFrom dplyr if_else
 #' @importFrom purrr list_rbind
 #' @importFrom tidyr as_tibble
 #' @importFrom tidyr replace_na
