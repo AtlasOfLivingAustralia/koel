@@ -268,7 +268,7 @@ build_gt_table <- function(df, cache_path){
       # add common name
       species = map(
         glue(
-          "<a href='https://biocache.ala.org.au/occurrences/{recordID}' target='_blank'><b><i>{correct_name}</i></b></a><br>
+          "<a href='https://biocache.ala.org.au/occurrences/{recordID}' target='_blank'><b><i>{scientificName}</i></b></a><br>
           Supplied as:<br><i>{provided_name}</i><br>
           Common name:<br>{common_name}
         "),
