@@ -55,6 +55,7 @@
 #' @importFrom galah search_media
 #' @importFrom galah collect_media
 #' @importFrom purrr map
+#' @importFrom purrr list_rbind
 #' @importFrom dplyr mutate
 #' @importFrom dplyr select
 #' @importFrom dplyr distinct
@@ -70,15 +71,14 @@
 #' @importFrom dplyr as_tibble
 #' @importFrom dplyr relocate
 #' @importFrom dplyr if_else
-#' @importFrom purrr list_rbind
 #' @importFrom tidyr as_tibble
-#' @importFrom tidyr replace_na
 #' @importFrom sf st_as_sf
 #' @importFrom sf st_crs
 #' @importFrom sf st_intersects
 #' @importFrom sf st_drop_geometry
 #' @importFrom stringr str_detect
 #' @importFrom lubridate dmy
+#' @importFrom lubridate as_datetime
 #' @importFrom rlang abort
 #' @importFrom rlang inform
 #' @export
@@ -164,15 +164,11 @@ get_occurrences <- function(species_list, common_names, cache_path,
   species_df <- species_list |>
     select(-common_name) |>
     distinct()
-  # set up galah_select() object to save space
-  tmp_select <- galah_select(raw_scientificName, scientificName, vernacularName,
-                             genus, species, subspecies,
-                             decimalLatitude, decimalLongitude,
-                             cl22, cl1048, cl966, cl21,
-                             basisOfRecord,
-                             group = c("basic", "media"))
   # set up divisions of 100 to search with
   divisions <- seq(1, length(unique(species_df$search_term)), 100)
+
+  # set up search fields
+  fields <- c("scientificName", "raw_scientificName", "species", "subspecies", "genus")
 
   # iterate search of Atlas for each search term. Store counts
   species_records <- map(
@@ -185,64 +181,31 @@ get_occurrences <- function(species_list, common_names, cache_path,
         unique(species_df$search_term)[divisions[num]:length(unique(species_df$search_term))]
       }
       # search through each potential name field
-      sn_search <- galah_call() |>
-        galah_filter(eventDate >= start_date, eventDate <= end_date,
-                     scientificName == search_terms) |>
-        atlas_occurrences(select = tmp_select) |>
-        mutate(match = "scientificName",
-               search_term = scientificName,
-               across(everything(), as.character))
-      rsn_search <- galah_call() |>
-        galah_filter(eventDate >= start_date, eventDate <= end_date,
-                     raw_scientificName == search_terms) |>
-        atlas_occurrences(select = tmp_select) |>
-        mutate(match = "raw_scientificName",
-               search_term = verbatimScientificName,
-               across(everything(), as.character))
-      g_search <- galah_call() |>
-        galah_filter(eventDate >= start_date, eventDate <= end_date,
-                     genus == search_terms) |>
-        atlas_occurrences(select = tmp_select) |>
-        mutate(match = "genus",
-               search_term = genus,
-               across(everything(), as.character))
-      s_search <- galah_call() |>
-        galah_filter(eventDate >= start_date, eventDate <= end_date,
-                     species == search_terms) |>
-        atlas_occurrences(select = tmp_select) |>
-        mutate(match = "species",
-               search_term = species,
-               across(everything(), as.character))
-      ss_search <- galah_call() |>
-        galah_filter(eventDate >= start_date, eventDate <= end_date,
-                     subspecies == search_terms) |>
-        atlas_occurrences(select = tmp_select)  |>
-        mutate(match = "subspecies",
-               search_term = subspecies,
-               across(everything(), as.character))
-      # combine all search fields, remove duplicates
-      ala_search <- bind_rows(sn_search, rsn_search, g_search, s_search, ss_search) |>
-        group_by(across(-match)) |>
-        slice_head() |>
-        ungroup()
-      # ala_search <- ala_search |>
-      #   filter(!duplicated(ala_search |> dplyr::select(-match)))
+      ala_search <- fields |>
+        map(galah_field_search,
+            start_date = start_date,
+            end_date = end_date,
+            search_terms = search_terms) |>
+        list_rbind()
       # informative output of no. of occurrences
       cat(paste0("Names ", divisions[num], "-",
                  min(divisions[num] + 99, length(unique(species_df$search_term))), ": ",
-                 nrow(ala_search), " records", "\n"))
+                 length(unique(ala_search$recordID)), " records", "\n"))
       return(ala_search)
     }, .progress = TRUE) |>
     # turn all columns into character columns in case dfs are empty
     map(~mutate(., across(everything(), as.character))) |>
-    list_rbind()
+    list_rbind() |>
+    # remove duplicated records
+    group_by(across(-c(match, search_term))) |>
+    slice_head() |>
+    ungroup() |>
+    mutate(eventDate = as_datetime(eventDate),
+           across(c(decimalLatitude, decimalLongitude), as.numeric))
 
   # download records and save temp files in cache_path
   if (nrow(species_records) > 0) {
     occ_list <- species_records |>
-      # introduce media data (if exists) for each occurrence (time sink)
-      #search_media() |>
-      (\(.) if (any(!is.na(.$multimedia))) search_media(.) else .)() |>
       # remove duplicates of the same record for the same search term
       distinct(recordID, search_term, .keep_all = TRUE) |>
       # add on list-specific data and common names
@@ -251,7 +214,6 @@ get_occurrences <- function(species_list, common_names, cache_path,
                 relationship = "many-to-many") |>
       left_join(common_names,
                 by = "correct_name") |>
-      mutate(common_name = replace_na(common_name, "[Common Name Unknown]")) |>
       # state-based filtering
       st_as_sf(coords = c("decimalLongitude", "decimalLatitude"),
                crs = st_crs(coastal_waters_shp),
@@ -263,29 +225,38 @@ get_occurrences <- function(species_list, common_names, cache_path,
                                 coastal_waters_shp$state_abbr[intersection])) |>
       select(-intersection) |>
       st_drop_geometry() |>
-      mutate(flagged_state = str_detect(jurisdiction, cw_state)) |>
-      filter(jurisdiction == "AUS" | flagged_state) |>
-      select(-flagged_state) |>
+      # do ID'd states + LGAs match provided ones
+      mutate(flagged_state = str_detect(state, cw_state),
+             flagged_LGA = (LGA == cl10923) |
+               str_detect(LGA, paste0("^",  cl10923, ",")) |
+               str_detect(LGA, paste0(", ", cl10923, ",")) |
+               str_detect(LGA, paste0(", ", cl10923, "$"))) |>
+      # filter out occurrences not in areas of interest
+      filter(state == "AUS" |
+               (!is.na(state) & flagged_state) |
+               (!is.na(LGA) & flagged_LGA)) |>
+      select(-flagged_state, -flagged_LGA) |>
       # filter by IBRA and IMCRA regions - may shift this line around a bit
       filter(!is.na(cl966) | !is.na(cl1048) | !is.na(cl21)) |>
-      as_tibble()
-
+      as_tibble() |>
+      # introduce media data (if exists) for each occurrence (time sink)
+      #search_media()
+      (\(.) if (any(!is.na(.$multimedia))) search_media(.) else .)() |>
+      distinct(recordID, correct_name, provided_name, state, LGA, .keep_all = TRUE)
 
     if (nrow(occ_list) > 0) {
       occ_media <- occ_list |>
         # only collect_media if we have images present
         (\(.) if (any(!is.na(.$multimedia))) {
-            collect_media(.,
-                          path = paste0(cache_path, "species_images"),
-                          type = "thumbnail")
+          collect_media(.,
+                        path = paste0(cache_path, "species_images"),
+                        type = "thumbnail")
           } else {
             mutate(., url = NA, download_path = NA)
           })() |>
-        # collect_media(path = paste0(cache_path, "species_images"),
-        #               type = "thumbnail") |>
-        select(recordID, jurisdiction, url, download_path) |>
-        right_join(occ_list, by = c("recordID", "jurisdiction")) |>
-        relocate(jurisdiction, .before = common_name)
+        select(recordID, state, LGA, url, download_path) |>
+        right_join(occ_list, by = c("recordID", "state", "LGA")) |>
+        relocate(c(state, LGA), .before = common_name)
 
       write.csv(occ_media,
                 file = paste0(cache_path, "alerts_data.csv"),
@@ -304,20 +275,50 @@ get_occurrences <- function(species_list, common_names, cache_path,
   }
 }
 
+#' Search ALA with multiple search terms and fields
+#'
 #' Helper function to perform galah searches for given search fields
 #'
+#' @param field Single character designating field to be searched in galah e.g.
+#'    `"scientificName"`, `"genus"`
+#' @param start_date Date to begin search of ALA occurrences. `character` object
+#'    and should be in the form "YYYY-mm-ddTHH::MM::SSZ
+#' @param end_date Date to end search of ALA occurrences. `character` object
+#'    and should be in the form "YYYY-mm-ddTHH::MM::SSZ
+#' @param search_terms Character vector (may be of length 1) of search terms to
+#'    be provided to `galah_filter()`. Length should be capped at 100 to avoid
+#'    `{galah}` errors.
 #'
- galah_field_search <- function(field) {
-  search_output <- galah_call() |>
-     galah_filter(eventDate >= start_date, eventDate <= end_date,
-                  scientificName == search_terms) |>
-     atlas_occurrences(select = tmp_select) |>
-     mutate(match = "scientificName",
-            search_term = scientificName,
-            across(everything(), as.character))
+#' @importFrom galah galah_call
+#' @importFrom galah galah_filter
+#' @importFrom galah galah_select
+#' @importFrom galah atlas_occurrences
+#' @importFrom dplyr mutate
+#' @importFrom dplyr across
+#' @importFrom dplyr everything
+#' @importFrom rlang .data
+#' @importFrom rlang embrace-operator
 
-  return(search_output)
- }
+galah_field_search <- function(field, start_date, end_date, search_terms, ...) {
+  field_fixed <- ifelse(field == "raw_scientificName",
+                        "verbatimScientificName",
+                        field)
+  occ_search <- galah_call() |>
+    galah_filter(eventDate >= start_date,
+                 eventDate <= end_date,
+                 {{field}} == search_terms) |>
+    galah_select(raw_scientificName, scientificName, vernacularName,
+                 genus, species, subspecies,
+                 decimalLatitude, decimalLongitude,
+                 cl22, cl10923, cl1048, cl966, cl21,
+                 basisOfRecord,
+                 group = c("basic", "media")) |>
+    atlas_occurrences() |>
+    mutate(match = field_fixed,
+           search_term = .data[[field_fixed]],
+           across(everything(), as.character))
+  return(occ_search)
+}
 
 
 #' Look up and append counts of species records
