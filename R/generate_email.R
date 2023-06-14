@@ -259,7 +259,7 @@ build_gt_table <- function(df, cache_path){
 
   # build table info
   table_df <- df |>
-    arrange(correct_name, eventDate) |>
+    arrange(scientificName, eventDate, cl22) |>
     mutate(
       path = here(),
       image_url = sub("thumbnail$", "original", url)
@@ -268,7 +268,7 @@ build_gt_table <- function(df, cache_path){
       # add common name
       species = map(
         glue(
-          "<a href='https://biocache.ala.org.au/occurrences/{recordID}' target='_blank'><b><i>{correct_name}</i></b></a><br>
+          "<a href='https://biocache.ala.org.au/occurrences/{recordID}' target='_blank'><b><i>{scientificName}</i></b></a><br>
           Supplied as:<br><i>{provided_name}</i><br>
           Common name:<br>{common_name}
         "),
