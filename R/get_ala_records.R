@@ -299,7 +299,7 @@ get_occurrences <- function(species_list, common_names, cache_path,
 #' @importFrom rlang .data
 #' @importFrom rlang embrace-operator
 
-galah_field_search <- function(field, start_date, end_date, search_terms, ...) {
+galah_field_search <- function(field, start_date, end_date, search_terms) {
   field_fixed <- ifelse(field == "raw_scientificName",
                         "verbatimScientificName",
                         field)

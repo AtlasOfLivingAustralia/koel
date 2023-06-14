@@ -259,7 +259,7 @@ build_gt_table <- function(df, cache_path){
 
   # build table info
   table_df <- df |>
-    arrange(cl22, creator) |>
+    arrange(correct_name, eventDate) |>
     mutate(
       path = here(),
       image_url = sub("thumbnail$", "original", url)
@@ -485,7 +485,7 @@ send_email <- function(recipients, output_file, email_send, email_password,
 
   ##### Function Implementation #####
   if (length(recipients) == 0) {
-    inform("No email recipients for this list. Email not sent but the html table has been saved.")
+    inform("No email recipients for this list. No email sent but .html table has been saved.")
   } else {
     if (test) {
       email <- envelope() |>
