@@ -69,9 +69,9 @@ get_species_lists2 <- function(lists_df, synonym_delimiter = ","){
       synonyms = clean_names(synonyms)) |>
     # add state and/or LGA columns if not present
     (\(.) if ("state" %in% names(.)) . else . |> tibble::add_column(state = NA))() |>
-    (\(.) if ("LGA" %in% names(.)) . else . |> tibble::add_column(LGA = NA))() |>
+    (\(.) if ("lga" %in% names(.)) . else . |> tibble::add_column(lga = NA))() |>
     # empty state rows (with no provided LGA) default to "AUS"
-    mutate(state = ifelse(is.na(state) & is.na(LGA), "AUS", state))
+    mutate(state = ifelse(is.na(state) & is.na(lga), "AUS", state))
 
   combined_df_clean <- combined_df |>
     # split multiple synonyms
@@ -89,19 +89,19 @@ get_species_lists2 <- function(lists_df, synonym_delimiter = ","){
 
   # group unique species+states together from multiple lists
   unique_species <- combined_df_clean |>
-    select(correct_name, state, LGA, list_name) |>
+    select(correct_name, state, lga, list_name) |>
     distinct() |>
     mutate(dummy_values = TRUE) |>
-    pivot_wider(id_cols = c(correct_name, state, LGA),
+    pivot_wider(id_cols = c(correct_name, state, lga),
                 names_from = list_name,
                 values_from = dummy_values,
                 values_fill = FALSE)
 
   combined_df_joined <- combined_df_clean |>
-    left_join(unique_species, by = c("correct_name", "state", "LGA")) |>
+    left_join(unique_species, by = c("correct_name", "state", "lga")) |>
     select(-list_name) |>
     mutate(common_name = toTitleCase(common_name),
-           LGA = toupper(LGA)) |>
+           lga = toupper(lga)) |>
     distinct()
 
   return(combined_df_joined)

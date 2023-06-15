@@ -3,12 +3,13 @@
 #' This function wraps the entire search, download and filtering processes
 #'    for the identification of species records from a provided dataframe of
 #'    search terms. It searches within some specified time period for exact name
-#'    matches using the {galah} package. The output of this function is a joined
-#'    dataframe containing occurrence, taxonomic, media and location for each
-#'    occurrence within the timeframe, with additional data pertaining to the
-#'    provided search-terms. Additionally, a temporary copy of this dataframe
-#'    is stored in the provided directory, as are the relevant media files
-#'    (one per occurrence).
+#'    matches using the {galah} package, and filters these by the optionally
+#'    provided state and LGA specifications. The output of this function is a
+#'    joined dataframe containing occurrence, taxonomic, media and location for
+#'    each occurrence within the timeframe, with additional data pertaining to
+#'    the provided search-terms. Additionally, a temporary copy of this
+#'    dataframe is stored in the provided directory, as are the relevant media
+#'    files (one per occurrence).
 #'
 #' The searches are performed for each block of 100 search terms, and
 #'    relevant text output (in between `"Checking queue"` outputs) indicate the
@@ -227,22 +228,22 @@ get_occurrences <- function(species_list, common_names, cache_path,
       st_drop_geometry() |>
       # do ID'd states + LGAs match provided ones
       mutate(flagged_state = str_detect(state, cw_state),
-             flagged_LGA = (LGA == cl10923) |
-               str_detect(LGA, paste0("^",  cl10923, ",")) |
-               str_detect(LGA, paste0(", ", cl10923, ",")) |
-               str_detect(LGA, paste0(", ", cl10923, "$"))) |>
+             flagged_lga = (lga == cl10923) |
+               str_detect(lga, paste0("^",  cl10923, ",")) |
+               str_detect(lga, paste0(", ", cl10923, ",")) |
+               str_detect(lga, paste0(", ", cl10923, "$"))) |>
       # filter out occurrences not in areas of interest
       filter(state == "AUS" |
                (!is.na(state) & flagged_state) |
-               (!is.na(LGA) & flagged_LGA)) |>
-      select(-flagged_state, -flagged_LGA) |>
+               (!is.na(lga) & flagged_lga)) |>
+      select(-flagged_state, -flagged_lga) |>
       # filter by IBRA and IMCRA regions - may shift this line around a bit
       filter(!is.na(cl966) | !is.na(cl1048) | !is.na(cl21)) |>
       as_tibble() |>
       # introduce media data (if exists) for each occurrence (time sink)
       #search_media()
       (\(.) if (any(!is.na(.$multimedia))) search_media(.) else .)() |>
-      distinct(recordID, correct_name, provided_name, state, LGA, .keep_all = TRUE)
+      distinct(recordID, correct_name, provided_name, state, lga, .keep_all = TRUE)
 
     if (nrow(occ_list) > 0) {
       occ_media <- occ_list |>
@@ -254,9 +255,9 @@ get_occurrences <- function(species_list, common_names, cache_path,
         } else {
           mutate(., url = NA, download_path = NA)
         })() |>
-        select(recordID, state, LGA, url, download_path) |>
-        right_join(occ_list, by = c("recordID", "state", "LGA")) |>
-        relocate(c(state, LGA), .before = common_name)
+        select(recordID, state, lga, url, download_path) |>
+        right_join(occ_list, by = c("recordID", "state", "lga")) |>
+        relocate(c(state, lga), .before = common_name)
 
       write.csv(occ_media,
                 file = paste0(cache_path, "alerts_data.csv"),
