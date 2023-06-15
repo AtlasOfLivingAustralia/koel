@@ -14,7 +14,7 @@
 #' @importFrom dplyr group_by
 #' @importFrom dplyr summarise
 #' @importFrom dplyr mutate
-#' @improtFrom dplyr replace_na
+#' @importFrom tidyr replace_na
 #' @importFrom rlang abort
 #' @importFrom rlang inform
 #'

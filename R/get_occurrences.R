@@ -89,10 +89,10 @@ get_occurrences <- function(species_list, common_names, cache_path,
   ##### Defensive Programming #####
   if (!("data.frame" %in% class(species_list))) {
     abort("`species_list` argument must be a data.frame or tibble")
-  } else if (!all(c("correct_name", "search_term", "common_name", "jurisdiction")
+  } else if (!all(c("correct_name", "search_term", "common_name")
                   %in% colnames(species_list))) {
     abort("`species_list` must have the following columns:
-          `correct_name`, `search_term`, `common_name`, `jurisdiction`")
+          `correct_name`, `search_term`, `common_name`")
   }
 
   if (!("data.frame" %in% class(common_names))) {
@@ -297,7 +297,6 @@ get_occurrences <- function(species_list, common_names, cache_path,
 #' @importFrom dplyr across
 #' @importFrom dplyr everything
 #' @importFrom rlang .data
-#' @importFrom rlang embrace-operator
 
 galah_field_search <- function(field, start_date, end_date, search_terms) {
   field_fixed <- ifelse(field == "raw_scientificName",
