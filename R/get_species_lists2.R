@@ -66,9 +66,12 @@ get_species_lists2 <- function(lists_df, synonym_delimiter = ","){
     # to clean columns for searching
     mutate(
       correct_name = clean_names(correct_name),
-      synonyms = clean_names(synonyms))
-  # empty state rows default to "AUS"
-  #mutate(state = replace_na(state, "AUS"))
+      synonyms = clean_names(synonyms)) |>
+    # add state and/or LGA columns if not present
+    (\(.) if ("state" %in% names(.)) . else . |> tibble::add_column(state = NA))() |>
+    (\(.) if ("LGA" %in% names(.)) . else . |> tibble::add_column(LGA = NA))() |>
+    # empty state rows (with no provided LGA) default to "AUS"
+    mutate(state = ifelse(is.na(state) & is.na(LGA), "AUS", state))
 
   combined_df_clean <- combined_df |>
     # split multiple synonyms
@@ -127,8 +130,8 @@ clean_names <- function(name) {
     gsub(",$", "", .) %>%           # remove trailing commas
     gsub(" +$", "", .) %>%          # remove trailing spaces
     gsub(",(\\w)", ", \\1", .) %>%  # add spaces between commas and text
-    gsub(" sp.", "", .) %>%
-    gsub(" spp.", "", .) %>%        # remove spp. and sp. abbreviations
+    gsub(" sp\\.", "", .) %>%
+    gsub(" spp\\.", "", .) %>%      # remove spp. and sp. abbreviations
     str_squish(.)
 
   return(cleaned_name)
