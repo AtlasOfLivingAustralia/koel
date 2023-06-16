@@ -204,6 +204,8 @@ get_occurrences <- function(species_list, common_names, cache_path,
     mutate(eventDate = as_datetime(eventDate),
            across(c(decimalLatitude, decimalLongitude), as.numeric))
 
+  cat(paste0("Total: ", nrow(species_records), " records pre location filtering \n"))
+
   # download records and save temp files in cache_path
   if (nrow(species_records) > 0) {
     occ_list <- species_records |>
@@ -244,6 +246,8 @@ get_occurrences <- function(species_list, common_names, cache_path,
       #search_media()
       (\(.) if (any(!is.na(.$multimedia))) search_media(.) else .)() |>
       distinct(recordID, correct_name, provided_name, state, lga, .keep_all = TRUE)
+
+    cat(paste0("Total: ", length(unique(occ_list$recordID)), " records post location filtering"))
 
     if (nrow(occ_list) > 0) {
       occ_media <- occ_list |>

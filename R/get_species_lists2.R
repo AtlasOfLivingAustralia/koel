@@ -68,8 +68,12 @@ get_species_lists2 <- function(lists_df, synonym_delimiter = ","){
       correct_name = clean_names(correct_name),
       synonyms = clean_names(synonyms)) |>
     # add state and/or LGA columns if not present
-    (\(.) if ("state" %in% names(.)) . else . |> tibble::add_column(state = NA))() |>
-    (\(.) if ("lga" %in% names(.)) . else . |> tibble::add_column(lga = NA))() |>
+    (\(.) if ("state" %in% names(.)) {.}
+          else {. |> tibble::add_column(state = NA) |>
+                     relocate(state, .after = common_name)})() |>
+    (\(.) if ("lga" %in% names(.)) {.}
+          else {. |> tibble::add_column(lga = NA) |>
+                     relocate(lga, .after = state)})() |>
     # empty state rows (with no provided LGA) default to "AUS"
     mutate(state = ifelse(is.na(state) & is.na(lga), "AUS", state))
 

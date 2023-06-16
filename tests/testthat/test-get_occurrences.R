@@ -5,9 +5,11 @@ test_that("get_occurrences() takes correct input arguments", {
   # set up arguments
   species_list <- data.frame(
     correct_name = c("Onychoprion fuscatus"),
+    provided_name = c("Onychoprion fuscatus"),
     search_term = c("Onychoprion fuscatus"),
     common_name = c("Sooty Tern"),
-    jurisdiction = c("AUS"),
+    state = c("AUS"),
+    lga = c(NA),
     list1 = c(TRUE)
   )
   common_names <- data.frame(
@@ -53,9 +55,11 @@ test_that("get_occurrences() produces all intended output", {
   # set up arguments
   species_list <- data.frame(
     correct_name = c("Onychoprion fuscatus"),
+    provided_name = c("Onychoprion fuscatus"),
     search_term = c("Onychoprion fuscatus"),
     common_name = c("Sooty Tern"),
-    jurisdiction = c("AUS"),
+    state = c("AUS"),
+    lga = c(NA),
     list1 = c(TRUE)
   )
   common_names <- data.frame(
@@ -72,7 +76,7 @@ test_that("get_occurrences() produces all intended output", {
   # output is of expected type
   expect_s3_class(go_output, "data.frame")
   # dataframe is of expected dimensions
-  expect_equal(dim(go_output), c(1, 38))
+  expect_equal(dim(go_output), c(1, 42))
   # state correctly identified
   expect_equal(go_output$cw_state, "NSW")
   # image downloaded
@@ -88,9 +92,11 @@ test_that("get_occurrences() handles the absence of records", {
   # set up arguments
   species_list <- data.frame(
     correct_name = c("Onychoprion fuscatus"),
+    provided_name = c("Onychoprion fuscatus"),
     search_term = c("Onychoprion fuscatus"),
     common_name = c("Sooty Tern"),
-    jurisdiction = c("AUS"),
+    state = c("AUS"),
+    lga = c(NA),
     list1 = c(TRUE)
   )
   common_names <- data.frame(
@@ -118,9 +124,11 @@ test_that("get_occurrences() filters correctly by state", {
   # set up arguments
   species_list <- data.frame(
     correct_name = c("Onychoprion fuscatus"),
+    provided_name = c("Onychoprion fuscatus"),
     search_term = c("Onychoprion fuscatus"),
     common_name = c("Sooty Tern"),
-    jurisdiction = c("NSW"),
+    state = c("NSW"),
+    lga = c(NA),
     list1 = c(TRUE)
   )
   common_names <- data.frame(
@@ -139,24 +147,64 @@ test_that("get_occurrences() filters correctly by state", {
   expect_equal(nrow(go_output), 1)
 
   # when state is one of many
-  species_list$jurisdiction <- "ACT, VIC, NSW"
+  species_list$state <- "ACT, VIC, NSW"
   go_output <- get_occurrences(species_list, common_names, cache_path, start_date, end_date)
   expect_equal(nrow(go_output), 1)
 
   # when state is not provided
-  species_list$jurisdiction <- "ACT, VIC, QLD, NT"
+  species_list$state <- "ACT, VIC, QLD, NT"
   go_output <- get_occurrences(species_list, common_names, cache_path, start_date, end_date)
   expect_equal(nrow(go_output), 0)
 })
 
-# correctly filters by IMCRA and IBRA regions
+# check that LGA-based filtering works
+test_that("get_occurrences() filters correctly by LGA", {
+  # set up arguments
+  species_list <- data.frame(
+    correct_name = c("Onychoprion fuscatus"),
+    provided_name = c("Onychoprion fuscatus"),
+    search_term = c("Onychoprion fuscatus"),
+    common_name = c("Sooty Tern"),
+    state = c(NA),
+    lga = c("CAIRNS REGIONAL"),
+    list1 = c(TRUE)
+  )
+  common_names <- data.frame(
+    correct_name = c("Onychoprion fuscatus"),
+    common_name = c("Sooty Tern")
+  )
+  cache_path <- paste0(withr::local_tempdir(), "/")
+  dir.create(paste0(cache_path, "species_images"))
+  start_date <- "02-09-2021"
+  end_date <- "03-09-2021"
+
+  go_output <- get_occurrences(species_list, common_names, cache_path, start_date, end_date)
+
+  # when state matches provided state
+  # dataframe is of expected dimensions
+  expect_equal(nrow(go_output), 1)
+
+  # when LGA is one of many
+  species_list$lga <- "CAIRNS REGIONAL, DOUGLAS SHIRE"
+  go_output <- get_occurrences(species_list, common_names, cache_path, start_date, end_date)
+  expect_equal(nrow(go_output), 1)
+
+  # when state is not provided
+  species_list$lga <- "DOUGLAS SHIRE, CASSOWARY COAST REGIONAL"
+  go_output <- get_occurrences(species_list, common_names, cache_path, start_date, end_date)
+  expect_equal(nrow(go_output), 0)
+})
+
+              # correctly filters by IMCRA and IBRA regions
 test_that("get_occurrences() respects IMCRA and IBRA boundaries", {
   # set up arguments
   species_list <- data.frame(
     correct_name = c("Onychoprion fuscatus"),
+    provided_name = c("Onychoprion fuscatus"),
     search_term = c("Onychoprion fuscatus"),
     common_name = c("Sooty Tern"),
-    jurisdiction = c("AUS"),
+    state = c("AUS"),
+    lga = c(NA),
     list1 = c(TRUE)
   )
   common_names <- data.frame(
@@ -184,9 +232,11 @@ test_that("get_occurrences() respects IMCRA and IBRA boundaries", {
   # check that sightings outside IMCRA regions are excluded
   species_list <- data.frame(
     correct_name = c("Thalassarche bulleri"),
+    provided_name = c("Thalassarche bulleri"),
     search_term = c("Thalassarche bulleri"),
     common_name = c("Buller's Albatross"),
-    jurisdiction = c("AUS"),
+    state = c("AUS"),
+    lga = c(NA),
     list1 = c(TRUE)
   )
   common_names <- data.frame(
@@ -203,14 +253,16 @@ test_that("get_occurrences() respects IMCRA and IBRA boundaries", {
   expect_equal(nrow(go_output), 0)
 })
 
-# handles different jurisdictions for the same search term
-test_that("get_occurrences() handles different jurisdictions for the same search term", {
+# handles different states for the same search term
+test_that("get_occurrences() handles different states for the same search term", {
   # set up arguments
   species_list <- data.frame(
     correct_name = c("Onychoprion fuscatus", "Onychoprion fuscatus"),
+    provided_name = c("Onychoprion fuscatus", "Onychoprion fuscatus"),
     search_term = c("Onychoprion fuscatus", "Onychoprion fuscatus"),
     common_name = c("Sooty Tern", "Sooty Tern"),
-    jurisdiction = c("AUS", "NSW"),
+    state = c("AUS", "NSW"),
+    lga = c(NA, NA),
     list1 = c(TRUE, TRUE)
   )
   common_names <- data.frame(
@@ -235,14 +287,58 @@ test_that("get_occurrences() handles different jurisdictions for the same search
   expect_equal(nrow(go_output), 2)
 })
 
+
+# handles different states for the same search term
+test_that("get_occurrences() handles different states for the same search term", {
+  # set up arguments
+  species_list <- data.frame(
+    correct_name = c("Parvipsitta pusilla", "Parvipsitta pusilla"),
+    provided_name = c("Parvipsitta pusilla", "Parvipsitta pusilla"),
+    search_term = c("Parvipsitta pusilla", "Parvipsitta pusilla"),
+    common_name = c("Little Lorikeet", "Little Lorikeet"),
+    state = c(NA,NA),
+    lga = c("LOCKYER VALLEY REGIONAL", "SOMERSET REGIONAL"),
+    list1 = c(TRUE, TRUE)
+  )
+  common_names <- data.frame(
+    correct_name = c("Parvipsitta pusilla"),
+    common_name = c("Little Lorikeet")
+  )
+  cache_path <- paste0(withr::local_tempdir(), "/")
+  dir.create(paste0(cache_path, "species_images"))
+
+  # provide sightings in different regions
+  start_date <- "01-07-2022"
+  end_date <- "24-07-2022"
+  go_output <- get_occurrences(species_list, common_names, cache_path, start_date, end_date)
+
+  expect_equal(nrow(go_output), 3)
+
+  # check a record is duplicated for different LGA searches in different lists
+  species_list <- data.frame(
+    correct_name = c("Parvipsitta pusilla", "Parvipsitta pusilla"),
+    provided_name = c("Parvipsitta pusilla", "Parvipsitta pusilla"),
+    search_term = c("Parvipsitta pusilla", "Parvipsitta pusilla"),
+    common_name = c("Little Lorikeet", "Little Lorikeet"),
+    state = c(NA,NA),
+    lga = c("LOCKYER VALLEY REGIONAL", "SOMERSET REGIONAL, LOCKYER VALLEY REGIONAL"),
+    list1 = c(TRUE, FALSE),
+    list2 = c(FALSE, TRUE)
+  )
+  go_output <- get_occurrences(species_list, common_names, cache_path, start_date, end_date)
+  expect_equal(nrow(go_output), 5)
+})
+
 # includes all records if none have media
 test_that("get_occurrences() works if all occurrences lack media", {
   # set up arguments
   species_list <- data.frame(
     correct_name = c("Onychoprion fuscatus"),
+    provided_name = c("Onychoprion fuscatus"),
     search_term = c("Onychoprion fuscatus"),
     common_name = c("Sooty Tern"),
-    jurisdiction = c("AUS"),
+    state = c("AUS"),
+    lga = c(NA),
     list1 = c(TRUE)
   )
   common_names <- data.frame(
@@ -258,8 +354,48 @@ test_that("get_occurrences() works if all occurrences lack media", {
   go_output <- get_occurrences(species_list, common_names, cache_path, start_date, end_date)
 
   expect_equal(nrow(go_output), 41)
+  expect_true(all(is.na(go_output$url)))
+  expect_true(all(is.na(go_output$download_path)))
 
-  # provide a set of sighitngs with and without media
+  # provide a set of sightings with and without media
+  start_date <- "19-01-2022"
+  end_date <- "20-01-2022"
+  go_output <- get_occurrences(species_list, common_names, cache_path, start_date, end_date)
 
+  expect_equal(nrow(go_output), 2)
 })
 
+# handles records with state AND LGA requirements
+test_that("get_occurrences() works with simultaneous state and LGA filters", {
+  # set up arguments
+  species_list <- data.frame(
+    correct_name = c("Parvipsitta pusilla"),
+    provided_name = c("Parvipsitta pusilla"),
+    search_term = c("Parvipsitta pusilla"),
+    common_name = c("Little Lorikeet"),
+    state = c("QLD"),
+    lga = c("FRASER COAST REGIONAL"),
+    list1 = c(TRUE)
+  )
+  common_names <- data.frame(
+    correct_name = c("Parvipsitta pusilla"),
+    common_name = c("Little Lorikeet")
+  )
+  cache_path <- paste0(withr::local_tempdir(), "/")
+  dir.create(paste0(cache_path, "species_images"))
+
+  # provide dates for a sighting in Fraser Coast and another in QLD
+  start_date <- "15-06-2022"
+  end_date <- "27-06-2022"
+  go_output <- get_occurrences(species_list, common_names, cache_path, start_date, end_date)
+
+  expect_equal(nrow(go_output), 2)
+
+  # provide dates for a sighting in Fraser Coast and another in NSW
+  species_list$state <- "NSW, VIC"
+  start_date <- "12-06-2022"
+  end_date <- "15-06-2022"
+  go_output <- get_occurrences(species_list, common_names, cache_path, start_date, end_date)
+
+  expect_equal(nrow(go_output), 2)
+})

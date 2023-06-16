@@ -55,12 +55,13 @@ A tibble containing the downloaded data for each occurrence record.
 This function wraps the entire search, download and filtering processes
    for the identification of species records from a provided dataframe of
    search terms. It searches within some specified time period for exact name
-   matches using the {galah} package. The output of this function is a joined
-   dataframe containing occurrence, taxonomic, media and location for each
-   occurrence within the timeframe, with additional data pertaining to the
-   provided search-terms. Additionally, a temporary copy of this dataframe
-   is stored in the provided directory, as are the relevant media files
-   (one per occurrence).
+   matches using the {galah} package, and filters these by the optionally
+   provided state and LGA specifications. The output of this function is a
+   joined dataframe containing occurrence, taxonomic, media and location for
+   each occurrence within the timeframe, with additional data pertaining to
+   the provided search-terms. Additionally, a temporary copy of this
+   dataframe is stored in the provided directory, as are the relevant media
+   files (one per occurrence).
 }
 \details{
 The searches are performed for each block of 100 search terms, and
