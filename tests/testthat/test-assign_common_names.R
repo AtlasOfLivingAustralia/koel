@@ -12,18 +12,18 @@ test_that("assign_common_names() returns the correct data.frame output", {
   # set up lists_df object
   dir_path <- withr::local_tempdir()
   {write.csv(data.frame(correct_name = c("Eudynamys orientalis", "Eolophus roseicapilla"),
-                        provided_name = c("Eudynamys orientalis (Linnaeus, 1766)","Cacatua roseicapilla (Vieillot, 1817)"),
+                        provided_name = c("Eudynamys orientalis","Cacatua roseicapilla"),
                         synonyms = c("Eudynamys orientalis cyanocephalus, Eudynamys orientalis subcyanocephalus",
                                      "Cacatua roseicapilla"),
                         common_name = c("Eastern Koel", "Galah"),
-                        jurisdiction = c("AUS", "ACT, QLD, SA")),
+                        state = c("AUS", "ACT, QLD, SA")),
              paste0(dir_path, "/list1_list.csv"),
              row.names = FALSE)
     write.csv(data.frame(correct_name = c("Eudynamys orientalis", "Dicrurus bracteatus"),
-                         provided_name = c("Eudynamys orientalis", "Dicrurus bracteatus Gould, 1843"),
+                         provided_name = c("Eudynamys orientalis", "Dicrurus bracteatus"),
                          synonyms = c("Eudynamys orientalis cyanocephalus", NA),
                          common_name = c("Eastern Koel", "Spangled Drongo"),
-                         jurisdiction = c("QLD", "NT, QLD, SA")),
+                         state = c("QLD", "NT, QLD, SA")),
               paste0(dir_path, "/list2_list.csv"),
               row.names = FALSE)}
   df <- collate_lists(paste0(dir_path, "/"))
@@ -51,7 +51,7 @@ test_that("outputted correct names each have unique common names", {
     provided_name = c("Eudynamys orientalis", "Eudynamys orientalis", "Eolophus roseicapilla", "Dicrurus bracteatus"),
     search_term = c("Eudynamys orientalis", "Eudynamys orientalis", "Eolophus roseicapilla", "Dicrurus bracteatus"),
     common_name = c("Eastern Koel", "Pacific Koel", "Galah", "Spangled Drongo"),
-    jurisdiction = "AUS",
+    state = "AUS",
     list1 = c(TRUE, TRUE, TRUE, TRUE)
   )
   # generate output for assign_common_names
@@ -71,7 +71,7 @@ test_that("assign_common_names handles common_name NAs correctly", {
     provided_name = c("Eudynamys orientalis", "Eudynamys orientalis"),
     search_term = c("Eudynamys orientalis", "Eudynamys orientalis cyanocephalus"),
     common_name = c(NA, NA),
-    jurisdiction = "AUS",
+    state = "AUS",
     list1 = c(TRUE, TRUE)
   )
   # test that common_name is recorded as NA
@@ -85,7 +85,7 @@ test_that("assign_common_names handles common_name NAs correctly", {
     provided_name = c("Eudynamys orientalis", "Eudynamys orientalis"),
     search_term = c("Eudynamys orientalis", "Eudynamys orientalis cyanocephalus"),
     common_name = c(NA, "Eastern Koel"),
-    jurisdiction = "AUS",
+    state = "AUS",
     list1 = c(TRUE, TRUE)
   )
   # test that common_name is recorded as "Eastern Koel"
