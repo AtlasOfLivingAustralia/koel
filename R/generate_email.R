@@ -133,7 +133,7 @@ build_email <- function(alerts_data,
 
     # identify list names from alerts_data
     list_names <- colnames(alerts_data)[(which(colnames(alerts_data) == "provided_name") + 1):
-                                          (which(colnames(alerts_data) == "jurisdiction") - 1)]
+                                          (which(colnames(alerts_data) == "state") - 1)]
 
     map(.x = list_names,
        .f = function(list_name) {
