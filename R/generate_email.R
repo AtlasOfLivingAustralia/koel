@@ -279,6 +279,7 @@ build_gt_table <- function(df, cache_path){
           "Supplied as:<br><i>{provided_name}</i><br>",
           "Common name:<br>{common_name}"
         ),
+
         gt::html
       ),
       observation = map(
