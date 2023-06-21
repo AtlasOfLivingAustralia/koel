@@ -14,7 +14,7 @@
 #'
 #' @return A data.frame of unique scientific names, the search term used to
 #'   match those names to the ALA taxonomy, a common name for each species, the
-#'   state jurisdictions of interest for each species, and a column for each
+#'   state and LGA jurisdictions of interest for each species, and a column for each
 #'   imported list. Each column associated with an imported list contains
 #'   logical information on whether or not a species appears on the list. This
 #'   data.frame may be passed to `assign_common_names()` and
@@ -57,7 +57,6 @@ get_species_lists2 <- function(lists_df, synonym_delimiter = ","){
   }
 
   ##### Function Implementation #####
-
   combined_df <- lists_df |>
     pmap(.f = \(path, label, ...)
          read_csv(path, show_col_types = FALSE) |>
@@ -68,8 +67,15 @@ get_species_lists2 <- function(lists_df, synonym_delimiter = ","){
     mutate(
       correct_name = clean_names(correct_name),
       synonyms = clean_names(synonyms)) |>
-    # empty jurisdiction rows default to "AUS"
-    mutate(jurisdiction = replace_na(jurisdiction, "AUS"))
+    # add state and/or LGA columns if not present
+    (\(.) if ("state" %in% names(.)) {.}
+          else {. |> tibble::add_column(state = NA) |>
+              relocate(state, .after = common_name)})() |>
+    (\(.) if ("lga" %in% names(.)) {.}
+          else {. |> tibble::add_column(lga = NA) |>
+              relocate(lga, .after = state)})() |>
+    # empty state rows (with no provided LGA) default to "AUS"
+    mutate(state = ifelse(is.na(state) & is.na(lga), "AUS", state))
 
   combined_df_clean <- combined_df |>
     # split multiple synonyms
@@ -85,20 +91,21 @@ get_species_lists2 <- function(lists_df, synonym_delimiter = ","){
     mutate(search_term = clean_names(search_term)) |>
     distinct()
 
-  # group unique species+jurisdictions together from multiple lists
+  # group unique species+states together from multiple lists
   unique_species <- combined_df_clean |>
-    select(correct_name, jurisdiction, list_name) |>
+    select(correct_name, state, lga, list_name) |>
     distinct() |>
     mutate(dummy_values = TRUE) |>
-    pivot_wider(id_cols = c(correct_name, jurisdiction),
+    pivot_wider(id_cols = c(correct_name, state, lga),
                 names_from = list_name,
                 values_from = dummy_values,
                 values_fill = FALSE)
 
   combined_df_joined <- combined_df_clean |>
-    left_join(unique_species, by = c("correct_name", "jurisdiction")) |>
+    left_join(unique_species, by = c("correct_name", "state", "lga")) |>
     select(-list_name) |>
-    mutate(common_name = toTitleCase(common_name)) |>
+    mutate(common_name = toTitleCase(common_name),
+           lga = toupper(lga)) |>
     distinct()
 
   return(combined_df_joined)
@@ -127,8 +134,8 @@ clean_names <- function(name) {
     gsub(",$", "", .) %>%           # remove trailing commas
     gsub(" +$", "", .) %>%          # remove trailing spaces
     gsub(",(\\w)", ", \\1", .) %>%  # add spaces between commas and text
-    gsub(" sp.", "", .) %>%
-    gsub(" spp.", "", .) %>%        # remove spp. and sp. abbreviations
+    gsub(" sp\\.", "", .) %>%
+    gsub(" spp\\.", "", .) %>%      # remove spp. and sp. abbreviations
     str_squish(.)
 
   return(cleaned_name)

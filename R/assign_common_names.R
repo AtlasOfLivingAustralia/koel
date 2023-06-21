@@ -13,6 +13,8 @@
 #' @importFrom dplyr select
 #' @importFrom dplyr group_by
 #' @importFrom dplyr summarise
+#' @importFrom dplyr mutate
+#' @importFrom tidyr replace_na
 #' @importFrom rlang abort
 #' @importFrom rlang inform
 #'
@@ -37,7 +39,8 @@ assign_common_names <- function(species_list) {
     select(correct_name, common_name) |>
     group_by(correct_name) |>
     # take the first common_name present for each correct species name
-    summarise(common_name = na.omit(common_name)[1], .groups = "drop")
+    summarise(common_name = na.omit(common_name)[1], .groups = "drop") |>
+    mutate(common_name = replace_na(common_name, "[Common Name Unknown]"))
 
   return(common_names)
 }
