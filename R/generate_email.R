@@ -15,10 +15,13 @@
 #' @param email_list A `data.frame` of email details for each list. Should
 #'    contain at least two columns, one named 'email' containing email addresses,
 #'    and one named 'list' containing the lists each email is associated with.
+#'    Defaults to an empty dataframe with these columns.
+#' @param email_subject An optional `character string` of the subject of the email.
+#'    If not provided, default subject is "ALA Biosecurity Alerts".
 #' @param email_send A `character string` providing the email address from which
-#'    the alerts are to be sent.
+#'    the alerts are to be sent. Deafults to NA.
 #' @param email_password A `character_string` providing the password for the
-#'    provided email address (`email_send` argument)
+#'    provided email address (`email_send` argument). Defaults to NA.
 #' @param email_host A `character_string` providing the email server host to be
 #'    fed to the `{emayili}` function `server()`. Defaults to
 #'    "smtp-relay.gmail.com" which supports the offocial ALA biosecurity alerts
@@ -26,8 +29,6 @@
 #' @param email_port A `numeric` value providing the email server port to be
 #'    fed to the `{emayili}` function `server()`. Defaults to `587` which
 #'    supports the offocial ALA biosecurity alerts  email address.
-#' @param email_subject An optional `character string` of the subject of the email.
-#'    If not provided, default subject is "ALA Biosecurity Alerts".
 #' @param template_path A `character string` containing the path to the R
 #'    markdown template to be rendered with the html table produced by
 #'    `build_gt_table()`
@@ -59,8 +60,11 @@
 #'
 #' @export
 
-build_email <- function(alerts_data, email_list,
-                        email_subject, email_send, email_password,
+build_email <- function(alerts_data,
+                        email_list = data.frame(email = character(),
+                                                list = character()),
+                        email_subject = "ALA Biosecurity Alert",
+                        email_send = NA, email_password = NA,
                         email_host = "smtp-relay.gmail.com", email_port = 587,
                         template_path, cache_path, output_path = NULL,
                         test = TRUE) {
@@ -129,7 +133,7 @@ build_email <- function(alerts_data, email_list,
 
     # identify list names from alerts_data
     list_names <- colnames(alerts_data)[(which(colnames(alerts_data) == "provided_name") + 1):
-                                          (which(colnames(alerts_data) == "jurisdiction") - 1)]
+                                          (which(colnames(alerts_data) == "state") - 1)]
 
     map(.x = list_names,
        .f = function(list_name) {
@@ -152,7 +156,7 @@ build_email <- function(alerts_data, email_list,
                        email_send, email_password,
                        email_host = email_host, email_port = email_port,
                        email_subject = email_subject,
-                       test = TRUE)
+                       test = test)
             } else {
               cat(paste0("No alert sent for list: ", list_name, "\n"))
             }
@@ -195,6 +199,9 @@ build_email <- function(alerts_data, email_list,
 #' @importFrom dplyr mutate
 #' @importFrom dplyr select
 #' @importFrom dplyr filter
+#' @importFrom dplyr tibble
+#' @importFrom dplyr if_else
+#' @importFrom dplyr rowwise
 #' @importFrom glue glue
 #' @importFrom gt html
 #' @importFrom purrr map
@@ -222,7 +229,7 @@ build_gt_table <- function(df, cache_path){
       "recordID", "eventDate", "cl22", "creator", "url", "correct_name",
       "verbatimScientificName", "common_name", "decimalLatitude",
       "decimalLongitude", "dataResourceName",  "download_path"
-      )
+    )
     %in% colnames(df)))) {
     cols_needed <- c(
       "recordID", "eventDate", "cl22", "creator", "url", "correct_name",
@@ -244,68 +251,72 @@ build_gt_table <- function(df, cache_path){
 
   ##### Function Implementation #####
   # get first image per record
-  df <- df |>
+  df2 <- df |>
     filter(!duplicated(recordID)) |>
     # format dates
     mutate(date_html = (format(eventDate, "%H:%M %d-%m-%Y")))
 
   # add maps
   invisible(
-    df |>
+    df2 |>
       pmap(tibble) |>
       map(~{build_map_thumbnail(.x, cache_path)})
-    )
+  )
 
   # build table info
-  table_df <- df |>
-    arrange(cl22, creator) |>
+  table_df <- df2 |>
+    arrange(scientificName, eventDate, cl22) |>
     mutate(
       path = here(),
       image_url = sub("thumbnail$", "original", url)
     ) |>
+    rowwise() |>
     mutate(
-      # add common name
-      species = map(
+      species_names = map(
         glue(
-          "<a href='https://biocache.ala.org.au/occurrences/{recordID}' target='_blank'><b><i>{correct_name}</i></b></a><br>
-          Supplied as:<br><i>{provided_name}</i><br>
-          Common name:<br>{common_name}
-        "),
+          "<a href='https://biocache.ala.org.au/occurrences/{recordID}' target='_blank'>
+            <b><i>{scientificName}</i></b></a><br>",
+          "Supplied as:<br><i>{provided_name}</i><br>",
+          "Common name:<br>{common_name}"
+        ),
+
         gt::html
       ),
-      observation = map(glue("
-         <b>{creator}</b><br>
-         {date_html}<br>
-         {cw_state}<br>(
-         <a href='https://www.google.com/maps/search/?api=1&query={decimalLatitude}%2C{decimalLongitude}' target='_blank'>{decimalLongitude}, {decimalLatitude}
-         </a>)<br>
-         <i>{dataResourceName}</i>
-       "),
-       gt::html
+      observation = map(
+        glue(
+          if_else(is.na(creator), "", "<b>{creator}</b><br>"),
+          "{date_html}<br>",
+          if_else(is.na(lga), "", "<font size='-1'>{cl10923}</font><br>"),
+          "{cw_state}<br>",
+          "(<a href='https://www.google.com/maps/search/?api=1&query={decimalLatitude}%2C{decimalLongitude}'
+            target='_blank'>{decimalLongitude}, {decimalLatitude}</a>)<br>",
+          "<i>{dataResourceName}</i>"
+        ),
+        gt::html
       ),
       location = map(
-        glue("
-          <a href='https://www.google.com/maps/search/?api=1&query={decimalLatitude}%2C{decimalLongitude}' target='_blank'>
+        glue(
+          "<a href='https://www.google.com/maps/search/?api=1&query={decimalLatitude}%2C{decimalLongitude}'
+              target='_blank'>
             <img src='{cache_path}maps/{recordID}.png' width='200' height='150'
                  style='width:200px;max-width:200px;height:150px;max-height:150px;'/>
-          </a>"),
+          </a>"
+        ),
         gt::html
       ),
-      image = map(
-        ifelse(is.na(url),
-               glue("
-                    <b>NO MEDIA AVAILABLE</b>"
-               ),
-               glue("
-                 <a href={image_url} target='_blank'>
-                    <img src='{download_path}' height = '200'
-                         style='max-width:267px;height:100%;max-height:200px;'>
-                 </a>"
-               )),
+      occ_media = map(
+        glue(
+          if_else(is.na(url),
+                  "<b>NO MEDIA AVAILABLE</b>",
+                  "<a href={image_url} target='_blank'>
+                      <img src='{download_path}' height = '200'
+                           style='max-width:267px;height:100%;max-height:200px;'>
+                  </a>")
+        ),
         gt::html
       )
     ) |>
-    select(species, observation, location, image)
+    select(species_names, observation, location, occ_media)
 
   save(table_df, file = paste0(cache_path, "table_df.RData"))
   return(table_df)
@@ -319,6 +330,10 @@ build_gt_table <- function(df, cache_path){
 #'    produce small map thumbnails that depict the locations of individual
 #'    observations extracted from ALA. These images are saved as .png files and
 #'    imported into a `gt` table for rendering in a markdown document.
+#'
+#' Note that this functino will install PhantomJS using the package `webshot` if
+#'    it is not already installed on the machine being used. The map production
+#'    cannot proceed without PhantomJS.
 #'
 #' @param list_row A `data.frame` object with a single row from a data.frame
 #'    produced by `ala_record_download()`. Usually the larger data.frame is
@@ -339,6 +354,8 @@ build_gt_table <- function(df, cache_path){
 #' @importFrom leaflet addTiles
 #' @importFrom leaflet setView
 #' @importFrom leaflet addCircleMarkers
+#' @importFrom webshot is_phantomjs_installed
+#' @importFrom webshot install_phantomjs
 #' @importFrom mapview mapshot
 #' @importFrom sf st_as_sf
 #' @importFrom rlang abort
@@ -417,6 +434,13 @@ build_map_thumbnail <- function(list_row, cache_path){
     inform("No 'maps' directory exists in the provided `cache_path`. One has been created.")
     dir.create(paste0(cache_path, "maps"))
   }
+
+  ##### Install PhantomJS if not installed #####
+  if (!is_phantomjs_installed()) {
+    inform("PhantomJS will be installed using package `webshot` to facilitate map creation.")
+    install_phantomjs()
+  }
+
   ##### Function Implementation #####
   # need to add defensive programming + check for existence of the maps directory
   occurrence_map <- leaflet(options = leafletOptions(crs = leafletCRS(code = "WGS84"))) |>
@@ -484,12 +508,12 @@ send_email <- function(recipients, output_file, email_send, email_password,
 
   ##### Function Implementation #####
   if (length(recipients) == 0) {
-    inform("No email recipients for this list. Email not sent but the html table has been saved.")
+    inform("No email recipients for this list. No email sent but .html table has been saved.")
   } else {
     if (test) {
       email <- envelope() |>
         from(email_send) |>
-        to(recipients) |>
+        bcc(recipients) |>
         subject(email_subject) |>
         emayili::html(read_html(output_file))
       # render("email_template.Rmd", include_css = "rmd")

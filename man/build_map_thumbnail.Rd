@@ -29,3 +29,8 @@ This function uses basemaps from OpenStreetMaps, called via `leaflet`,to
    observations extracted from ALA. These images are saved as .png files and
    imported into a `gt` table for rendering in a markdown document.
 }
+\details{
+Note that this functino will install PhantomJS using the package `webshot` if
+   it is not already installed on the machine being used. The map production
+   cannot proceed without PhantomJS.
+}

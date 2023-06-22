@@ -6,10 +6,10 @@
 \usage{
 build_email(
   alerts_data,
-  email_list,
-  email_subject,
-  email_send,
-  email_password,
+  email_list = data.frame(email = character(), list = character()),
+  email_subject = "ALA Biosecurity Alert",
+  email_send = NA,
+  email_password = NA,
   email_host = "smtp-relay.gmail.com",
   email_port = 587,
   template_path,
@@ -26,16 +26,17 @@ logical column for each list in the dataset.}
 
 \item{email_list}{A `data.frame` of email details for each list. Should
 contain at least two columns, one named 'email' containing email addresses,
-and one named 'list' containing the lists each email is associated with.}
+and one named 'list' containing the lists each email is associated with.
+Defaults to an empty dataframe with these columns.}
 
 \item{email_subject}{An optional `character string` of the subject of the email.
 If not provided, default subject is "ALA Biosecurity Alerts".}
 
 \item{email_send}{A `character string` providing the email address from which
-the alerts are to be sent.}
+the alerts are to be sent. Deafults to NA.}
 
 \item{email_password}{A `character_string` providing the password for the
-provided email address (`email_send` argument)}
+provided email address (`email_send` argument). Defaults to NA.}
 
 \item{email_host}{A `character_string` providing the email server host to be
 fed to the `{emayili}` function `server()`. Defaults to
