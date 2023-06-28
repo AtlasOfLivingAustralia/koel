@@ -48,40 +48,40 @@
 #'    indicating the Australian state/territory jurisdiction each occurrence was
 #'    located as per the Australian Coastal Waters Act 1980.
 #'
-#' @importFrom galah galah_call
-#' @importFrom galah galah_filter
-#' @importFrom galah galah_config
-#' @importFrom galah galah_select
-#' @importFrom galah atlas_occurrences
-#' @importFrom galah search_media
-#' @importFrom galah collect_media
-#' @importFrom purrr map
-#' @importFrom purrr list_rbind
-#' @importFrom dplyr mutate
-#' @importFrom dplyr select
-#' @importFrom dplyr distinct
-#' @importFrom dplyr filter
-#' @importFrom dplyr left_join
-#' @importFrom dplyr right_join
 #' @importFrom dplyr across
-#' @importFrom dplyr everything
+#' @importFrom dplyr as_tibble
 #' @importFrom dplyr bind_rows
+#' @importFrom dplyr distinct
+#' @importFrom dplyr everything
+#' @importFrom dplyr filter
 #' @importFrom dplyr group_by
+#' @importFrom dplyr if_else
+#' @importFrom dplyr left_join
+#' @importFrom dplyr mutate
+#' @importFrom dplyr right_join
+#' @importFrom dplyr relocate
+#' @importFrom dplyr select
 #' @importFrom dplyr slice_head
 #' @importFrom dplyr ungroup
-#' @importFrom dplyr as_tibble
-#' @importFrom dplyr relocate
-#' @importFrom dplyr if_else
-#' @importFrom tidyr as_tibble
+#' @importFrom galah atlas_occurrences
+#' @importFrom galah collect_media
+#' @importFrom galah galah_call
+#' @importFrom galah galah_config
+#' @importFrom galah galah_filter
+#' @importFrom galah galah_select
+#' @importFrom galah search_media
+#' @importFrom lubridate as_datetime
+#' @importFrom lubridate dmy
+#' @importFrom purrr list_rbind
+#' @importFrom purrr map
+#' @importFrom rlang abort
+#' @importFrom rlang inform
 #' @importFrom sf st_as_sf
 #' @importFrom sf st_crs
 #' @importFrom sf st_intersects
 #' @importFrom sf st_drop_geometry
 #' @importFrom stringr str_detect
-#' @importFrom lubridate dmy
-#' @importFrom lubridate as_datetime
-#' @importFrom rlang abort
-#' @importFrom rlang inform
+#' @importFrom tidyr as_tibble
 #' @export
 
 get_occurrences <- function(species_list, common_names, cache_path,
@@ -183,7 +183,7 @@ get_occurrences <- function(species_list, common_names, cache_path,
       }
       # search through each potential name field
       ala_search <- fields |>
-        map(galah_field_search,
+        map(search_name_fields,
             start_date = start_date,
             end_date = end_date,
             search_terms = search_terms) |>
@@ -208,6 +208,7 @@ get_occurrences <- function(species_list, common_names, cache_path,
 
   # download records and save temp files in cache_path
   if (nrow(species_records) > 0) {
+    # download records and save temp files in cache_path
     occ_list <- species_records |>
       # remove duplicates of the same record for the same search term
       distinct(recordID, search_term, .keep_all = TRUE) |>
@@ -218,34 +219,26 @@ get_occurrences <- function(species_list, common_names, cache_path,
       left_join(common_names,
                 by = "correct_name") |>
       # state-based filtering
-      st_as_sf(coords = c("decimalLongitude", "decimalLatitude"),
-               crs = st_crs(coastal_waters_shp),
-               remove = FALSE) |>
-      mutate(intersection = st_intersects(geometry, coastal_waters_shp) |>
-               as.integer(),
-             cw_state = if_else(is.na(intersection),
-                                NA,
-                                coastal_waters_shp$state_abbr[intersection])) |>
-      select(-intersection) |>
-      st_drop_geometry() |>
+      identify_state() |>
+      identify_shape(shapes_path = shapes_path) |>
       # do ID'd states + LGAs match provided ones
       mutate(flagged_state = str_detect(state, cw_state),
-             flagged_lga = (lga == cl10923) |
-               str_detect(lga, paste0("^",  cl10923, ",")) |
-               str_detect(lga, paste0(", ", cl10923, ",")) |
-               str_detect(lga, paste0(", ", cl10923, "$"))) |>
+             flagged_lga = !is.na(cl10923) & (cl10923 %in% str_detect(lga, " ,")[[1]]),
+             flagged_shape = !is.na(shape_feature)) |>
       # filter out occurrences not in areas of interest
       filter(state == "AUS" |
                (!is.na(state) & flagged_state) |
-               (!is.na(lga) & flagged_lga)) |>
-      select(-flagged_state, -flagged_lga) |>
+               (!is.na(lga) & flagged_lga) |
+               (!is.na(shape) & flagged_shape)) |>
+      select(-flagged_state, -flagged_lga, -flagged_shape) |>
       # filter by IBRA and IMCRA regions - may shift this line around a bit
       filter(!is.na(cl966) | !is.na(cl1048) | !is.na(cl21)) |>
       as_tibble() |>
       # introduce media data (if exists) for each occurrence (time sink)
       #search_media()
       (\(.) if (any(!is.na(.$multimedia))) search_media(.) else .)() |>
-      distinct(recordID, correct_name, provided_name, state, lga, .keep_all = TRUE)
+      # keep the first media item for each record
+      distinct(recordID, correct_name, provided_name, state, lga, shape, .keep_all = TRUE)
 
     cat(paste0("Total: ", length(unique(occ_list$recordID)), " records post location filtering"))
 
@@ -255,13 +248,15 @@ get_occurrences <- function(species_list, common_names, cache_path,
         (\(.) if (any(!is.na(.$multimedia))) {
           collect_media(.,
                         path = paste0(cache_path, "species_images"),
-                        type = "thumbnail")
+                        type = "thumbnail") |>
+            select(recordID, state, lga, shape, url, download_path)
         } else {
-          mutate(., url = NA, download_path = NA)
+          mutate(., url = NA, download_path = NA, creator = NA) |>
+            select(recordID, state, lga, shape, url, download_path, creator)
         })() |>
-        select(recordID, state, lga, url, download_path) |>
-        right_join(occ_list, by = c("recordID", "state", "lga")) |>
-        relocate(c(state, lga), .before = common_name)
+        right_join(occ_list, by = c("recordID", "state", "lga", "shape")) |>
+        relocate(c(state, lga, shape), .before = common_name) |>
+        relocate(creator, .after = cw_state)
 
       write.csv(occ_media,
                 file = paste0(cache_path, "alerts_data.csv"),
@@ -294,16 +289,16 @@ get_occurrences <- function(species_list, common_names, cache_path,
 #'    be provided to `galah_filter()`. Length should be capped at 100 to avoid
 #'    `{galah}` errors.
 #'
+#' @importFrom dplyr across
+#' @importFrom dplyr everything
+#' @importFrom dplyr mutate
+#' @importFrom galah atlas_occurrences
 #' @importFrom galah galah_call
 #' @importFrom galah galah_filter
 #' @importFrom galah galah_select
-#' @importFrom galah atlas_occurrences
-#' @importFrom dplyr mutate
-#' @importFrom dplyr across
-#' @importFrom dplyr everything
 #' @importFrom rlang .data
 
-galah_field_search <- function(field, start_date, end_date, search_terms) {
+search_name_fields <- function(field, start_date, end_date, search_terms) {
   field_fixed <- ifelse(field == "raw_scientificName",
                         "verbatimScientificName",
                         field)
@@ -323,4 +318,137 @@ galah_field_search <- function(field, start_date, end_date, search_terms) {
            across(everything(), as.character))
   return(occ_search)
 }
+
+#' Identify the Australian state of each record in a dataframe
+#'
+#' When provided with some (potentially modified) dataframe/tibble as produced
+#'    by `atlas_occurrences()` or other, a new column `cw_state` will be created
+#'    and appended to the end of the dataframe, identifying the Australian state
+#'    each occurrence sits in. This relies on the presence of numeric columns
+#'    `decimalLongitude` and `decimalLatitude` (default {galah} coordinate
+#'    columns) to match the coordinates of the occurrences to the Australian
+#'    state boundaries as described and delineated by the Coastal Waters Act
+#'    1980. If an occurrence does not occur in any state jurisdiction then
+#'    `NA` is returned.
+#'
+#' @param occ_list A dataframe/tibble prodcued by `atlas_occurrences()` or
+#'    otherwise, containing at minimum columns containing longitude and latitude
+#'    columns. Each row represents a unique occurrence
+#' @return Returns the exact provided dataframe with an additional character
+#'    column `cw_state` (Coastal Waters state) containing Australian state
+#'    abbreviations
+#'
+#' @importFrom dplyr if_else
+#' @importFrom dplyr mutate
+#' @importFrom dplyr select
+#' @importFrom sf st_as_sf
+#' @importFrom sf st_crs
+#' @importFrom sf st_drop_geometry
+#' @importFrom sf st_intersects
+#' @export
+
+identify_state <- function(occ_list) {
+  occ_list |>
+    st_as_sf(coords = c("decimalLongitude", "decimalLatitude"),
+             crs = st_crs(coastal_waters_shp),
+             remove = FALSE) |>
+    mutate(intersection = st_intersects(geometry, coastal_waters_shp) |>
+             as.integer(),
+           cw_state = if_else(is.na(intersection),
+                              NA,
+                              coastal_waters_shp$state_abbr[intersection])) |>
+    select(-intersection) |>
+    st_drop_geometry()
+}
+
+#' Identify the presence of species occurrences in a set of shapefiles
+#'
+#' Within the {koel} `get_occurrences()` workflow, species may be provided with
+#'    an optional `shape` argument specifying the name of the shapefile inside
+#'    which occurrences of that species should be kept. When provided with some
+#'    (potentially modified) dataframe/tibble as produced by
+#'    `atlas_occurrences()` or other, a new column `shape_feature` will be
+#'    created and appended to the end of the dataframe, identifying the feature
+#'    of its specified shapefile that each occurrence occurs in, if it does
+#'    occur in the shapefile. If an occurrence does not occur in the specified
+#'    shapefile then `NA` is returned.
+#'
+#' @param occ_list A dataframe/tibble prodcued by `atlas_occurrences()` or
+#'    otherwise, containing at minimum columns containing longitude and latitude
+#'    columns, and a column named `shape` specifying the name of the shapefiles
+#'    to filter each species. Multiple shapefiles may be used, but it is limited
+#'    to one shapefile per row. Each row represents a unique occurrence.
+#' @param shapes_path Path to a directory that includes folders containing each
+#'    shapefile specified in the `shape` column of `occ_list`. Each shapefile
+#'    belongs in its own folder, and all files in that folder must be named
+#'    identically to the folder name except for the file suffixes. Each
+#'    shapefile must contain a feature named `SHAPE_NAME`.
+#' @return Returns the exact provided dataframe with an additional character
+#'    column `shape_feature` containing the name of the provided shapefile
+#'    feature if the occurrence does sit within the region specified by the
+#'    shapefile.
+#'
+#' @importFrom dplyr if_else
+#' @importFrom dplyr mutate
+#' @importFrom dplyr pull
+#' @importFrom dplyr select
+#' @importFrom purrr list_rbind
+#' @importFrom purrr map
+#' @importFrom sf st_as_sf
+#' @importFrom sf st_crs
+#' @importFrom sf st_drop_geometry
+#' @importFrom sf st_intersects
+#' @importFrom sf st_is_valid
+#' @importFrom sf st_make_valid
+#' @importFrom sf st_read
+#' @importFrom tidyr replace_na
+#' @export
+
+identify_shape <- function(occ_list, shapes_path) {
+  # first need to download all relevant shape files
+  shape_names <- unique(occ_list$shape) |> na.omit()
+  shapefiles <- map(
+    .x = shape_names,
+    .f = function(shape_name) {
+      st_read(paste0(shapes_path, shape_name, "/", shape_name, ".shp")) |>
+        (\(.) if (all(st_is_valid(.))) . else st_make_valid(.))()
+    }
+  ) |>
+    setNames(shape_names)
+  # then figure out whether an occurrence is in its specified shpfile
+  occ_list_shapes <- occ_list |>
+    # group occurrences by the shapefile they use (or by NA if none provided)
+    split(occ_list |>
+            mutate(shape = replace_na(shape, "empty")) |>
+            pull(shape)) |>
+    # iterate over each identified shapefile (one df per shp)
+    map(.f = function(occ_dfs) {
+      # if its the NA df then just return a column of NAs
+      if (all(is.na(occ_dfs$shape))) {
+        occ_dfs |>
+          mutate(shape_feature = NA)
+      } else {
+        # otherwise, check whether each occurrence lies in the shp file,
+        # and return the feature name that it lies in (change to FEATURE_NAME)
+        occ_dfs |>
+          st_as_sf(
+            coords = c("decimalLongitude", "decimalLatitude"),
+            crs = st_crs(shapefiles[[unique(occ_dfs$shape)]]),
+            remove = FALSE) |>
+          mutate(intersection = st_intersects(geometry,
+                                              shapefiles[[unique(shape)]]) |>
+                   as.integer(),
+                 shape_feature = if_else(
+                   is.na(intersection),
+                   NA,
+                   shapefiles[[unique(shape)]]$SHAPE_NAME[intersection])) |>
+          select(-intersection) |>
+          st_drop_geometry()
+      }
+    }) |>
+    list_rbind()
+
+  return(occ_list_shapes)
+}
+
 

@@ -10,13 +10,13 @@
 #' `get_species_list2()`, that contains at least a 'correct_name' and a
 #' 'common_name' column.
 #'
-#' @importFrom dplyr select
 #' @importFrom dplyr group_by
-#' @importFrom dplyr summarise
 #' @importFrom dplyr mutate
-#' @importFrom tidyr replace_na
+#' @importFrom dplyr select
+#' @importFrom dplyr summarise
 #' @importFrom rlang abort
 #' @importFrom rlang inform
+#' @importFrom tidyr replace_na
 #'
 #' @return A single data.frame with a 'correct_name' and 'common_name' column.
 #'    Each correct_name is unique and has a single common name assigned to it.

@@ -279,13 +279,13 @@ build_gt_table <- function(df, cache_path){
           "Supplied as:<br><i>{provided_name}</i><br>",
           "Common name:<br>{common_name}"
         ),
-
         gt::html
       ),
       observation = map(
         glue(
           if_else(is.na(creator), "", "<b>{creator}</b><br>"),
           "{date_html}<br>",
+          if_else(is.na(shape), "", "<font size='-1'>{shape_feature}</font><br>"),
           if_else(is.na(lga), "", "<font size='-1'>{cl10923}</font><br>"),
           "{cw_state}<br>",
           "(<a href='https://www.google.com/maps/search/?api=1&query={decimalLatitude}%2C{decimalLongitude}'
