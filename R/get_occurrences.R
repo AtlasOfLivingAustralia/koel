@@ -255,13 +255,15 @@ get_occurrences <- function(species_list, common_names, cache_path,
         (\(.) if (any(!is.na(.$multimedia))) {
           collect_media(.,
                         path = paste0(cache_path, "species_images"),
-                        type = "thumbnail")
+                        type = "thumbnail") |>
+            select(recordID, state, lga, url, download_path)
         } else {
-          mutate(., url = NA, download_path = NA)
+          mutate(., url = NA, download_path = NA, creator = NA) |>
+            select(recordID, state, lga, url, download_path, creator)
         })() |>
-        select(recordID, state, lga, url, download_path) |>
         right_join(occ_list, by = c("recordID", "state", "lga")) |>
-        relocate(c(state, lga), .before = common_name)
+        relocate(c(state, lga), .before = common_name) |>
+        relocate(creator, .after = cw_state)
 
       write.csv(occ_media,
                 file = paste0(cache_path, "alerts_data.csv"),
