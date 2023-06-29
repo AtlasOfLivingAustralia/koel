@@ -15,7 +15,8 @@
 #' @param email_list A `data.frame` of email details for each list. Should
 #'    contain at least two columns, one named 'email' containing email addresses,
 #'    and one named 'list' containing the lists each email is associated with.
-#'    Defaults to an empty dataframe with these columns.
+#'    Defaults to an empty dataframe with these columns. Emails provided with
+#'    `"universal"` in the `list` column receive emails for all lists
 #' @param email_subject An optional `character string` of the subject of the email.
 #'    If not provided, default subject is "ALA Biosecurity Alerts".
 #' @param email_send A `character string` providing the email address from which

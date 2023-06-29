@@ -69,7 +69,7 @@ The function workflow from .csv list files through to sending of emails is summa
 
 Importantly, the key inputs for the workflow are 1) a folder containing similarly named and formatted .csv files of species lists., and 2) the R markdown template used for visualising the output of `build_gt_table()`. If lists require shapefile filtering then an additional folder of shape files must be provided.
 
-The recommended workflow follows the calling of the five blue functions which pass their dataframe/tibble outputs to each other. `collate_lists()` summarises the list names and paths for import and tidying with `get_species_lists2()`. `assign_common_names()` summarises duplicate common names and the outputs pass through to `get_occurrences()`, which download and filter occurrence data and media. `build_email()` is the final function called in the workflow, and facilitates the creation and sending of biosecurity alert emails to and from pre-specified email addresses. Output files are saved at various stages throughout the workflow in specified cache and output paths.
+The recommended workflow follows the calling of the five blue functions which pass their dataframe/tibble outputs to each other. `collate_lists()` summarises the list names and paths for import and tidying with `get_species_lists2()`. `assign_common_names()` summarises duplicate common names and the outputs pass through to `get_occurrences()`, which download and filter occurrence data and media. `build_email()` is the final function called in the workflow, and facilitates the creation and sending of biosecurity alert emails to and from pre-specified email addresses. Output files are saved at various stages throughout the workflow in specified cache and/or output paths.
 
 #### Email sending
 
