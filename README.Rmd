@@ -23,7 +23,7 @@ install.packages("remotes")
 remotes::install_github("atlasoflivingaustralia/koel")
 ```
 
-```{r Install Packages, echo = FALSE}
+```{r Install Packages, include = FALSE}
 #install.packages("galah")
 #install.packages("DiagrammeR")
 #install.packages("gt")

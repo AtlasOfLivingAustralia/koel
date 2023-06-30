@@ -4,8 +4,8 @@
 #'   combines all existing lists and returns a single data.frame, which may
 #'   then be passed as an argument to `get_species_lists()`.
 #'
-#' @param path Path to the directory where lists are saved, beginning with "./"
-#'   and ending in "/".
+#' @param path Path to the directory where lists are saved, beginning with `"./"`
+#'   and ending in `"/"`.
 #' @param list_suffix Character string between the list name and file extension.
 #' @return A data.frame containing four columns, with information about the
 #'   source and location of user-supplied lists.

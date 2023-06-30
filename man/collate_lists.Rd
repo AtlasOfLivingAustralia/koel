@@ -7,8 +7,8 @@
 collate_lists(path, list_suffix = "_list")
 }
 \arguments{
-\item{path}{Path to the directory where lists are saved, beginning with "./"
-and ending in "/".}
+\item{path}{Path to the directory where lists are saved, beginning with `"./"`
+and ending in `"/"`.}
 
 \item{list_suffix}{Character string between the list name and file extension.}
 }

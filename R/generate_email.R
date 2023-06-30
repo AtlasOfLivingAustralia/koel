@@ -8,56 +8,54 @@
 #'    of this function, however it provides the option to save .html and .csv
 #'    files to local or temporary directories.
 #'
-#' @param alerts_data A `data.frame` ideally produced by `ala_record_download()`.
+#' @param alerts_data A data.frame ideally produced by `download_occurrences()`.
 #'    Each row contains ALA data pertaining to a single species occurrence record
-#'    downloaded with galah. Should contain 29 default columns plus an extra
+#'    downloaded with galah. Should contain __ default columns plus an extra
 #'    logical column for each list in the dataset.
-#' @param email_list A `data.frame` of email details for each list. Should
-#'    contain at least two columns, one named 'email' containing email addresses,
-#'    and one named 'list' containing the lists each email is associated with.
+#' @param email_list A data.frame of email details for each list. Should
+#'    contain at least two columns, one named `email` containing email addresses,
+#'    and one named `list` containing the lists each email is associated with.
 #'    Defaults to an empty dataframe with these columns. Emails provided with
 #'    `"universal"` in the `list` column receive emails for all lists
-#' @param email_subject An optional `character string` of the subject of the email.
+#' @param email_subject An optional single string of the subject of the email.
 #'    If not provided, default subject is "ALA Biosecurity Alerts".
-#' @param email_send A `character string` providing the email address from which
-#'    the alerts are to be sent. Deafults to NA.
-#' @param email_password A `character_string` providing the password for the
-#'    provided email address (`email_send` argument). Defaults to NA.
-#' @param email_host A `character_string` providing the email server host to be
-#'    fed to the `{emayili}` function `server()`. Defaults to
-#'    "smtp-relay.gmail.com" which supports the offocial ALA biosecurity alerts
+#' @param email_send A single string providing the email address from which
+#'    the alerts are to be sent. Deafults to `NA`.
+#' @param email_password A single string providing the password for the
+#'    provided email address (`email_send` argument). Defaults to `NA`.
+#' @param email_host A single string providing the email server host to be
+#'    fed to the {emayili} function `server()`. Defaults to
+#'    `"smtp-relay.gmail.com"` which supports the official ALA biosecurity alerts
 #'    email address.
-#' @param email_port A `numeric` value providing the email server port to be
-#'    fed to the `{emayili}` function `server()`. Defaults to `587` which
-#'    supports the offocial ALA biosecurity alerts  email address.
-#' @param template_path A `character string` containing the path to the R
+#' @param email_port A single numeric value providing the email server port to be
+#'    fed to the {emayili} function `server()`. Defaults to `587` which
+#'    supports the official ALA biosecurity alerts email address.
+#' @param template_path A single string containing the path to the R
 #'    markdown template to be rendered with the html table produced by
 #'    `build_gt_table()`
-#' @param cache_path A `character string` containing the path to the temporary
+#' @param cache_path A single string containing the path to the temporary
 #'    cache folder in which species images and maps are saved.  Must begin with
-#'    "./" and end  with "/". Should contain a 'species_images' and a 'maps'
+#'    `"./"` and end  with `"/"`. Should contain a `species_images` and a `maps`
 #'    directory, however these will be created if they do not exist.
-#' @param output_path An optional `character string` containing the path to the
+#' @param output_path An optional single string containing the path to the
 #'    permanent directory in which the produced .html and .csv files are saved
 #'    for record-keeping purposes. Default value is `NULL`, and files are only
-#'    saved if a file path is provided instead. Must begin with "./" and end
-#'    with "/". Should contain a 'html' and a 'csv' directory, however these
+#'    saved if a file path is provided instead. Must begin with `"./"` and end
+#'    with `"/"`. Should contain a 'html' and a 'csv' directory, however these
 #'    will be created if they do not exist.
-#' @param test A `logical` argument which indicates whether the email should be
+#' @param test A logical argument which indicates whether the email should be
 #'    sent as a test email (TRUE) or as an official email (FALSE). If the email
-#'    is a test then it is addressed to recipients directly and not to the
-#'    sending email address. If the email is not a test then it is bcc'd to all
-#'    recipients and is also addressed to the sending email address. Defaults to
-#'    TRUE.
+#'    is a test then it is not addressed to the sending email address. Defaults
+#'    to `TRUE`.
 #'
-#' @importFrom purrr map
 #' @importFrom dplyr filter
-#' @importFrom dplyr select
 #' @importFrom dplyr pull
-#' @importFrom rmarkdown render
+#' @importFrom dplyr select
+#' @importFrom purrr map
 #' @importFrom readr write_csv
 #' @importFrom rlang abort
 #' @importFrom rlang inform
+#' @importFrom rmarkdown render
 #'
 #' @export
 
@@ -188,33 +186,31 @@ build_email <- function(alerts_data,
 #'    interactive html tables which link to various web pages and contain
 #'    observation images, maps and details
 #'
-#' @param df A `data.frame` produced by `ala_record_download()` that is filtered
-#'    down to a given list in `build_email()`. Contains 29 data columns and l
-#'    ogical columns for each list of interest.
-#' @param cache_path A `character string` containing the path to the temporary
+#' @param df A data.frame produced by `download_occurrences()` that is filtered
+#'    down to a given list in `build_email()`. Contains __ data columns and
+#'    logical columns for each list of interest.
+#' @param cache_path A single string containing the path to the temporary
 #'    cache folder in which species images and maps are saved.  Must begin with
-#'    "./" and end  with "/". When this function it is called it should contain
-#'    a 'species_images' and a 'maps' directory containing relevant images.
+#'    `"./"` and end  with `"/"`. When this function it is called it should contain
+#'    a `species_images` and a `maps` directory containing relevant images.
+#' @return A tibble that is passed on to some RMarkdown (.Rmd) file to be
+#'    rendered as a gt table. Contains four columns: `species`, `observation`,
+#'    `location` and `image`.
 #'
 #' @importFrom dplyr arrange
-#' @importFrom dplyr mutate
-#' @importFrom dplyr select
 #' @importFrom dplyr filter
-#' @importFrom dplyr tibble
 #' @importFrom dplyr if_else
+#' @importFrom dplyr mutate
 #' @importFrom dplyr rowwise
+#' @importFrom dplyr select
+#' @importFrom dplyr tibble
 #' @importFrom glue glue
 #' @importFrom gt html
+#' @importFrom here here
 #' @importFrom purrr map
 #' @importFrom purrr pmap
-#' @importFrom here here
 #' @importFrom rlang abort
 #' @importFrom rlang inform
-#'
-#' @return A `data.frame` that is passed on to some RMarkdown (.Rmd) to be
-#'    rendered as a gt table. Contains four columns: 'species', 'observation',
-#'    'location' and 'image'.
-#'
 #' @export
 
 build_gt_table <- function(df, cache_path){
@@ -327,44 +323,43 @@ build_gt_table <- function(df, cache_path){
 
 #' Internal function to build map thumbnails for ALA observations
 #'
-#' This function uses basemaps from OpenStreetMaps, called via `leaflet`,to
+#' This function uses basemaps from OpenStreetMaps, called via `leaflet`, to
 #'    produce small map thumbnails that depict the locations of individual
 #'    observations extracted from ALA. These images are saved as .png files and
-#'    imported into a `gt` table for rendering in a markdown document.
+#'    imported into a {gt} table for rendering in a markdown document.
 #'
-#' Note that this functino will install PhantomJS using the package `webshot` if
+#' Note that this function will install PhantomJS using the package `webshot` if
 #'    it is not already installed on the machine being used. The map production
 #'    cannot proceed without PhantomJS.
 #'
 #' @param list_row A `data.frame` object with a single row from a data.frame
 #'    produced by `ala_record_download()`. Usually the larger data.frame is
 #'    parsed through build_email, where it is then filtered twice to get down to
-#'    one row. Must at least contain 'recordID', decimalLatitude' and
-#'    'decimalLongitude' columns as these are used for plotting of the point on
+#'    one row. Must at least contain `recordID`, `decimalLatitude` and
+#'    `decimalLongitude` columns as these are used for plotting of the point on
 #'    the map and naming of the produced .png file.
 #' @param cache_path A `character string` containing the path to the temporary
 #'    cache folder in which species images and maps are saved.  Must begin with
-#'    "./" and end  with "/". When this function it is called it should contain
-#'    a 'species_images' and a 'maps'. This function saves images in `cache_path/maps/`
-#'
-#' @importFrom maptiles get_tiles
-#' @importFrom maptiles plot_tiles
-#' @importFrom leaflet leaflet
-#' @importFrom leaflet leafletOptions
-#' @importFrom leaflet leafletCRS
-#' @importFrom leaflet addTiles
-#' @importFrom leaflet setView
-#' @importFrom leaflet addCircleMarkers
-#' @importFrom webshot is_phantomjs_installed
-#' @importFrom webshot install_phantomjs
-#' @importFrom mapview mapshot
-#' @importFrom sf st_as_sf
-#' @importFrom rlang abort
-#' @importFrom rlang inform
-#'
+#'    `"./"` and end  with `"/"`. When this function it is called it should contain
+#'    "species_images" and "maps" directories. This function saves images in
+#'    "./cache_path/maps/".
 #' @return No returned file. Instead, a .png version of the produced thumbnail i
 #'    is saved in the 'maps' directory of 'cache_path'.
 #'
+#' @importFrom leaflet addCircleMarkers
+#' @importFrom leaflet addTiles
+#' @importFrom leaflet leaflet
+#' @importFrom leaflet leafletCRS
+#' @importFrom leaflet leafletOptions
+#' @importFrom leaflet setView
+#' @importFrom maptiles get_tiles
+#' @importFrom maptiles plot_tiles
+#' @importFrom mapview mapshot
+#' @importFrom rlang abort
+#' @importFrom rlang inform
+#' @importFrom sf st_as_sf
+#' @importFrom webshot install_phantomjs
+#' @importFrom webshot is_phantomjs_installed
 #' @export
 
 # build_map_thumbnail <- function(list_row, cache_path){
@@ -461,45 +456,41 @@ build_map_thumbnail <- function(list_row, cache_path){
 #'    of occurrences of species of interest. Is used internally in `build_email()`
 #'    but can be deployed externally if necessary.
 #'
-#' @param recipients A `character string` vector of email addresses to be sent
+#' @param recipients A character vector of email addresses to be sent
 #'    the generated email. Is automatically generated by `build_email()` but can
 #'    be provided separately if needed.
-#' @param output_file A `character string` providing the path to the outputted
+#' @param output_file A character providing the path to the outputted
 #'    html file containing the {gt} table to be rendered in the email. This
 #'    path is produced in `build_email()` but can be provided separately too.
-#' @param email_send A `character string` providing the email address from which
+#' @param email_send A single string providing the email address from which
 #'    the alerts are to be sent.
-#' @param email_password A `character_string` providing the password for the
+#' @param email_password A single string providing the password for the
 #'    provided email address (`email_send` argument)
-#' @param email_host A `character_string` providing the email server host to be
-#'    fed to the `{emayili}` function `server()`. Defaults to
-#'    "smtp-relay.gmail.com" which supports the offocial ALA biosecurity alerts
+#' @param email_host A single string providing the email server host to be
+#'    fed to the {emayili} function `server()`. Defaults to
+#'    `"smtp-relay.gmail.com"` which supports the official ALA biosecurity alerts
 #'    email address.
-#' @param email_port A `numeric` value providing the email server port to be
-#'    fed to the `{emayili}` function `server()`. Defaults to `587` which
+#' @param email_port A numeric value providing the email server port to be
+#'    fed to the {emayili} function `server()`. Defaults to `587` which
 #'    supports the offocial ALA biosecurity alerts  email address.
-#' @param email_subject An optional `character string` of the subject of the email.
+#' @param email_subject An optional single string of the subject of the email.
 #'    If not provided, default subject is "ALA Biosecurity Alerts".
-#' @param test A `logical` argument which indicates whether the email should be
+#' @param test A logical argument which indicates whether the email should be
 #'    sent as a test email (TRUE) or as an official email (FALSE). If the email
-#'    is a test then it is addressed to recipients directly and not to the
-#'    sending email address. If the email is not a test then it is bcc'd to all
-#'    recipients and is also addressed to the sending email address. Defaults to
-#'    TRUE.
-#'
-#' @importFrom emayili envelope
-#' @importFrom emayili from
-#' @importFrom emayili to
-#' @importFrom emayili bcc
-#' @importFrom emayili subject
-#' @importFrom emayili server
-#' @importFrom xml2 read_html
-#' @importFrom rlang abort
-#' @importFrom rlang inform
-#'
+#'    is a test then it is not addressed to the sending email address. Defaults
+#'    to `TRUE`.
 #' @return No object is returned. This function exists only to send an email
 #'    containing the relevant tables for a biosecurity alert.
 #'
+#' @importFrom emayili bcc
+#' @importFrom emayili envelope
+#' @importFrom emayili from
+#' @importFrom emayili server
+#' @importFrom emayili subject
+#' @importFrom emayili to
+#' @importFrom rlang abort
+#' @importFrom rlang inform
+#' @importFrom xml2 read_html
 #' @export
 
 send_email <- function(recipients, output_file, email_send, email_password,

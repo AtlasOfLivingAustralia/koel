@@ -8,12 +8,12 @@ get_species_lists2(lists_df, synonym_delimiter = ",")
 }
 \arguments{
 \item{lists_df}{A data.frame preferably produced by `collate_lists()`
-containing at minimum two columns named 'path' and 'label' which denote
+containing at minimum two columns named `path` and `label` which denote
 respectively the path to and name of each list being searched.}
 
 \item{synonym_delimiter}{An optional character string detailing the delimiter
 used for multiple synonyms in the synonym columns of the lists. Defaults
-to ", ".}
+to `", "`.}
 }
 \value{
 A data.frame of unique scientific names, the search term used to
@@ -22,11 +22,11 @@ A data.frame of unique scientific names, the search term used to
   imported list. Each column associated with an imported list contains
   logical information on whether or not a species appears on the list. This
   data.frame may be passed to `assign_common_names()` and
-  `lookup_species_count()`.
+  `search_occurrences()`.
 }
 \description{
-This function takes a small `data.frame` produced by `collate_lists()` and
+This function takes a small data.frame produced by `collate_lists()` and
    facilitates the import of species list files described there. The rest of
    the function utilises {dplyr} and {tidyr} functions to clean and combine
-   the species lists into a single data.frame suitable for use with {ala}.
+   the species lists into a single data.frame suitable for use with {galah}.
 }
