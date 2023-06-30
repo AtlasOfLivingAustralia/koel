@@ -11,10 +11,10 @@ search_name_fields(field, start_date, end_date, search_terms)
 `"scientificName"`, `"genus"`}
 
 \item{start_date}{Date to begin search of ALA occurrences. `character` object
-and should be in the form "YYYY-mm-ddTHH::MM::SSZ}
+and should be in the form `"YYYY-mm-ddTHH::MM::SSZ"`.}
 
 \item{end_date}{Date to end search of ALA occurrences. `character` object
-and should be in the form "YYYY-mm-ddTHH::MM::SSZ}
+and should be in the form `"YYYY-mm-ddTHH::MM::SSZ"`.}
 
 \item{search_terms}{Character vector (may be of length 1) of search terms to
 be provided to `galah_filter()`. Length should be capped at 100 to avoid
