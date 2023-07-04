@@ -5,7 +5,7 @@
 #'    the function utilises {dplyr} and {tidyr} functions to clean and combine
 #'    the species lists into a single data.frame suitable for use with {galah}.
 #'
-#' @param lists_df A data.frame preferably produced by `collate_lists()`
+#' @param list_df A data.frame preferably produced by `collate_lists()`
 #'    containing at minimum two columns named `path` and `label` which denote
 #'    respectively the path to and name of each list being searched.
 #' @param synonym_delimiter An optional character string detailing the delimiter
@@ -41,13 +41,13 @@
 #' @importFrom tools toTitleCase
 #' @export
 
-get_species_lists2 <- function(lists_df, synonym_delimiter = ","){
+get_species_lists2 <- function(list_df, synonym_delimiter = ","){
 
   ##### Defensive Programming #####
-  if (!("data.frame" %in% class(lists_df))) {
-    abort("`lists_df` argument must be a data.frame or tibble")
-  } else if (!all(c("label", "path") %in% colnames(lists_df))) {
-    abort("`lists_df` must have columns `label` and `path`")
+  if (!("data.frame" %in% class(list_df))) {
+    abort("`list_df` argument must be a data.frame or tibble")
+  } else if (!all(c("label", "path") %in% colnames(list_df))) {
+    abort("`list_df` must have columns `label` and `path`")
   }
 
   if (class(synonym_delimiter) != "character") {
@@ -56,7 +56,7 @@ get_species_lists2 <- function(lists_df, synonym_delimiter = ","){
     abort("`synonym_delimiter` must be a single character object of length 1.")
   }
 
-  combined_df <- lists_df |>
+  combined_df <- list_df |>
     pmap(.f = \(path, label, ...)
          read_csv(path, show_col_types = FALSE) |>
            mutate(list_name = label)) |>

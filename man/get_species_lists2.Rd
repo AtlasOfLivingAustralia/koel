@@ -4,10 +4,10 @@
 \alias{get_species_lists2}
 \title{Import user-supplied species lists from a single directory}
 \usage{
-get_species_lists2(lists_df, synonym_delimiter = ",")
+get_species_lists2(list_df, synonym_delimiter = ",")
 }
 \arguments{
-\item{lists_df}{A data.frame preferably produced by `collate_lists()`
+\item{list_df}{A data.frame preferably produced by `collate_lists()`
 containing at minimum two columns named `path` and `label` which denote
 respectively the path to and name of each list being searched.}
 

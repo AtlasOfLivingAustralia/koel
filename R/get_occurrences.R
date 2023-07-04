@@ -75,16 +75,6 @@ search_occurrences <- function(species_list, common_names,
           `correct_name`, `common_name`")
   }
 
-  if (!is.character(cache_path) | substr(cache_path, nchar(cache_path), nchar(cache_path)) != "/") {
-    abort("`cache_path` argument but be a string ending in '/'")
-  } else if (!dir.exists(cache_path)) {
-    abort("The directory specified by `cache_path` does not exist")
-  }
-  if (!("species_images" %in% list.files(cache_path))) {
-    inform("No 'species_images' directory exists in the provided cache path. One has been created.")
-    dir.create(paste0(cache_path, "species_images"))
-  }
-
   if (!(is.numeric(start_date) | is.character(start_date))) {
     abort("`start_date` must be either a single numeric value or a character date in format 'ddmmyyyy'")
   }
@@ -184,7 +174,7 @@ search_occurrences <- function(species_list, common_names,
     left_join(common_names,
               by = "correct_name")
 
-  cat(paste0("Total: ", length(unique$species_records),
+  cat(paste0("Total: ", length(unique(species_records$recordID)),
              " records pre location filtering \n"))
 
   return(species_records)
@@ -235,7 +225,7 @@ search_occurrences <- function(species_list, common_names,
 #' @importFrom rlang abort
 #' @importFrom rlang inform
 #' @importFrom stringr str_detect
-#' @importFrom stringr str_split_1
+#' @importFrom stringr str_split
 #' @importFrom tidyr as_tibble
 #' @export
 
@@ -251,7 +241,7 @@ filter_occurrences <- function(species_records, shapes_path = NULL) {
       # do ID'd states + LGAs match provided ones
       mutate(flagged_state = str_detect(state, cw_state),
              flagged_lga = !is.na(cl10923) &
-                            (cl10923 %in% str_split_1(lga, ", ")),
+                            (cl10923 %in% str_split(lga, ", ")[[1]]),
              flagged_shape = !is.na(shape_feature)) |>
       # filter out occurrences not in areas of interest
       filter(state == "AUS" |
@@ -314,13 +304,26 @@ filter_occurrences <- function(species_records, shapes_path = NULL) {
 #' @export
 
 download_occurrences <- function(occ_list, cache_path) {
+
+  ##### Defensive Programming #####
+  if (!is.character(cache_path) | substr(cache_path, nchar(cache_path), nchar(cache_path)) != "/") {
+    abort("`cache_path` argument but be a string ending in '/'")
+  } else if (!dir.exists(cache_path)) {
+    abort("The directory specified by `cache_path` does not exist")
+  }
+  if (!("species_images" %in% list.files(cache_path))) {
+    inform("No 'species_images' directory exists in the provided cache path. One has been created.")
+    dir.create(paste0(cache_path, "species_images"))
+  }
+
+  ##### Function Implementation #####
   # download records and save temp files in cache_path if they exist
   if (nrow(occ_list) == 0) {
     occ_full <- tibble()
   } else {
     occ_media <- occ_list |>
       # introduce media data (if exists) for each occurrence (time sink)
-      (\(.) if (any(!is.na(.$multimedia))) search_media(.) else .)() |>
+      (\(.) if (any(!is.na(.$multimedia))) search_media(.) else mutate(., creator = NA))() |>
       # keep the first media item for each record
       distinct(recordID, correct_name, provided_name, state, lga, shape, .keep_all = TRUE)
 
@@ -336,7 +339,7 @@ download_occurrences <- function(occ_list, cache_path) {
         mutate(., url = NA, download_path = NA, creator = NA)
       })() |>
       select(recordID, state, lga, shape, url, download_path, creator) |>
-      right_join(occ_media, by = c("recordID", "state", "lga", "shape")) |>
+      right_join(occ_media, by = c("recordID", "creator", "state", "lga", "shape")) |>
       relocate(c(state, lga, shape), .before = common_name) |>
       relocate(creator, .after = cw_state)
   }
@@ -534,5 +537,3 @@ identify_shape <- function(occ_list, shapes_path = NULL) {
 
   return(occ_list_shapes)
 }
-
-
