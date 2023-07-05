@@ -7,7 +7,7 @@
 identify_shape(species_records, shapes_path = NULL)
 }
 \arguments{
-\item{species_records}{A dataframe/tibble prodcued by `atlas_occurrences()` or
+\item{species_records}{A dataframe/tibble produced by `atlas_occurrences()` or
 otherwise, containing at minimum columns containing longitude and latitude
 columns, and a column named `shape` specifying the name of the shapefiles
 to filter each species. Multiple shapefiles may be used, but it is limited

@@ -174,17 +174,19 @@ koel_defensive <- function(...) {
   # cache_path (see `download_occurrences()`)
 
   # output_path
-  if (exists("output_path", inherits = FALSE) & !is.null(output_path)) {
-    check_dir_path(output_path, "output_path")
+  if (exists("output_path", inherits = FALSE)) {
+    if (!is.null(output_path)) {
+      check_dir_path(output_path, "output_path")
 
-    if (!("html" %in% list.files(output_path))) {
-      inform("No 'html' directory exists in the provided output_path. One has been created.")
-      dir.create(paste0(output_path, "html"))
-    }
+      if (!("html" %in% list.files(output_path))) {
+        inform("No 'html' directory exists in the provided output_path. One has been created.")
+        dir.create(paste0(output_path, "html"))
+      }
 
-    if (!("csv" %in% list.files(output_path))) {
-      inform("No 'csv' directory exists in the provided output_path. One has been created.")
-      dir.create(paste0(output_path, "csv"))
+      if (!("csv" %in% list.files(output_path))) {
+        inform("No 'csv' directory exists in the provided output_path. One has been created.")
+        dir.create(paste0(output_path, "csv"))
+      }
     }
   }
 
@@ -212,7 +214,7 @@ koel_defensive <- function(...) {
 
   ###### build_map_thumbnail() ######
   # list_row
-  if (exists("list_row", inhrits = FALSE)) {
+  if (exists("list_row", inherits = FALSE)) {
     if (nrow(list_row) != 1) {
       abort("list_row requires exactly one row to compile a map")
     } else {

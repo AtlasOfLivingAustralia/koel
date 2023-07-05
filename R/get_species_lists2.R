@@ -68,7 +68,8 @@ get_species_lists2 <- function(list_df, synonym_delimiter = ","){
      else {. |> tibble::add_column(shape = NA)})() |>
     relocate(c(state, lga, shape), .after = common_name) |>
     # empty state rows (with no provided LGA or shape) default to "AUS"
-    mutate(state = ifelse(is.na(state) & is.na(lga) & is.na(shape), "AUS", state))
+    mutate(state = ifelse(is.na(state) & is.na(lga) & is.na(shape), "AUS", state),
+           across(c(state, lga, shape), as.character))
 
   combined_df_clean <- combined_df |>
     # split multiple synonyms
