@@ -4,10 +4,10 @@
 \alias{assign_common_names}
 \title{Function to identify single assigned common names for species}
 \usage{
-assign_common_names(species_list)
+assign_common_names(species_names)
 }
 \arguments{
-\item{species_list}{A data.frame of species data, probably produced by
+\item{species_names}{A data.frame of species data, probably produced by
 `get_species_list2()`, that contains at least a `correct_name` and a
 `common_name` column.}
 }

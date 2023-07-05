@@ -6,7 +6,7 @@
 #'    data and filters it down to have a single row for correct scientific
 #'    species name. Each name is assigned a single correct common name.
 #'
-#' @param species_list A data.frame of species data, probably produced by
+#' @param species_names A data.frame of species data, probably produced by
 #' `get_species_list2()`, that contains at least a `correct_name` and a
 #' `common_name` column.
 #'
@@ -24,7 +24,7 @@
 #'
 #' @export
 
-assign_common_names <- function(species_list) {
+assign_common_names <- function(species_names) {
 
   ##### Defensive Programming #####
   this_call <- match.call(expand.dots = TRUE)
@@ -33,7 +33,7 @@ assign_common_names <- function(species_list) {
 
   ##### Function Implementation #####
   # take the list of all species, and keep only species names columns
-  common_names <- species_list |>
+  common_names <- species_names |>
     select(correct_name, common_name) |>
     group_by(correct_name) |>
     # take the first common_name present for each correct species name

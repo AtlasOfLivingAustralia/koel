@@ -17,23 +17,23 @@ test_that("get_species_lists2() arguments are supplied correctly",{
 test_that("get_species_lists2() returns the correct data.frame output",{
   # set up lists_df object
   dir_path <- withr::local_tempdir()
-  {write.csv(data.frame(correct_name = c("Eudynamys orientalis", "Eolophus roseicapilla"),
-                        provided_name = c("Eudynamys orientalis","Cacatua roseicapilla"),
-                        synonyms = c("Eudynamys orientalis cyanocephalus, Eudynamys orientalis subcyanocephalus",
-                                     "Cacatua roseicapilla"),
-                        common_name = c("Eastern Koel", "Galah"),
-                        state = c("AUS", "ACT, QLD, SA"),
-                        lga = c(NA, NA),
-                        shape = c(NA, NA)),
+  {write.csv(tibble(correct_name = c("Eudynamys orientalis", "Eolophus roseicapilla"),
+                    provided_name = c("Eudynamys orientalis","Cacatua roseicapilla"),
+                    synonyms = c("Eudynamys orientalis cyanocephalus, Eudynamys orientalis subcyanocephalus",
+                                 "Cacatua roseicapilla"),
+                    common_name = c("Eastern Koel", "Galah"),
+                    state = c("AUS", "ACT, QLD, SA"),
+                    lga = c(NA, NA),
+                    shape = c(NA, NA)),
              paste0(dir_path, "/list1_list.csv"),
              row.names = FALSE)
-    write.csv(data.frame(correct_name = c("Eudynamys orientalis", "Dicrurus bracteatus"),
-                         provided_name = c("Eudynamys orientalis", "Dicrurus bracteatus"),
-                         synonyms = c("Eudynamys orientalis cyanocephalus", NA),
-                         common_name = c("Eastern Koel", "Spangled Drongo"),
-                         state = c("QLD", "NT, QLD, SA"),
-                         lga = c(NA, NA),
-                         shape = c(NA, NA)),
+    write.csv(tibble(correct_name = c("Eudynamys orientalis", "Dicrurus bracteatus"),
+                     provided_name = c("Eudynamys orientalis", "Dicrurus bracteatus"),
+                     synonyms = c("Eudynamys orientalis cyanocephalus", NA),
+                     common_name = c("Eastern Koel", "Spangled Drongo"),
+                     state = c("QLD", "NT, QLD, SA"),
+                     lga = c(NA, NA),
+                     shape = c(NA, NA)),
               paste0(dir_path, "/list2_list.csv"),
               row.names = FALSE)}
   df <- collate_lists(paste0(dir_path, "/"))
@@ -56,35 +56,35 @@ test_that("get_species_lists2() returns the correct data.frame output",{
 test_that("get_species_lists2() deals with similar and different states", {
   # set up lists_df object with same states/LGAs
   dir_path <- withr::local_tempdir()
-  {write.csv(data.frame(correct_name = "Eudynamys orientalis",
-                        provided_name = "Eudynamys orientalis",
-                        synonyms = NA,
-                        common_name = "Eastern Koel",
-                        state = "QLD, VIC",
-                        lga = NA,
-                        shape = NA),
+  {write.csv(tibble(correct_name = "Eudynamys orientalis",
+                    provided_name = "Eudynamys orientalis",
+                    synonyms = NA,
+                    common_name = "Eastern Koel",
+                    state = "QLD, VIC",
+                    lga = NA,
+                    shape = NA),
              paste0(dir_path, "/list1_list.csv"),
              row.names = FALSE)
-    write.csv(data.frame(correct_name = "Eudynamys orientalis",
-                         provided_name = "Eudynamys orientalis",
-                         synonyms = NA,
-                         common_name = "Eastern Koel",
-                         state = "QLD, VIC",
-                         lga = NA,
-                         shape = NA),
+    write.csv(tibble(correct_name = "Eudynamys orientalis",
+                    provided_name = "Eudynamys orientalis",
+                    synonyms = NA,
+                    common_name = "Eastern Koel",
+                    state = "QLD, VIC",
+                    lga = NA,
+                    shape = NA),
               paste0(dir_path, "/list2_list.csv"),
               row.names = FALSE)}
   df <- collate_lists(paste0(dir_path, "/"))
 
   expect_equal(nrow(get_species_lists2(df)), 1)
   # set up lists_df object with different states/LGAs
-  {write.csv(data.frame(correct_name = "Eudynamys orientalis",
-                         provided_name = "Eudynamys orientalis",
-                         synonyms = NA,
-                         common_name = "Eastern Koel",
-                         state = "NSW, VIC",
-                         lga = NA,
-                         shape = NA),
+  {write.csv(tibble(correct_name = "Eudynamys orientalis",
+                    provided_name = "Eudynamys orientalis",
+                    synonyms = NA,
+                    common_name = "Eastern Koel",
+                    state = "NSW, VIC",
+                    lga = NA,
+                    shape = NA),
               paste0(dir_path, "/list2_list.csv"),
               row.names = FALSE)}
   df <- collate_lists(paste0(dir_path, "/"))
@@ -99,13 +99,13 @@ test_that("get_species_lists2() deals with similar and different states", {
 test_that("get_species_lists2() returns the correct data.frame output",{
   # set up lists_df object
   dir_path <- withr::local_tempdir()
-  {write.csv(data.frame(correct_name = "Eudynamys orientalis",
-                        provided_name = "Eudynamys orientalis",
-                        synonyms = "Eudynamys orientalis cyanocephalus, Eudynamys orientalis subcyanocephalus",
-                        common_name = "Eastern Koel",
-                        state = "AUS",
-                        lga = NA,
-                        shape = NA),
+  {write.csv(tibble(correct_name = "Eudynamys orientalis",
+                    provided_name = "Eudynamys orientalis",
+                    synonyms = "Eudynamys orientalis cyanocephalus, Eudynamys orientalis subcyanocephalus",
+                    common_name = "Eastern Koel",
+                    state = "AUS",
+                    lga = NA,
+                    shape = NA),
              paste0(dir_path, "/list1_list.csv"),
              row.names = FALSE)}
   df <- collate_lists(paste0(dir_path, "/"))
@@ -121,10 +121,10 @@ test_that("get_species_lists2() returns the correct data.frame output",{
 test_that("get_species_lists2() creates state/lga columns when not provided", {
   # create dummy list with no state, lga or shape columns
   dir_path <- withr::local_tempdir()
-  {write.csv(data.frame(correct_name = "Eudynamys orientalis",
-                        provided_name = "Eudynamys orientalis",
-                        synonyms = NA,
-                        common_name = "Eastern Koel"),
+  {write.csv(tibble(correct_name = "Eudynamys orientalis",
+                    provided_name = "Eudynamys orientalis",
+                    synonyms = NA,
+                    common_name = "Eastern Koel"),
              paste0(dir_path, "/list1_list.csv"),
              row.names = FALSE)}
   df <- collate_lists(paste0(dir_path, "/"))
@@ -142,12 +142,12 @@ test_that("get_species_lists2() creates state/lga columns when not provided", {
 
   # create dummy list with no shape column
   dir_path <- withr::local_tempdir()
-  {write.csv(data.frame(correct_name = "Eudynamys orientalis",
-                        provided_name = "Eudynamys orientalis",
-                        synonyms = NA,
-                        common_name = "Eastern Koel",
-                        state = "QLD",
-                        lga = "BRISBANE CITY"),
+  {write.csv(tibble(correct_name = "Eudynamys orientalis",
+                    provided_name = "Eudynamys orientalis",
+                    synonyms = NA,
+                    common_name = "Eastern Koel",
+                    state = "QLD",
+                    lga = "BRISBANE CITY"),
              paste0(dir_path, "/list1_list.csv"),
              row.names = FALSE)}
   df <- collate_lists(paste0(dir_path, "/"))
@@ -168,13 +168,13 @@ test_that("get_species_lists2() creates state/lga columns when not provided", {
 test_that("get_species_list2() defaults state to 'AUS' correctly", {
   # create dummy list with no state or lga columns
   dir_path <- withr::local_tempdir()
-  {write.csv(data.frame(correct_name = c("Eudynamys orientalis", "Dicrurus bracteatus", "Cacatua roseicapilla"),
-                        provided_name = c("Eudynamys orientalis", "Dicrurus bracteatus", "Cacatua roseicapilla"),
-                        synonyms = c(NA, NA, NA),
-                        common_name = c("Eastern Koel", "Spangled Drongo", "Galah"),
-                        state = c(NA, NA, NA),
-                        lga = c(NA, "FRASER COAST REGIONAL", NA),
-                        shape = c(NA, NA, "shape1")),
+  {write.csv(tibble(correct_name = c("Eudynamys orientalis", "Dicrurus bracteatus", "Cacatua roseicapilla"),
+                    provided_name = c("Eudynamys orientalis", "Dicrurus bracteatus", "Cacatua roseicapilla"),
+                    synonyms = c(NA, NA, NA),
+                    common_name = c("Eastern Koel", "Spangled Drongo", "Galah"),
+                    state = c(NA, NA, NA),
+                    lga = c(NA, "FRASER COAST REGIONAL", NA),
+                    shape = c(NA, NA, "shape1")),
              paste0(dir_path, "/list1_list.csv"),
              row.names = FALSE)}
   df <- collate_lists(paste0(dir_path, "/"))

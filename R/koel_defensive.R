@@ -49,8 +49,8 @@ koel_defensive <- function(...) {
     check_string(synonym_delimiter, "synonym_delimiter")
   }
   ###### assign_common_names() ######
-  if (exists("species_list", inherits = FALSE)) {
-    check_df(species_list, "species_list",
+  if (exists("species_names", inherits = FALSE)) {
+    check_df(species_names, "species_names",
              req_cols = c("correct_name", "common_name"))
   }
   ###### search_occurrences() ######
