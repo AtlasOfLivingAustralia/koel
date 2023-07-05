@@ -44,18 +44,11 @@
 get_species_lists2 <- function(list_df, synonym_delimiter = ","){
 
   ##### Defensive Programming #####
-  if (!("data.frame" %in% class(list_df))) {
-    abort("`list_df` argument must be a data.frame or tibble")
-  } else if (!all(c("label", "path") %in% colnames(list_df))) {
-    abort("`list_df` must have columns `label` and `path`")
-  }
+  this_call <- match.call(expand.dots = TRUE)
+  this_call[[1]] <- as.name("koel_defensive")
+  eval.parent(this_call)
 
-  if (class(synonym_delimiter) != "character") {
-    abort("'`synonym_delimiter` argument must be a character string.")
-  } else if (length(synonym_delimiter) > 1) {
-    abort("`synonym_delimiter` must be a single character object of length 1.")
-  }
-
+  ##### Function Implementation #####
   combined_df <- list_df |>
     pmap(.f = \(path, label, ...)
          read_csv(path, show_col_types = FALSE) |>

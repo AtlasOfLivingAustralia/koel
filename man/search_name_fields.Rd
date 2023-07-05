@@ -4,17 +4,26 @@
 \alias{search_name_fields}
 \title{Search ALA with multiple search terms and fields}
 \usage{
-search_name_fields(field, start_date, end_date, search_terms)
+search_name_fields(
+  field,
+  event_date_start,
+  event_date_end,
+  upload_date_start,
+  upload_date_end,
+  search_terms
+)
 }
 \arguments{
 \item{field}{Single character designating field to be searched in galah e.g.
 `"scientificName"`, `"genus"`}
 
-\item{start_date}{Date to begin search of ALA occurrences. `character` object
-and should be in the form `"YYYY-mm-ddTHH::MM::SSZ"`.}
+\item{event_date_start, event_date_end}{Dates to begin and end ALA occurrences
+filter for event date (on field `eventDate`). Are `character` objects and
+should be in the form `"YYYY-mm-ddTHH::MM::SSZ"`.}
 
-\item{end_date}{Date to end search of ALA occurrences. `character` object
-and should be in the form `"YYYY-mm-ddTHH::MM::SSZ"`.}
+\item{upload_date_start, upload_date_end}{Dates to begin and end ALA
+occurrences filter for upload date (on field `firstLoadedDate`). Are
+`character` objects and should be in the form `"YYYY-mm-ddTHH::MM::SSZ"`.}
 
 \item{search_terms}{Character vector (may be of length 1) of search terms to
 be provided to `galah_filter()`. Length should be capped at 100 to avoid

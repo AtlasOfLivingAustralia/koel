@@ -67,60 +67,10 @@ build_email <- function(alerts_data,
                         email_host = "smtp-relay.gmail.com", email_port = 587,
                         template_path, cache_path, output_path = NULL,
                         test = TRUE) {
-
   ##### Defensive Programming #####
-  # alerts_data
-  if (!("data.frame" %in% class(alerts_data))) {
-    abort("`alerts_data` argument must be a data.frame or tibble")
-  }
-  # else if (!all(c("correct_name", "search_term") %in% colnames(alerts_data))) {
-  #   stop("`alerts_data` must be an object produced and returned by `ala_record_download`")
-  # }
-
-  # email_list
-  if (!("data.frame" %in% class(email_list))) {
-    abort("`email_list` argument must be a data.frame or tibble")
-  } else if (!all(c("email", "list") %in% colnames(email_list))) {
-    abort("`email_list` must have columns `email` and `list`")
-  } else if (nrow(email_list) == 0) {
-    inform("No emails provided in `email_list`. Reports will be produced but no emails will be sent.")
-  }
-  # template_path
-  if (!is.character(template_path) | substr(template_path, nchar(template_path) - 3, nchar(template_path)) != ".Rmd") {
-    abort("`template_path` argument must be a character string for a .Rmd file")
-  } else if (!file.exists(template_path)) {
-    abort("The .Rmd file specified by `template_path` does not exist")
-  }
-  # cache_path
-  if (!is.character(cache_path) | substr(cache_path, nchar(cache_path), nchar(cache_path)) != "/") {
-    abort("`cache_path` argument must be a string ending in '/'")
-  } else if (!dir.exists(cache_path)) {
-    abort("The directory specified by `cache_path` does not exist")
-  }
-  # create a `species_images` and `maps` folder if one does not exist
-  if (!("species_images" %in% list.files(cache_path))) {
-    inform("No 'species_images' directory exists in the provided `cache_path`. One has been created.")
-    dir.create(paste0(cache_path, "species_images"))
-  } else if (!("maps" %in% list.files(cache_path))) {
-    inform("No 'maps' directory exists in the provided `cache_path`. One has been created.")
-    dir.create(paste0(cache_path, "maps"))
-  }
-  # output_path
-  if (!is.null(output_path)) {
-    if (!is.character(output_path) | substr(output_path, nchar(output_path), nchar(output_path)) != "/") {
-      abort("`output_path` argument must be a string ending in '/'")
-    } else if (!dir.exists(output_path)) {
-      abort("The directory specified by `output_path` does not exist")
-    }
-    # create a `html` and `csv` folder if one does not exist
-    if (!("html" %in% list.files(output_path))) {
-      inform("No 'html' directory exists in the provided `output_path`. One has been created.")
-      dir.create(paste0(output_path, "html"))
-    } else if (!("csv" %in% list.files(output_path))) {
-      inform("No 'csv' directory exists in the provided `output_path`. One has been created.")
-      dir.create(paste0(output_path, "csv"))
-    }
-  }
+  this_call <- match.call(expand.dots = TRUE)
+  this_call[[1]] <- as.name("koel_defensive")
+  eval.parent(this_call)
 
   ##### Function Implementation #####
   # set current date and time for inclusion in file names
@@ -151,14 +101,16 @@ build_email <- function(alerts_data,
             recipients <- email_list |>
               filter(list == list_name | list == "universal") |>
               pull(email)
-            send_email(recipients, output_file,
-                       email_send, email_password,
-                       email_host = email_host, email_port = email_port,
-                       email_subject = email_subject,
-                       test = test)
-            } else {
-              cat(paste0("No alert sent for list: ", list_name, "\n"))
+            if (!is.na(email_send) & !is.na(email_password)) {
+              send_email(recipients, output_file,
+                         email_send, email_password,
+                         email_host = email_host, email_port = email_port,
+                         email_subject = email_subject,
+                         test = test)
             }
+          } else {
+            cat(paste0("No alert sent for list: ", list_name, "\n"))
+          }
         }
     )
 
@@ -213,38 +165,11 @@ build_email <- function(alerts_data,
 #' @importFrom rlang inform
 #' @export
 
-build_gt_table <- function(df, cache_path){
-
+build_gt_table <- function(df, cache_path) {
   ##### Defensive Programming #####
-  # df
-  if (!("data.frame" %in% class(df))) {
-    abort("`df` argument must be a data.frame or tibble")
-  } else if (nrow(df) == 0) {
-    abort("`df` requires at least one row to compile a table")
-  } else if (!(all(
-    c(
-      "recordID", "eventDate", "cl22", "creator", "url", "correct_name",
-      "verbatimScientificName", "common_name", "decimalLatitude",
-      "decimalLongitude", "dataResourceName",  "download_path"
-    )
-    %in% colnames(df)))) {
-    cols_needed <- c(
-      "recordID", "eventDate", "cl22", "creator", "url", "correct_name",
-      "verbatimScientificName", "common_name", "decimalLatitude",
-      "decimalLongitude", "dataResourceName",  "download_path"
-    )
-    abort(paste0("`df` requires a column named ",
-                 cols_needed(which(!(cols_needed %in% col_names(df))))[1]))
-  }
-  # cache_path
-  if (!is.character(cache_path) | substr(cache_path, nchar(cache_path), nchar(cache_path)) != "/") {
-    abort("`cache_path` argument must be a string ending in '/'")
-  } else if (!dir.exists(cache_path)) {
-    abort("The directory specified by `cache_path` does not exist")
-  } else if (!("maps" %in% list.files(cache_path))) {
-    inform("No 'maps' directory exists in the provided `cache_path`. One has been created.")
-    dir.create(paste0(cache_path, "maps"))
-  }
+  this_call <- match.call(expand.dots = TRUE)
+  this_call[[1]] <- as.name("koel_defensive")
+  eval.parent(this_call)
 
   ##### Function Implementation #####
   # get first image per record
@@ -262,7 +187,7 @@ build_gt_table <- function(df, cache_path){
 
   # build table info
   table_df <- df2 |>
-    arrange(scientificName, eventDate, cl22) |>
+    arrange(scientificName, eventDate, cw_state) |>
     mutate(
       path = here(),
       image_url = sub("thumbnail$", "original", url)
@@ -406,30 +331,11 @@ build_gt_table <- function(df, cache_path){
 #   dev.off()
 # }
 
-build_map_thumbnail <- function(list_row, cache_path){
-
+build_map_thumbnail <- function(list_row, cache_path) {
   ##### Defensive Programming #####
-  # list row
-  if (!("data.frame" %in% class(list_row))) {
-    abort("`list_row` argument must be a data.frame or tibble")
-  } else if (nrow(list_row) != 1) {
-    abort("`list_row` requires exactly one row to compile a map")
-  } else if (
-    !(all(c("recordID", "decimalLatitude", "decimalLongitude") %in%
-          colnames(list_row)))) {
-    cols_needed <- c("recordID", "decimalLatitude", "decimalLongitude")
-    abort(paste0("`list_row` requires a column named ",
-                 cols_needed(which(!(cols_needed %in% col_names(list_row))))[1]))
-  }
-  # cache_path
-  if (!is.character(cache_path) | substr(cache_path, nchar(cache_path), nchar(cache_path)) != "/") {
-    abort("`cache_path` argument must be a string ending in '/'")
-  } else if (!dir.exists(cache_path)) {
-    abort("The directory specified by `cache_path` does not exist")
-  } else if (!("maps" %in% list.files(cache_path))) {
-    inform("No 'maps' directory exists in the provided `cache_path`. One has been created.")
-    dir.create(paste0(cache_path, "maps"))
-  }
+  this_call <- match.call(expand.dots = TRUE)
+  this_call[[1]] <- as.name("koel_defensive")
+  eval.parent(this_call)
 
   ##### Install PhantomJS if not installed #####
   if (!is_phantomjs_installed()) {

@@ -4,10 +4,10 @@
 \alias{identify_shape}
 \title{Identify the presence of species occurrences in a set of shapefiles}
 \usage{
-identify_shape(occ_list, shapes_path = NULL)
+identify_shape(species_records, shapes_path = NULL)
 }
 \arguments{
-\item{occ_list}{A dataframe/tibble prodcued by `atlas_occurrences()` or
+\item{species_records}{A dataframe/tibble prodcued by `atlas_occurrences()` or
 otherwise, containing at minimum columns containing longitude and latitude
 columns, and a column named `shape` specifying the name of the shapefiles
 to filter each species. Multiple shapefiles may be used, but it is limited
@@ -15,7 +15,7 @@ to one shapefile per row. Each row represents a unique occurrence.}
 
 \item{shapes_path}{A character string specifying the directory that includes
 folders containing each shapefile specified in the `shape` column of
-`occ_list`. Each shapefile belongs in its own folder, and all files in
+`species_records`. Each shapefile belongs in its own folder, and all files in
 that folder must be named identically to the folder name except for the
 file suffixes. Each shapefile must contain a feature named `SHAPE_NAME`.}
 }

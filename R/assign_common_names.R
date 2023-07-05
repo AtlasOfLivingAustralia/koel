@@ -27,11 +27,9 @@
 assign_common_names <- function(species_list) {
 
   ##### Defensive Programming #####
-  if (!("data.frame" %in% class(species_list))) {
-    abort("`species_list` argument must be a data.frame or tibble")
-  } else if (!all(c("correct_name", "common_name") %in% colnames(species_list))) {
-    abort("`species_list` must at least have columns `correct_name` and `common_name`")
-  }
+  this_call <- match.call(expand.dots = TRUE)
+  this_call[[1]] <- as.name("koel_defensive")
+  eval.parent(this_call)
 
   ##### Function Implementation #####
   # take the list of all species, and keep only species names columns

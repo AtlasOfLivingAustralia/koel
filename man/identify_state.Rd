@@ -4,10 +4,10 @@
 \alias{identify_state}
 \title{Identify the Australian state of each record in a dataframe}
 \usage{
-identify_state(occ_list)
+identify_state(species_records)
 }
 \arguments{
-\item{occ_list}{A dataframe/tibble prodcued by `atlas_occurrences()` or
+\item{species_records}{A dataframe/tibble prodcued by `atlas_occurrences()` or
 otherwise, containing at minimum columns containing longitude and latitude
 columns. Each row represents a unique occurrence}
 }

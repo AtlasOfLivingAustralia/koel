@@ -20,15 +20,19 @@
 #'   `correct_name` and `common_name`, and rows indicating the accepted common
 #'   name for each correct species name. May be produced by
 #'   `common_names_assigned()`.
-#' @param start_date Date to begin search of ALA occurrences. May be in one of
-#'    two forms: either a single dbl indicating how many days prior from the current
-#'    date to begin the search, or a character vector indicating the date to
-#'    search from in `"ddmmyyyy"` format.
-#' @param end_date Date to end search of ALA occurrences. May be in one of
-#'    two forms: either a single dbl indicating how many days prior from the current
-#'    date to end the search, or a character vector indicating the date to
-#'    search to in `"ddmmyyyy"` format. Default value is 0 i.e. search up to
-#'    the current date.
+#' @param event_date_start,event_date_end Dates to begin and end ALA occurrences
+#'    filter for event date field. Allows filtering of records that have been
+#'    uploaded in some time period. May be in one of two forms: either a single
+#'    dbl indicating how many days prior from the currentdate to begin the
+#'    search, or a character vector indicating the date to search from in
+#'    `"ddmmyyyy"` format.  Default to `upload_date_start` and `upload_date_end`
+#'    parameters respectively.
+#' @param upload_date_start,upload_date_end Dates to begin and end ALA
+#'    occurrences filter for upload date field. Allows filtering of records that
+#'    have been uploaded in some time period. May be in one of two forms: either
+#'    a single dbl indicating how many days prior from the current date to begin
+#'    the search, or a character vector indicating the date to search from in
+#'    `"ddmmyyyy"` format. `upload_date_end` defaults to 0 (i.e. current date).
 #' @return A tibble containing the downloaded data for each occurrence record.
 #'    Contains 32 ALA-specific columns with data regarding taxonomy, location,
 #'    media, uploading user, data type; 5 user-supplied columns from `species_list`
@@ -41,6 +45,7 @@
 #' @importFrom dplyr distinct
 #' @importFrom dplyr everything
 #' @importFrom dplyr group_by
+#' @importFrom dplyr if_else
 #' @importFrom dplyr left_join
 #' @importFrom dplyr mutate
 #' @importFrom dplyr select
@@ -57,49 +62,13 @@
 #' @export
 
 search_occurrences <- function(species_list, common_names,
-                               start_date, end_date = 0) {
-
+                               event_date_start, event_date_end = 0,
+                               upload_date_start = event_date_start,
+                               upload_date_end = 0) {
   ##### Defensive Programming #####
-  if (!("data.frame" %in% class(species_list))) {
-    abort("`species_list` argument must be a data.frame or tibble")
-  } else if (!all(c("correct_name", "search_term", "common_name")
-                  %in% colnames(species_list))) {
-    abort("`species_list` must have the following columns:
-          `correct_name`, `search_term`, `common_name`")
-  }
-
-  if (!("data.frame" %in% class(common_names))) {
-    abort("`species_list` argument must be a data.frame or tibble")
-  } else if (!all(c("correct_name", "common_name") %in% colnames(common_names))) {
-    abort("`species_list` must have the following columns:
-          `correct_name`, `common_name`")
-  }
-
-  if (!(is.numeric(start_date) | is.character(start_date))) {
-    abort("`start_date` must be either a single numeric value or a character date in format 'ddmmyyyy'")
-  }
-  if (is.numeric(start_date)) {
-    if (length(start_date) != 1 || start_date < 0) {
-      abort("`start_date` should be of length one and non-negative if numeric")
-    }
-  } else if (is.character(start_date)) {
-    if (length(start_date) != 1) {
-      abort("`start_date` should be of length one")
-    }
-  }
-
-  if (!(is.numeric(end_date) | is.character(end_date))) {
-    abort("`end_date` must be either a single numeric value or a character date in format 'ddmmyyyy'")
-  }
-  if (is.numeric(end_date)) {
-    if (length(end_date) != 1 || end_date < 0) {
-      abort("`end_date` should be of length one and non-negative if numeric")
-    }
-  } else if (is.character(end_date)) {
-    if (length(end_date) != 1) {
-      abort("`end_date` should be of length one")
-    }
-  }
+  this_call <- match.call(expand.dots = TRUE)
+  this_call[[1]] <- as.name("koel_defensive")
+  eval.parent(this_call)
 
   ##### Function Implementation #####
   galah_config(
@@ -108,25 +77,33 @@ search_occurrences <- function(species_list, common_names,
     verbose = TRUE)
 
   # manipulate date objects to create correct window
-  if (is.numeric(start_date)) {
-    start_date <- as.character(Sys.Date() - start_date) |>
-      paste0("T00:00:00Z")
-  } else if (is.character(start_date)) {
-    start_date <- dmy(start_date) |>
-      paste0("T00:00:00Z")
-  }
-  if (is.numeric(end_date)) {
-    end_date <- as.character(Sys.Date() - end_date + 1) |>
-      paste0("T00:00:00Z")
-  } else if (is.character(end_date)) {
-    end_date <- (dmy(end_date) + 1) |>
-      paste0("T00:00:00Z")
-  }
+  upload_date_start <- if_else(
+    is.numeric(upload_date_start),
+    paste0(Sys.Date() - upload_date_start, "T00:00:00Z"),
+    paste0(dmy(upload_date_start), "T00:00:00Z")
+  )
+  upload_date_end <- if_else(
+    is.numeric(upload_date_end),
+    paste0(Sys.Date() - upload_date_end + 1, "T00:00:00Z"),
+    paste0(dmy(upload_date_end) + 1, "T00:00:00Z")
+  )
+
+  event_date_start <- if_else(
+    is.numeric(event_date_start),
+    paste0(Sys.Date() - event_date_start, "T00:00:00Z"),
+    paste0(dmy(event_date_start), "T00:00:00Z")
+  )
+  event_date_end <- if_else(
+    is.numeric(event_date_end),
+    paste0(Sys.Date() - event_date_end + 1, "T00:00:00Z"),
+    paste0(dmy(event_date_end) + 1, "T00:00:00Z")
+  )
 
   # remove common name duplicates
   species_df <- species_list |>
     select(-common_name) |>
     distinct()
+
   # set up divisions of 100 to search with
   divisions <- seq(1, length(unique(species_df$search_term)), 100)
 
@@ -146,8 +123,10 @@ search_occurrences <- function(species_list, common_names,
       # search through each potential name field
       ala_search <- fields |>
         map(search_name_fields,
-            start_date = start_date,
-            end_date = end_date,
+            event_date_start = event_date_start,
+            event_date_end = event_date_end,
+            upload_date_start = upload_date_start,
+            upload_date_end = upload_date_end,
             search_terms = search_terms) |>
         list_rbind()
       # informative output of no. of occurrences
@@ -230,6 +209,12 @@ search_occurrences <- function(species_list, common_names,
 #' @export
 
 filter_occurrences <- function(species_records, shapes_path = NULL) {
+  ##### Defensive Programming #####
+  this_call <- match.call(expand.dots = TRUE)
+  this_call[[1]] <- as.name("koel_defensive")
+  eval.parent(this_call)
+
+  ##### Function Implementation #####
   if (nrow(species_records) == 0) {
     occ_list <- tibble()
   } else {
@@ -304,17 +289,10 @@ filter_occurrences <- function(species_records, shapes_path = NULL) {
 #' @export
 
 download_occurrences <- function(occ_list, cache_path) {
-
   ##### Defensive Programming #####
-  if (!is.character(cache_path) | substr(cache_path, nchar(cache_path), nchar(cache_path)) != "/") {
-    abort("`cache_path` argument but be a string ending in '/'")
-  } else if (!dir.exists(cache_path)) {
-    abort("The directory specified by `cache_path` does not exist")
-  }
-  if (!("species_images" %in% list.files(cache_path))) {
-    inform("No 'species_images' directory exists in the provided cache path. One has been created.")
-    dir.create(paste0(cache_path, "species_images"))
-  }
+  this_call <- match.call(expand.dots = TRUE)
+  this_call[[1]] <- as.name("koel_defensive")
+  eval.parent(this_call)
 
   ##### Function Implementation #####
   # download records and save temp files in cache_path if they exist
@@ -356,10 +334,12 @@ download_occurrences <- function(occ_list, cache_path) {
 #'
 #' @param field Single character designating field to be searched in galah e.g.
 #'    `"scientificName"`, `"genus"`
-#' @param start_date Date to begin search of ALA occurrences. `character` object
-#'    and should be in the form `"YYYY-mm-ddTHH::MM::SSZ"`.
-#' @param end_date Date to end search of ALA occurrences. `character` object
-#'    and should be in the form `"YYYY-mm-ddTHH::MM::SSZ"`.
+#' @param event_date_start,event_date_end Dates to begin and end ALA occurrences
+#'    filter for event date (on field `eventDate`). Are `character` objects and
+#'    should be in the form `"YYYY-mm-ddTHH::MM::SSZ"`.
+#' @param upload_date_start,upload_date_end Dates to begin and end ALA
+#'    occurrences filter for upload date (on field `firstLoadedDate`). Are
+#'    `character` objects and should be in the form `"YYYY-mm-ddTHH::MM::SSZ"`.
 #' @param search_terms Character vector (may be of length 1) of search terms to
 #'    be provided to `galah_filter()`. Length should be capped at 100 to avoid
 #'    `{galah}` errors.
@@ -375,19 +355,25 @@ download_occurrences <- function(occ_list, cache_path) {
 #' @importFrom rlang abort
 #' @importFrom rlang inform
 
-search_name_fields <- function(field, start_date, end_date, search_terms) {
+search_name_fields <- function(field,
+                               event_date_start, event_date_end,
+                               upload_date_start, upload_date_end,
+                               search_terms) {
+##### Function Implementation #####
   field_fixed <- ifelse(field == "raw_scientificName",
                         "verbatimScientificName",
                         field)
   occ_search <- galah_call() |>
-    galah_filter(eventDate >= start_date,
-                 eventDate <= end_date,
+    galah_filter(firstLoadedDate >= upload_date_start,
+                 firstLoadedDate <= upload_date_end,
+                 eventDate >= event_date_start,
+                 eventDate <= event_date_end,
                  {{field}} == search_terms) |>
     galah_select(raw_scientificName, scientificName, vernacularName,
                  genus, species, subspecies,
                  decimalLatitude, decimalLongitude,
                  cl22, cl10923, cl1048, cl966, cl21,
-                 basisOfRecord,
+                 firstLoadedDate, basisOfRecord,
                  group = c("basic", "media")) |>
     atlas_occurrences() |>
     mutate(match = field_fixed,
@@ -408,7 +394,7 @@ search_name_fields <- function(field, start_date, end_date, search_terms) {
 #'    1980. If an occurrence does not occur in any state jurisdiction then
 #'    `NA` is returned.
 #'
-#' @param occ_list A dataframe/tibble prodcued by `atlas_occurrences()` or
+#' @param species_records A dataframe/tibble prodcued by `atlas_occurrences()` or
 #'    otherwise, containing at minimum columns containing longitude and latitude
 #'    columns. Each row represents a unique occurrence
 #' @return Returns the exact provided dataframe with an additional character
@@ -426,8 +412,14 @@ search_name_fields <- function(field, start_date, end_date, search_terms) {
 #' @importFrom sf st_intersects
 #' @export
 
-identify_state <- function(occ_list) {
-  occ_list |>
+identify_state <- function(species_records) {
+  ##### Defensive Programming #####
+  this_call <- match.call(expand.dots = TRUE)
+  this_call[[1]] <- as.name("koel_defensive")
+  eval.parent(this_call)
+
+  ##### Function Implementation #####
+  species_records |>
     st_as_sf(coords = c("decimalLongitude", "decimalLatitude"),
              crs = st_crs(coastal_waters_shp),
              remove = FALSE) |>
@@ -452,14 +444,14 @@ identify_state <- function(occ_list) {
 #'    occur in the shapefile. If an occurrence does not occur in the specified
 #'    shapefile then `NA` is returned.
 #'
-#' @param occ_list A dataframe/tibble prodcued by `atlas_occurrences()` or
+#' @param species_records A dataframe/tibble produced by `atlas_occurrences()` or
 #'    otherwise, containing at minimum columns containing longitude and latitude
 #'    columns, and a column named `shape` specifying the name of the shapefiles
 #'    to filter each species. Multiple shapefiles may be used, but it is limited
 #'    to one shapefile per row. Each row represents a unique occurrence.
 #' @param shapes_path A character string specifying the directory that includes
 #'    folders containing each shapefile specified in the `shape` column of
-#'    `occ_list`. Each shapefile belongs in its own folder, and all files in
+#'    `species_records`. Each shapefile belongs in its own folder, and all files in
 #'    that folder must be named identically to the folder name except for the
 #'    file suffixes. Each shapefile must contain a feature named `SHAPE_NAME`.
 #' @return Returns the exact provided dataframe with an additional character
@@ -485,12 +477,18 @@ identify_state <- function(occ_list) {
 #' @importFrom tidyr replace_na
 #' @export
 
-identify_shape <- function(occ_list, shapes_path = NULL) {
+identify_shape <- function(species_records, shapes_path = NULL) {
+  ##### Defensive Programming #####
+  this_call <- match.call(expand.dots = TRUE)
+  this_call[[1]] <- as.name("koel_defensive")
+  eval.parent(this_call)
+
+  ##### Function Implementation #####
   # first need to download all relevant shape files
-  shape_names <- unique(occ_list$shape) |> na.omit()
+  shape_names <- unique(species_records$shape) |> na.omit()
   # only proceed if we have at least one shape named and a path provided
   if (length(shape_names) == 0 | is.null(shapes_path)) {
-    occ_list_shapes <- occ_list |>
+    sr_shapes <- species_records |>
       mutate(shape_feature = NA)
   } else {
     shapefiles <- map(
@@ -501,25 +499,25 @@ identify_shape <- function(occ_list, shapes_path = NULL) {
       }
     ) |>
       setNames(shape_names)
-    # then figure out whether an occurrence is in its specified shpfile
-    occ_list_shapes <- occ_list |>
+    # then figure out species_records an occurrence is in its specified shpfile
+    sr_shapes <- species_records |>
       # group occurrences by the shapefile they use (or by NA if none provided)
-      split(occ_list |>
+      split(species_records |>
               mutate(shape = replace_na(shape, "empty")) |>
               pull(shape)) |>
       # iterate over each identified shapefile (one df per shp)
-      map(.f = function(occ_dfs) {
+      map(.f = function(sr_dfs) {
         # if its the NA df then just return a column of NAs
-        if (all(is.na(occ_dfs$shape))) {
-          occ_dfs |>
+        if (all(is.na(sr_dfs$shape))) {
+          sr_dfs |>
             mutate(shape_feature = NA)
         } else {
           # otherwise, check whether each occurrence lies in the shp file,
           # and return the feature name that it lies in (change to FEATURE_NAME)
-          occ_dfs |>
+          sr_dfs |>
             st_as_sf(
               coords = c("decimalLongitude", "decimalLatitude"),
-              crs = st_crs(shapefiles[[unique(occ_dfs$shape)]]),
+              crs = st_crs(shapefiles[[unique(sr_dfs$shape)]]),
               remove = FALSE) |>
             mutate(intersection = st_intersects(geometry,
                                                 shapefiles[[unique(shape)]]) |>
@@ -527,7 +525,10 @@ identify_shape <- function(occ_list, shapes_path = NULL) {
                    shape_feature = if_else(
                      is.na(intersection),
                      NA,
-                     shapefiles[[unique(shape)]]$SHAPE_NAME[intersection])) |>
+                     if_else(
+                       "SHAPE_NAME" %in% names(shapefiles[[unique(shape)]]),
+                       shapefiles[[unique(shape)]]$SHAPE_NAME[intersection],
+                       shape))) |>
             select(-intersection) |>
             st_drop_geometry()
         }
@@ -535,5 +536,5 @@ identify_shape <- function(occ_list, shapes_path = NULL) {
       list_rbind()
   }
 
-  return(occ_list_shapes)
+  return(sr_shapes)
 }
