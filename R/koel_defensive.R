@@ -67,13 +67,6 @@ koel_defensive <- function(...) {
              req_cols = c("correct_name", "common_name"))
   }
 
-  # upload_dates
-  if (exists("upload_date_start", inherits = FALSE)) {
-    check_date(upload_date_start, "upload_date_start")
-  }
-  if (exists("upload_date_end", inherits = FALSE)) {
-    check_date(upload_date_end, "upload_date_end")
-  }
   # event_dates
   if (exists("event_date_start", inherits = FALSE)) {
     check_date(event_date_start, "event_date_start")
@@ -81,6 +74,15 @@ koel_defensive <- function(...) {
   if (exists("event_date_end", inherits = FALSE)) {
     check_date(event_date_end, "event_date_end")
   }
+
+  # upload_dates
+  if (exists("upload_date_start", inherits = FALSE)) {
+    check_date(upload_date_start, "upload_date_start")
+  }
+  if (exists("upload_date_end", inherits = FALSE)) {
+    check_date(upload_date_end, "upload_date_end")
+  }
+
   ###### filter_occurrences() ######
   # also identify_shape() + identify_state()
   # species_records
@@ -338,9 +340,9 @@ check_date <- function(var, var_name) {
   if (!(is.numeric(var) | is.character(var))) {
     abort(glue("{var_name} must be either a character date in format 'ddmmyyyy' or a numeric value."))
   }
-  if (is.numeric(var_name)) {
+  if (is.numeric(var)) {
     # non-negative and length one
-    if (length(var) != 1 || var < 0) {
+    if (length(var) != 1 | var < 0) {
       abort(glue("If numeric, {var_name} must be a single, non-negative value"))
     }
   } else if (is.character(var)) {

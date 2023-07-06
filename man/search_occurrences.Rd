@@ -9,7 +9,7 @@ search_occurrences(
   common_names,
   event_date_start,
   event_date_end = 0,
-  upload_date_start = event_date_start,
+  upload_date_start = "01-01-1570",
   upload_date_end = 0
 )
 }
@@ -30,15 +30,15 @@ filter for event date field. Allows filtering of records that have been
 uploaded in some time period. May be in one of two forms: either a single
 dbl indicating how many days prior from the currentdate to begin the
 search, or a character vector indicating the date to search from in
-`"ddmmyyyy"` format.  Default to `upload_date_start` and `upload_date_end`
-parameters respectively.}
+`"ddmmyyyy"` format.  `event_date_end` defaults to 0 (current date).}
 
 \item{upload_date_start, upload_date_end}{Dates to begin and end ALA
 occurrences filter for upload date field. Allows filtering of records that
 have been uploaded in some time period. May be in one of two forms: either
 a single dbl indicating how many days prior from the current date to begin
 the search, or a character vector indicating the date to search from in
-`"ddmmyyyy"` format. `upload_date_end` defaults to 0 (i.e. current date).}
+`"ddmmyyyy"` format. `upload_date_start` defaults to `"01-01-1570"` and
+`upload_date_end` defaults to 0 (i.e. current date).}
 }
 \value{
 A tibble containing the downloaded data for each occurrence record.

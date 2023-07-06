@@ -25,14 +25,14 @@
 #'    uploaded in some time period. May be in one of two forms: either a single
 #'    dbl indicating how many days prior from the currentdate to begin the
 #'    search, or a character vector indicating the date to search from in
-#'    `"ddmmyyyy"` format.  Default to `upload_date_start` and `upload_date_end`
-#'    parameters respectively.
+#'    `"ddmmyyyy"` format.  `event_date_end` defaults to 0 (current date).
 #' @param upload_date_start,upload_date_end Dates to begin and end ALA
 #'    occurrences filter for upload date field. Allows filtering of records that
 #'    have been uploaded in some time period. May be in one of two forms: either
 #'    a single dbl indicating how many days prior from the current date to begin
 #'    the search, or a character vector indicating the date to search from in
-#'    `"ddmmyyyy"` format. `upload_date_end` defaults to 0 (i.e. current date).
+#'    `"ddmmyyyy"` format. `upload_date_start` defaults to `"01-01-1570"` and
+#'    `upload_date_end` defaults to 0 (i.e. current date).
 #' @return A tibble containing the downloaded data for each occurrence record.
 #'    Contains 32 ALA-specific columns with data regarding taxonomy, location,
 #'    media, uploading user, data type; 5 user-supplied columns from `species_list`
@@ -63,7 +63,7 @@
 
 search_occurrences <- function(species_list, common_names,
                                event_date_start, event_date_end = 0,
-                               upload_date_start = event_date_start,
+                               upload_date_start = "01-01-1570",
                                upload_date_end = 0) {
   ##### Defensive Programming #####
   this_call <- match.call(expand.dots = TRUE)
@@ -77,26 +77,26 @@ search_occurrences <- function(species_list, common_names,
     verbose = TRUE)
 
   # manipulate date objects to create correct window
-  upload_date_start <- if_else(
-    is.numeric(upload_date_start),
-    paste0(Sys.Date() - upload_date_start, "T00:00:00Z"),
-    paste0(dmy(upload_date_start), "T00:00:00Z")
-  )
-  upload_date_end <- if_else(
-    is.numeric(upload_date_end),
-    paste0(Sys.Date() - upload_date_end + 1, "T00:00:00Z"),
-    paste0(dmy(upload_date_end) + 1, "T00:00:00Z")
-  )
-
-  event_date_start <- if_else(
+  event_date_start <- ifelse(
     is.numeric(event_date_start),
     paste0(Sys.Date() - event_date_start, "T00:00:00Z"),
     paste0(dmy(event_date_start), "T00:00:00Z")
   )
-  event_date_end <- if_else(
+  event_date_end <- ifelse(
     is.numeric(event_date_end),
     paste0(Sys.Date() - event_date_end + 1, "T00:00:00Z"),
     paste0(dmy(event_date_end) + 1, "T00:00:00Z")
+  )
+
+  upload_date_start <- ifelse(
+    is.numeric(upload_date_start),
+    paste0(Sys.Date() - upload_date_start, "T00:00:00Z"),
+    paste0(dmy(upload_date_start), "T00:00:00Z")
+  )
+  upload_date_end <- ifelse(
+    is.numeric(upload_date_end),
+    paste0(Sys.Date() - upload_date_end + 1, "T00:00:00Z"),
+    paste0(dmy(upload_date_end) + 1, "T00:00:00Z")
   )
 
   # remove common name duplicates
