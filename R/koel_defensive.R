@@ -322,7 +322,7 @@ check_df <- function(var, var_name, req_cols = NULL) {
     missing_cols <- req_cols %in% colnames(var)
     if (!all(missing_cols)) {
       abort(glue("{var_name} argument requires the following columns:
-                  {paste(req_cols[missing_cols], collapse = ', ')}"))
+                  {paste(req_cols[!missing_cols], collapse = ', ')}"))
     }
   }
 }

@@ -176,7 +176,7 @@ test_that("search_occurrences() handles different date formats", {
 })
 
 # check that the function can search on multiple species (2 or 102)
-test_that("search_occurrences() handles different date formats", {
+test_that("search_occurrences() can search on multiple terms/species", {
   # set up arguments for 2 search terms
   species_list <- data.frame(
     correct_name = c("Onychoprion fuscatus", "Thalassarche bulleri"),
@@ -193,12 +193,12 @@ test_that("search_occurrences() handles different date formats", {
     common_name = c("Sooty Tern", "Buller's Albatross")
   )
   event_date_start <- "03-10-2022"
-  event_date_end <- "04-10-2022"
+  event_date_end <- "09-10-2022"
 
   so_output <- search_occurrences(species_list, common_names,
                                   event_date_start, event_date_end)
   # dataframe is of expected dimensions
-  expect_equal(dim(so_output), c(____, 33))
+  expect_equal(dim(so_output), c(12, 33))
 
 
   # set up arguments for 101 search terms
@@ -214,8 +214,10 @@ test_that("search_occurrences() handles different date formats", {
     shape = c("shape1"),
     list1 = c(TRUE)
     )
-    # dataframe is of expected dimensions
-    expect_equal(dim(so_output), c(____, 33))
+  so_output <- search_occurrences(species_list, common_names,
+                                  event_date_start, event_date_end)
+  # dataframe is of expected dimensions
+  expect_equal(dim(so_output), c(12, 33))
 })
 
 
@@ -245,5 +247,5 @@ test_that("search_occurrences() duplicates the same species for different lists"
   # output is of expected type
   expect_s3_class(so_output, "data.frame")
   # dataframe is of expected dimensions
-  expect_equal(dim(so_output), c(____, 34))
+  expect_equal(dim(so_output), c(2, 34))
 })
