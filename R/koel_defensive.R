@@ -108,9 +108,8 @@ koel_defensive <- function(...) {
   if (exists("occ_list", inherits = FALSE)) {
     if (nrow(occ_list) > 0) {
       ol_req_cols <- c("correct_name", "provided_name", "common_name",
-                       "state", "lga", "shape", "cw_state")
-      check_df(occ_list, "occ_list",
-               req_cols = ol_req_cols)
+                       "state", "lga", "shape", "basisOfRecord")
+      check_df(occ_list, "occ_list", req_cols = ol_req_cols)
     }
   }
 

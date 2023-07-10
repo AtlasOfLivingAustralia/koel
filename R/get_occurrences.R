@@ -218,7 +218,6 @@ filter_occurrences <- function(species_records, shapes_path = NULL) {
   if (nrow(species_records) == 0) {
     occ_list <- tibble()
   } else {
-    # download records and save temp files in cache_path
     occ_list <- species_records |>
       # state-based filtering
       identify_state() |>
@@ -237,10 +236,10 @@ filter_occurrences <- function(species_records, shapes_path = NULL) {
       # filter by IBRA and IMCRA regions - may shift this line around a bit
       filter(!is.na(cl966) | !is.na(cl1048) | !is.na(cl21)) |>
       as_tibble()
-  }
 
-  cat(paste0("Total: ", length(unique(occ_list$recordID)),
-              " records post location filtering"))
+    cat(paste0("Total: ", length(unique(occ_list$recordID)),
+               " records post location filtering\n"))
+  }
   return(occ_list)
 }
 
@@ -319,7 +318,7 @@ download_occurrences <- function(occ_list, cache_path) {
       select(recordID, state, lga, shape, url, download_path, creator) |>
       right_join(occ_media, by = c("recordID", "creator", "state", "lga", "shape")) |>
       relocate(c(state, lga, shape), .before = common_name) |>
-      relocate(creator, .after = cw_state)
+      relocate(creator, .after = basisOfRecord)
   }
 
   write.csv(occ_full,
@@ -513,7 +512,9 @@ identify_shape <- function(species_records, shapes_path = NULL) {
             mutate(shape_feature = NA)
         } else {
           # otherwise, check whether each occurrence lies in the shp file,
-          # and return the feature name that it lies in (change to FEATURE_NAME)
+          # and return the feature name that it lies in (change to SHAPE_NAME)
+          # but FIRST check whether there is a SHAPE_NAME column
+          is_SHAPE_NAME <- "SHAPE_NAME" %in% names(shapefiles[[unique(sr_dfs$shape)]])
           sr_dfs |>
             st_as_sf(
               coords = c("decimalLongitude", "decimalLatitude"),
@@ -522,13 +523,14 @@ identify_shape <- function(species_records, shapes_path = NULL) {
             mutate(intersection = st_intersects(geometry,
                                                 shapefiles[[unique(shape)]]) |>
                      as.integer(),
-                   shape_feature = if_else(
+                   shape_feature = ifelse(
                      is.na(intersection),
                      NA,
-                     if_else(
-                       "SHAPE_NAME" %in% names(shapefiles[[unique(shape)]]),
-                       shapefiles[[unique(shape)]]$SHAPE_NAME[intersection],
-                       shape))) |>
+                     shape),
+                   shape_feature = ifelse(
+                     !is.na(shape_feature) & is_SHAPE_NAME,
+                     shapefiles[[unique(shape)]]$SHAPE_NAME[intersection],
+                     shape_feature)) |>
             select(-intersection) |>
             st_drop_geometry()
         }
