@@ -225,19 +225,19 @@ test_that("search_occurrences() can search on multiple terms/species", {
 test_that("search_occurrences() duplicates the same species for different lists", {
   # set up arguments for 2 search terms
   species_list <- data.frame(
-    correct_name = c("Onychoprion fuscatus", "Onychoprion fuscatu"),
-    provided_name = c("Onychoprion fuscatus", "Onychoprion fuscatu"),
-    search_term = c("Onychoprion fuscatus", "Onychoprion fuscatu"),
+    correct_name = c("Onychoprion fuscatus", "Onychoprion fuscatus"),
+    provided_name = c("Onychoprion fuscatus", "Onychoprion fuscatus"),
+    search_term = c("Onychoprion fuscatus", "Onychoprion fuscatus"),
     common_name = c("Sooty Tern", "Sooty Tern"),
     state = c("AUS", "QLD"),
-    lga = c("some_LGA", "some_LGA"),
-    shape = c("shape1", "shape1"),
+    lga = c(NA, NA),
+    shape = c(NA, NA),
     list1 = c(TRUE, FALSE),
     list2 = c(FALSE, TRUE)
   )
   common_names <- data.frame(
-    correct_name = c("Onychoprion fuscatus", "Onychoprion fuscatu"),
-    common_name = c("Sooty Tern", "Sooty Tern")
+    correct_name = c("Onychoprion fuscatus"),
+    common_name = c("Sooty Tern")
   )
   event_date_start <- "03-10-2022"
   event_date_end <- "04-10-2022"
