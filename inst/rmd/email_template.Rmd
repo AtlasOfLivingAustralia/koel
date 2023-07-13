@@ -1,0 +1,29 @@
+---
+title: ""
+output: html_document
+---
+
+```{r}
+#| include = FALSE
+
+library(gt)
+library(lubridate)
+```
+
+```{r}
+#| echo = FALSE
+
+table_df |>
+  gt() |>
+  cols_label(
+    species_names = "Species",
+    observation = "Observation",
+    location = "Location",
+    occ_media = "Image"
+  ) |>
+  cols_align(align = c("left"), columns = everything()) |>
+  tab_options(table.width = pct(95))
+```
+<br>
+<br>
+This document was generated with R at `r paste0(format(Sys.time(), "%H"), ":", format(Sys.time(), "%M"))` (AEST) on `r paste0(wday(Sys.time(), label = TRUE, abbr = FALSE), ", ", day(Sys.Date()), " ", month(Sys.Date(), label = TRUE, abbr = FALSE), " ", year(Sys.Date()))`.

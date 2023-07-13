@@ -195,7 +195,7 @@ test_that("get_occurrences() filters correctly by LGA", {
   expect_equal(nrow(go_output), 0)
 })
 
-              # correctly filters by IMCRA and IBRA regions
+# correctly filters by IMCRA and IBRA regions
 test_that("get_occurrences() respects IMCRA and IBRA boundaries", {
   # set up arguments
   species_list <- data.frame(

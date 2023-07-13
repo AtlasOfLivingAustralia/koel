@@ -8,120 +8,72 @@
 #'    of this function, however it provides the option to save .html and .csv
 #'    files to local or temporary directories.
 #'
-#' @param alerts_data A `data.frame` ideally produced by `ala_record_download()`.
+#' @param alerts_data A data.frame ideally produced by `download_occurrences()`.
 #'    Each row contains ALA data pertaining to a single species occurrence record
-#'    downloaded with galah. Should contain 29 default columns plus an extra
+#'    downloaded with galah. Should contain __ default columns plus an extra
 #'    logical column for each list in the dataset.
-#' @param email_list A `data.frame` of email details for each list. Should
-#'    contain at least two columns, one named 'email' containing email addresses,
-#'    and one named 'list' containing the lists each email is associated with.
-#'    Defaults to an empty dataframe with these columns.
-#' @param email_subject An optional `character string` of the subject of the email.
-#'    If not provided, default subject is "ALA Biosecurity Alerts".
-#' @param email_send A `character string` providing the email address from which
-#'    the alerts are to be sent. Deafults to NA.
-#' @param email_password A `character_string` providing the password for the
-#'    provided email address (`email_send` argument). Defaults to NA.
-#' @param email_host A `character_string` providing the email server host to be
-#'    fed to the `{emayili}` function `server()`. Defaults to
-#'    "smtp-relay.gmail.com" which supports the offocial ALA biosecurity alerts
-#'    email address.
-#' @param email_port A `numeric` value providing the email server port to be
-#'    fed to the `{emayili}` function `server()`. Defaults to `587` which
-#'    supports the offocial ALA biosecurity alerts  email address.
-#' @param template_path A `character string` containing the path to the R
+#' @param template_path A single string containing the path to the R
 #'    markdown template to be rendered with the html table produced by
-#'    `build_gt_table()`
-#' @param cache_path A `character string` containing the path to the temporary
+#'    `build_gt_table()`. Defaults to NULL which triggers the use of a minimal
+#'    .Rmd file to render the produced table. Markdown file must use object
+#'    `table_df`.
+#' @param cache_path A single string containing the path to the temporary
 #'    cache folder in which species images and maps are saved.  Must begin with
-#'    "./" and end  with "/". Should contain a 'species_images' and a 'maps'
+#'    `"./"` and end  with `"/"`. Should contain a `species_images` and a `maps`
 #'    directory, however these will be created if they do not exist.
-#' @param output_path An optional `character string` containing the path to the
+#' @param output_path An optional single string containing the path to the
 #'    permanent directory in which the produced .html and .csv files are saved
 #'    for record-keeping purposes. Default value is `NULL`, and files are only
-#'    saved if a file path is provided instead. Must begin with "./" and end
-#'    with "/". Should contain a 'html' and a 'csv' directory, however these
+#'    saved if a file path is provided instead. Must begin with `"./"` and end
+#'    with `"/"`. Should contain a 'html' and a 'csv' directory, however these
 #'    will be created if they do not exist.
-#' @param test A `logical` argument which indicates whether the email should be
+#' @param email_list A data.frame of email details for each list. Should
+#'    contain at least two columns, one named `email` containing email addresses,
+#'    and one named `list` containing the lists each email is associated with.
+#'    Defaults to an empty dataframe with these columns. Emails provided with
+#'    `"universal"` in the `list` column receive emails for all lists
+#' @param email_subject An optional single string of the subject of the email.
+#'    If not provided, default subject is "ALA Biosecurity Alerts".
+#' @param email_send A single string providing the email address from which
+#'    the alerts are to be sent. Deafults to `NA`.
+#' @param email_password A single string providing the password for the
+#'    provided email address (`email_send` argument). Defaults to `NA`.
+#' @param email_host A single string providing the email server host to be
+#'    fed to the {emayili} function `server()`. Defaults to
+#'    `"smtp-relay.gmail.com"` which supports the official ALA biosecurity alerts
+#'    email address.
+#' @param email_port A single numeric value providing the email server port to be
+#'    fed to the {emayili} function `server()`. Defaults to `587` which
+#'    supports the official ALA biosecurity alerts email address.
+#' @param test A logical argument which indicates whether the email should be
 #'    sent as a test email (TRUE) or as an official email (FALSE). If the email
-#'    is a test then it is addressed to recipients directly and not to the
-#'    sending email address. If the email is not a test then it is bcc'd to all
-#'    recipients and is also addressed to the sending email address. Defaults to
-#'    TRUE.
+#'    is a test then it is not addressed to the sending email address. Defaults
+#'    to `TRUE`.
 #'
-#' @importFrom purrr map
 #' @importFrom dplyr filter
-#' @importFrom dplyr select
 #' @importFrom dplyr pull
-#' @importFrom rmarkdown render
+#' @importFrom dplyr select
+#' @importFrom purrr map
 #' @importFrom readr write_csv
 #' @importFrom rlang abort
 #' @importFrom rlang inform
+#' @importFrom rmarkdown render
 #'
 #' @export
 
-build_email <- function(alerts_data,
+build_email <- function(alerts_data, cache_path,
+                        template_path = NULL,
+                        output_path = NULL,
                         email_list = data.frame(email = character(),
                                                 list = character()),
                         email_subject = "ALA Biosecurity Alert",
                         email_send = NA, email_password = NA,
                         email_host = "smtp-relay.gmail.com", email_port = 587,
-                        template_path, cache_path, output_path = NULL,
                         test = TRUE) {
-
   ##### Defensive Programming #####
-  # alerts_data
-  if (!("data.frame" %in% class(alerts_data))) {
-    abort("`alerts_data` argument must be a data.frame or tibble")
-  }
-  # else if (!all(c("correct_name", "search_term") %in% colnames(alerts_data))) {
-  #   stop("`alerts_data` must be an object produced and returned by `ala_record_download`")
-  # }
-
-  # email_list
-  if (!("data.frame" %in% class(email_list))) {
-    abort("`email_list` argument must be a data.frame or tibble")
-  } else if (!all(c("email", "list") %in% colnames(email_list))) {
-    abort("`email_list` must have columns `email` and `list`")
-  } else if (nrow(email_list) == 0) {
-    inform("No emails provided in `email_list`. Reports will be produced but no emails will be sent.")
-  }
-  # template_path
-  if (!is.character(template_path) | substr(template_path, nchar(template_path) - 3, nchar(template_path)) != ".Rmd") {
-    abort("`template_path` argument must be a character string for a .Rmd file")
-  } else if (!file.exists(template_path)) {
-    abort("The .Rmd file specified by `template_path` does not exist")
-  }
-  # cache_path
-  if (!is.character(cache_path) | substr(cache_path, nchar(cache_path), nchar(cache_path)) != "/") {
-    abort("`cache_path` argument must be a string ending in '/'")
-  } else if (!dir.exists(cache_path)) {
-    abort("The directory specified by `cache_path` does not exist")
-  }
-  # create a `species_images` and `maps` folder if one does not exist
-  if (!("species_images" %in% list.files(cache_path))) {
-    inform("No 'species_images' directory exists in the provided `cache_path`. One has been created.")
-    dir.create(paste0(cache_path, "species_images"))
-  } else if (!("maps" %in% list.files(cache_path))) {
-    inform("No 'maps' directory exists in the provided `cache_path`. One has been created.")
-    dir.create(paste0(cache_path, "maps"))
-  }
-  # output_path
-  if (!is.null(output_path)) {
-    if (!is.character(output_path) | substr(output_path, nchar(output_path), nchar(output_path)) != "/") {
-      abort("`output_path` argument must be a string ending in '/'")
-    } else if (!dir.exists(output_path)) {
-      abort("The directory specified by `output_path` does not exist")
-    }
-    # create a `html` and `csv` folder if one does not exist
-    if (!("html" %in% list.files(output_path))) {
-      inform("No 'html' directory exists in the provided `output_path`. One has been created.")
-      dir.create(paste0(output_path, "html"))
-    } else if (!("csv" %in% list.files(output_path))) {
-      inform("No 'csv' directory exists in the provided `output_path`. One has been created.")
-      dir.create(paste0(output_path, "csv"))
-    }
-  }
+  this_call <- match.call(expand.dots = TRUE)
+  this_call[[1]] <- as.name("koel_defensive")
+  eval.parent(this_call)
 
   ##### Function Implementation #####
   # set current date and time for inclusion in file names
@@ -129,6 +81,12 @@ build_email <- function(alerts_data,
     gsub("\\s", "_", x = _) |>
     gsub(":", "-", x = _)
 
+  # set template_path if not provided
+  if (is.null(template_path)) {
+    template_path <- system.file("rmd", "email_template.Rmd", package = "koel")
+  }
+
+  # build tables if there are occurrences in alerts_data
   if (nrow(alerts_data) > 0) {
 
     # identify list names from alerts_data
@@ -152,14 +110,16 @@ build_email <- function(alerts_data,
             recipients <- email_list |>
               filter(list == list_name | list == "universal") |>
               pull(email)
-            send_email(recipients, output_file,
-                       email_send, email_password,
-                       email_host = email_host, email_port = email_port,
-                       email_subject = email_subject,
-                       test = test)
-            } else {
-              cat(paste0("No alert sent for list: ", list_name, "\n"))
+            if (!is.na(email_send) & !is.na(email_password)) {
+              send_email(recipients, output_file,
+                         email_send, email_password,
+                         email_host = email_host, email_port = email_port,
+                         email_subject = email_subject,
+                         test = test)
             }
+          } else {
+            cat(paste0("No alert sent for list: ", list_name, "\n"))
+          }
         }
     )
 
@@ -187,67 +147,38 @@ build_email <- function(alerts_data,
 #'    interactive html tables which link to various web pages and contain
 #'    observation images, maps and details
 #'
-#' @param df A `data.frame` produced by `ala_record_download()` that is filtered
-#'    down to a given list in `build_email()`. Contains 29 data columns and l
-#'    ogical columns for each list of interest.
-#' @param cache_path A `character string` containing the path to the temporary
+#' @param df A data.frame produced by `download_occurrences()` that is filtered
+#'    down to a given list in `build_email()`. Contains __ data columns and
+#'    logical columns for each list of interest.
+#' @param cache_path A single string containing the path to the temporary
 #'    cache folder in which species images and maps are saved.  Must begin with
-#'    "./" and end  with "/". When this function it is called it should contain
-#'    a 'species_images' and a 'maps' directory containing relevant images.
+#'    `"./"` and end  with `"/"`. When this function it is called it should contain
+#'    a `species_images` and a `maps` directory containing relevant images.
+#' @return A tibble that is passed on to some RMarkdown (.Rmd) file to be
+#'    rendered as a gt table. Contains four columns: `species`, `observation`,
+#'    `location` and `image`.
 #'
 #' @importFrom dplyr arrange
-#' @importFrom dplyr mutate
-#' @importFrom dplyr select
 #' @importFrom dplyr filter
-#' @importFrom dplyr tibble
 #' @importFrom dplyr if_else
+#' @importFrom dplyr mutate
 #' @importFrom dplyr rowwise
+#' @importFrom dplyr select
+#' @importFrom dplyr tibble
 #' @importFrom glue glue
 #' @importFrom gt html
+#' @importFrom here here
 #' @importFrom purrr map
 #' @importFrom purrr pmap
-#' @importFrom here here
 #' @importFrom rlang abort
 #' @importFrom rlang inform
-#'
-#' @return A `data.frame` that is passed on to some RMarkdown (.Rmd) to be
-#'    rendered as a gt table. Contains four columns: 'species', 'observation',
-#'    'location' and 'image'.
-#'
 #' @export
 
-build_gt_table <- function(df, cache_path){
-
+build_gt_table <- function(df, cache_path) {
   ##### Defensive Programming #####
-  # df
-  if (!("data.frame" %in% class(df))) {
-    abort("`df` argument must be a data.frame or tibble")
-  } else if (nrow(df) == 0) {
-    abort("`df` requires at least one row to compile a table")
-  } else if (!(all(
-    c(
-      "recordID", "eventDate", "cl22", "creator", "url", "correct_name",
-      "verbatimScientificName", "common_name", "decimalLatitude",
-      "decimalLongitude", "dataResourceName",  "download_path"
-    )
-    %in% colnames(df)))) {
-    cols_needed <- c(
-      "recordID", "eventDate", "cl22", "creator", "url", "correct_name",
-      "verbatimScientificName", "common_name", "decimalLatitude",
-      "decimalLongitude", "dataResourceName",  "download_path"
-    )
-    abort(paste0("`df` requires a column named ",
-                 cols_needed(which(!(cols_needed %in% col_names(df))))[1]))
-  }
-  # cache_path
-  if (!is.character(cache_path) | substr(cache_path, nchar(cache_path), nchar(cache_path)) != "/") {
-    abort("`cache_path` argument must be a string ending in '/'")
-  } else if (!dir.exists(cache_path)) {
-    abort("The directory specified by `cache_path` does not exist")
-  } else if (!("maps" %in% list.files(cache_path))) {
-    inform("No 'maps' directory exists in the provided `cache_path`. One has been created.")
-    dir.create(paste0(cache_path, "maps"))
-  }
+  this_call <- match.call(expand.dots = TRUE)
+  this_call[[1]] <- as.name("koel_defensive")
+  eval.parent(this_call)
 
   ##### Function Implementation #####
   # get first image per record
@@ -265,7 +196,7 @@ build_gt_table <- function(df, cache_path){
 
   # build table info
   table_df <- df2 |>
-    arrange(scientificName, eventDate, cl22) |>
+    arrange(scientificName, eventDate, cw_state) |>
     mutate(
       path = here(),
       image_url = sub("thumbnail$", "original", url)
@@ -279,13 +210,13 @@ build_gt_table <- function(df, cache_path){
           "Supplied as:<br><i>{provided_name}</i><br>",
           "Common name:<br>{common_name}"
         ),
-
         gt::html
       ),
       observation = map(
         glue(
           if_else(is.na(creator), "", "<b>{creator}</b><br>"),
           "{date_html}<br>",
+          if_else(is.na(shape), "", "<font size='-1'>{shape_feature}</font><br>"),
           if_else(is.na(lga), "", "<font size='-1'>{cl10923}</font><br>"),
           "{cw_state}<br>",
           "(<a href='https://www.google.com/maps/search/?api=1&query={decimalLatitude}%2C{decimalLongitude}'
@@ -326,44 +257,43 @@ build_gt_table <- function(df, cache_path){
 
 #' Internal function to build map thumbnails for ALA observations
 #'
-#' This function uses basemaps from OpenStreetMaps, called via `leaflet`,to
+#' This function uses basemaps from OpenStreetMaps, called via `leaflet`, to
 #'    produce small map thumbnails that depict the locations of individual
 #'    observations extracted from ALA. These images are saved as .png files and
-#'    imported into a `gt` table for rendering in a markdown document.
+#'    imported into a {gt} table for rendering in a markdown document.
 #'
-#' Note that this functino will install PhantomJS using the package `webshot` if
+#' Note that this function will install PhantomJS using the package `webshot` if
 #'    it is not already installed on the machine being used. The map production
 #'    cannot proceed without PhantomJS.
 #'
 #' @param list_row A `data.frame` object with a single row from a data.frame
 #'    produced by `ala_record_download()`. Usually the larger data.frame is
 #'    parsed through build_email, where it is then filtered twice to get down to
-#'    one row. Must at least contain 'recordID', decimalLatitude' and
-#'    'decimalLongitude' columns as these are used for plotting of the point on
+#'    one row. Must at least contain `recordID`, `decimalLatitude` and
+#'    `decimalLongitude` columns as these are used for plotting of the point on
 #'    the map and naming of the produced .png file.
 #' @param cache_path A `character string` containing the path to the temporary
 #'    cache folder in which species images and maps are saved.  Must begin with
-#'    "./" and end  with "/". When this function it is called it should contain
-#'    a 'species_images' and a 'maps'. This function saves images in `cache_path/maps/`
-#'
-#' @importFrom maptiles get_tiles
-#' @importFrom maptiles plot_tiles
-#' @importFrom leaflet leaflet
-#' @importFrom leaflet leafletOptions
-#' @importFrom leaflet leafletCRS
-#' @importFrom leaflet addTiles
-#' @importFrom leaflet setView
-#' @importFrom leaflet addCircleMarkers
-#' @importFrom webshot is_phantomjs_installed
-#' @importFrom webshot install_phantomjs
-#' @importFrom mapview mapshot
-#' @importFrom sf st_as_sf
-#' @importFrom rlang abort
-#' @importFrom rlang inform
-#'
+#'    `"./"` and end  with `"/"`. When this function it is called it should contain
+#'    "species_images" and "maps" directories. This function saves images in
+#'    "./cache_path/maps/".
 #' @return No returned file. Instead, a .png version of the produced thumbnail i
 #'    is saved in the 'maps' directory of 'cache_path'.
 #'
+#' @importFrom leaflet addCircleMarkers
+#' @importFrom leaflet addTiles
+#' @importFrom leaflet leaflet
+#' @importFrom leaflet leafletCRS
+#' @importFrom leaflet leafletOptions
+#' @importFrom leaflet setView
+#' @importFrom maptiles get_tiles
+#' @importFrom maptiles plot_tiles
+#' @importFrom mapview mapshot
+#' @importFrom rlang abort
+#' @importFrom rlang inform
+#' @importFrom sf st_as_sf
+#' @importFrom webshot install_phantomjs
+#' @importFrom webshot is_phantomjs_installed
 #' @export
 
 # build_map_thumbnail <- function(list_row, cache_path){
@@ -410,30 +340,11 @@ build_gt_table <- function(df, cache_path){
 #   dev.off()
 # }
 
-build_map_thumbnail <- function(list_row, cache_path){
-
+build_map_thumbnail <- function(list_row, cache_path) {
   ##### Defensive Programming #####
-  # list row
-  if (!("data.frame" %in% class(list_row))) {
-    abort("`list_row` argument must be a data.frame or tibble")
-  } else if (nrow(list_row) != 1) {
-    abort("`list_row` requires exactly one row to compile a map")
-  } else if (
-    !(all(c("recordID", "decimalLatitude", "decimalLongitude") %in%
-          colnames(list_row)))) {
-    cols_needed <- c("recordID", "decimalLatitude", "decimalLongitude")
-    abort(paste0("`list_row` requires a column named ",
-                 cols_needed(which(!(cols_needed %in% col_names(list_row))))[1]))
-  }
-  # cache_path
-  if (!is.character(cache_path) | substr(cache_path, nchar(cache_path), nchar(cache_path)) != "/") {
-    abort("`cache_path` argument must be a string ending in '/'")
-  } else if (!dir.exists(cache_path)) {
-    abort("The directory specified by `cache_path` does not exist")
-  } else if (!("maps" %in% list.files(cache_path))) {
-    inform("No 'maps' directory exists in the provided `cache_path`. One has been created.")
-    dir.create(paste0(cache_path, "maps"))
-  }
+  this_call <- match.call(expand.dots = TRUE)
+  this_call[[1]] <- as.name("koel_defensive")
+  eval.parent(this_call)
 
   ##### Install PhantomJS if not installed #####
   if (!is_phantomjs_installed()) {
@@ -460,45 +371,41 @@ build_map_thumbnail <- function(list_row, cache_path){
 #'    of occurrences of species of interest. Is used internally in `build_email()`
 #'    but can be deployed externally if necessary.
 #'
-#' @param recipients A `character string` vector of email addresses to be sent
+#' @param recipients A character vector of email addresses to be sent
 #'    the generated email. Is automatically generated by `build_email()` but can
 #'    be provided separately if needed.
-#' @param output_file A `character string` providing the path to the outputted
+#' @param output_file A character providing the path to the outputted
 #'    html file containing the {gt} table to be rendered in the email. This
 #'    path is produced in `build_email()` but can be provided separately too.
-#' @param email_send A `character string` providing the email address from which
+#' @param email_send A single string providing the email address from which
 #'    the alerts are to be sent.
-#' @param email_password A `character_string` providing the password for the
+#' @param email_password A single string providing the password for the
 #'    provided email address (`email_send` argument)
-#' @param email_host A `character_string` providing the email server host to be
-#'    fed to the `{emayili}` function `server()`. Defaults to
-#'    "smtp-relay.gmail.com" which supports the offocial ALA biosecurity alerts
+#' @param email_host A single string providing the email server host to be
+#'    fed to the {emayili} function `server()`. Defaults to
+#'    `"smtp-relay.gmail.com"` which supports the official ALA biosecurity alerts
 #'    email address.
-#' @param email_port A `numeric` value providing the email server port to be
-#'    fed to the `{emayili}` function `server()`. Defaults to `587` which
+#' @param email_port A numeric value providing the email server port to be
+#'    fed to the {emayili} function `server()`. Defaults to `587` which
 #'    supports the offocial ALA biosecurity alerts  email address.
-#' @param email_subject An optional `character string` of the subject of the email.
+#' @param email_subject An optional single string of the subject of the email.
 #'    If not provided, default subject is "ALA Biosecurity Alerts".
-#' @param test A `logical` argument which indicates whether the email should be
+#' @param test A logical argument which indicates whether the email should be
 #'    sent as a test email (TRUE) or as an official email (FALSE). If the email
-#'    is a test then it is addressed to recipients directly and not to the
-#'    sending email address. If the email is not a test then it is bcc'd to all
-#'    recipients and is also addressed to the sending email address. Defaults to
-#'    TRUE.
-#'
-#' @importFrom emayili envelope
-#' @importFrom emayili from
-#' @importFrom emayili to
-#' @importFrom emayili bcc
-#' @importFrom emayili subject
-#' @importFrom emayili server
-#' @importFrom xml2 read_html
-#' @importFrom rlang abort
-#' @importFrom rlang inform
-#'
+#'    is a test then it is not addressed to the sending email address. Defaults
+#'    to `TRUE`.
 #' @return No object is returned. This function exists only to send an email
 #'    containing the relevant tables for a biosecurity alert.
 #'
+#' @importFrom emayili bcc
+#' @importFrom emayili envelope
+#' @importFrom emayili from
+#' @importFrom emayili server
+#' @importFrom emayili subject
+#' @importFrom emayili to
+#' @importFrom rlang abort
+#' @importFrom rlang inform
+#' @importFrom xml2 read_html
 #' @export
 
 send_email <- function(recipients, output_file, email_send, email_password,

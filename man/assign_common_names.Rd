@@ -4,21 +4,21 @@
 \alias{assign_common_names}
 \title{Function to identify single assigned common names for species}
 \usage{
-assign_common_names(species_list)
+assign_common_names(species_names)
 }
 \arguments{
-\item{species_list}{A data.frame of species data, probably produced by
-`get_species_list2()`, that contains at least a 'correct_name' and a
-'common_name' column.}
+\item{species_names}{A data.frame of species data, probably produced by
+`get_species_list2()`, that contains at least a `correct_name` and a
+`common_name` column.}
 }
 \value{
-A single data.frame with a 'correct_name' and 'common_name' column.
+A single data.frame with a `correct_name` and `common_name` column.
    Each correct_name is unique and has a single common name assigned to it.
-   This object can be passed onto `record_download()`.
+   This object can be passed onto `search_occurrences()`.
 }
 \description{
 This function reduces confusion and complexity that arises from species having
-   multiple accepted common names. It takes a `data.frame` of species name
+   multiple accepted common names. It takes a data.frame of species name
    data and filters it down to have a single row for correct scientific
    species name. Each name is assigned a single correct common name.
 }
