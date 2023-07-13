@@ -359,9 +359,9 @@ search_name_fields <- function(field,
                                upload_date_start, upload_date_end,
                                search_terms) {
 ##### Function Implementation #####
-  field_fixed <- ifelse(field == "raw_scientificName",
-                        "verbatimScientificName",
-                        field)
+  # field_fixed <- ifelse(field == "raw_scientificName",
+  #                       "verbatimScientificName",
+  #                       field)
   occ_search <- galah_call() |>
     galah_filter(firstLoadedDate >= upload_date_start,
                  firstLoadedDate <= upload_date_end,
@@ -375,8 +375,8 @@ search_name_fields <- function(field,
                  firstLoadedDate, basisOfRecord,
                  group = c("basic", "media")) |>
     atlas_occurrences() |>
-    mutate(match = field_fixed,
-           search_term = .data[[field_fixed]],
+    mutate(match = field,
+           search_term = .data[[field]],
            across(everything(), as.character))
   return(occ_search)
 }

@@ -6,15 +6,15 @@
 \usage{
 build_email(
   alerts_data,
+  cache_path,
+  template_path = system.file("rmd", "email_template.Rmd", package = "koel"),
+  output_path = NULL,
   email_list = data.frame(email = character(), list = character()),
   email_subject = "ALA Biosecurity Alert",
   email_send = NA,
   email_password = NA,
   email_host = "smtp-relay.gmail.com",
   email_port = 587,
-  template_path,
-  cache_path,
-  output_path = NULL,
   test = TRUE
 )
 }
@@ -23,6 +23,23 @@ build_email(
 Each row contains ALA data pertaining to a single species occurrence record
 downloaded with galah. Should contain __ default columns plus an extra
 logical column for each list in the dataset.}
+
+\item{cache_path}{A single string containing the path to the temporary
+cache folder in which species images and maps are saved.  Must begin with
+`"./"` and end  with `"/"`. Should contain a `species_images` and a `maps`
+directory, however these will be created if they do not exist.}
+
+\item{template_path}{A single string containing the path to the R
+markdown template to be rendered with the html table produced by
+`build_gt_table()`. Defaults to the path to a minimal .Rmd file which will
+render the produced table. Must use object `table_df`.}
+
+\item{output_path}{An optional single string containing the path to the
+permanent directory in which the produced .html and .csv files are saved
+for record-keeping purposes. Default value is `NULL`, and files are only
+saved if a file path is provided instead. Must begin with `"./"` and end
+with `"/"`. Should contain a 'html' and a 'csv' directory, however these
+will be created if they do not exist.}
 
 \item{email_list}{A data.frame of email details for each list. Should
 contain at least two columns, one named `email` containing email addresses,
@@ -47,22 +64,6 @@ email address.}
 \item{email_port}{A single numeric value providing the email server port to be
 fed to the {emayili} function `server()`. Defaults to `587` which
 supports the official ALA biosecurity alerts email address.}
-
-\item{template_path}{A single string containing the path to the R
-markdown template to be rendered with the html table produced by
-`build_gt_table()`}
-
-\item{cache_path}{A single string containing the path to the temporary
-cache folder in which species images and maps are saved.  Must begin with
-`"./"` and end  with `"/"`. Should contain a `species_images` and a `maps`
-directory, however these will be created if they do not exist.}
-
-\item{output_path}{An optional single string containing the path to the
-permanent directory in which the produced .html and .csv files are saved
-for record-keeping purposes. Default value is `NULL`, and files are only
-saved if a file path is provided instead. Must begin with `"./"` and end
-with `"/"`. Should contain a 'html' and a 'csv' directory, however these
-will be created if they do not exist.}
 
 \item{test}{A logical argument which indicates whether the email should be
 sent as a test email (TRUE) or as an official email (FALSE). If the email

@@ -99,8 +99,10 @@ koel_defensive <- function(...) {
   }
 
   # shapes_path
-  if (exists("shapes_path", inherits = FALSE) & is.null("shapes_path")) {
-    check_dir_path(shapes_path, "shapes_path")
+  if (exists("shapes_path", inherits = FALSE)) {
+    if (!is.null(shapes_path)) {
+      check_dir_path(shapes_path, "shapes_path")
+    }
   }
 
   ###### download_occurrences() ######
@@ -144,22 +146,27 @@ koel_defensive <- function(...) {
       if (exists("email_list", inherits = FALSE)) {
         check_df(email_list, "email_list",
                  req_cols = c("email", "list"))
+
+        if (nrow(email_list) == 0) {
+          inform("No emails provided in `email_list`. Reports will be produced but no emails will be sent.")
+        }
       }
 
-      if (nrow(email_list) == 0) {
-        inform("No emails provided in `email_list`. Reports will be produced but no emails will be sent.")
-      }
       # email_subject
       if (exists("email_subject", inherits = FALSE)) {
         check_string(email_subject, "email_subject")
       }
       # email_send
-      if (exists("email_send", inherits = FALSE) & !is.na(email_send)) {
-        check_string(email_send, "email_send")
+      if (exists("email_send", inherits = FALSE)) {
+        if (!is.na(email_send)) {
+          check_string(email_send, "email_send")
+        }
       }
       # email_password
-      if (exists("email_password", inherits = FALSE) & !is.na(email_password)) {
-        check_string(email_password, "email_password")
+      if (exists("email_password", inherits = FALSE)) {
+        if (!is.na(email_password)) {
+          check_string(email_password, "email_password")
+        }
       }
       # email_host
       ## No checks yet - assume is probably a string though
@@ -274,7 +281,7 @@ check_file_path <- function(var, var_name, file_ext) {
     abort(glue("{var_name} must be a single string."))
   }
   # correct file extension required
-  if (!(substr(var, nchar(var) - nchar(file_ext), nchar(var)) %in% file_ext)) {
+  if (!(substr(var, nchar(var) - nchar(file_ext) + 1, nchar(var)) %in% file_ext)) {
     abort(glue("Invalid path. {var_name} must be a file of type {paste(file_ext, collapse = ', ')}"))
   }
   # file exists

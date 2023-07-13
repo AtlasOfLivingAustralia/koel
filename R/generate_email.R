@@ -12,6 +12,20 @@
 #'    Each row contains ALA data pertaining to a single species occurrence record
 #'    downloaded with galah. Should contain __ default columns plus an extra
 #'    logical column for each list in the dataset.
+#' @param template_path A single string containing the path to the R
+#'    markdown template to be rendered with the html table produced by
+#'    `build_gt_table()`. Defaults to the path to a minimal .Rmd file which will
+#'    render the produced table. Must use object `table_df`.
+#' @param cache_path A single string containing the path to the temporary
+#'    cache folder in which species images and maps are saved.  Must begin with
+#'    `"./"` and end  with `"/"`. Should contain a `species_images` and a `maps`
+#'    directory, however these will be created if they do not exist.
+#' @param output_path An optional single string containing the path to the
+#'    permanent directory in which the produced .html and .csv files are saved
+#'    for record-keeping purposes. Default value is `NULL`, and files are only
+#'    saved if a file path is provided instead. Must begin with `"./"` and end
+#'    with `"/"`. Should contain a 'html' and a 'csv' directory, however these
+#'    will be created if they do not exist.
 #' @param email_list A data.frame of email details for each list. Should
 #'    contain at least two columns, one named `email` containing email addresses,
 #'    and one named `list` containing the lists each email is associated with.
@@ -30,19 +44,6 @@
 #' @param email_port A single numeric value providing the email server port to be
 #'    fed to the {emayili} function `server()`. Defaults to `587` which
 #'    supports the official ALA biosecurity alerts email address.
-#' @param template_path A single string containing the path to the R
-#'    markdown template to be rendered with the html table produced by
-#'    `build_gt_table()`
-#' @param cache_path A single string containing the path to the temporary
-#'    cache folder in which species images and maps are saved.  Must begin with
-#'    `"./"` and end  with `"/"`. Should contain a `species_images` and a `maps`
-#'    directory, however these will be created if they do not exist.
-#' @param output_path An optional single string containing the path to the
-#'    permanent directory in which the produced .html and .csv files are saved
-#'    for record-keeping purposes. Default value is `NULL`, and files are only
-#'    saved if a file path is provided instead. Must begin with `"./"` and end
-#'    with `"/"`. Should contain a 'html' and a 'csv' directory, however these
-#'    will be created if they do not exist.
 #' @param test A logical argument which indicates whether the email should be
 #'    sent as a test email (TRUE) or as an official email (FALSE). If the email
 #'    is a test then it is not addressed to the sending email address. Defaults
@@ -59,13 +60,14 @@
 #'
 #' @export
 
-build_email <- function(alerts_data,
+build_email <- function(alerts_data, cache_path,
+                        template_path = system.file("rmd", "email_template.Rmd", package = "koel"),
+                        output_path = NULL,
                         email_list = data.frame(email = character(),
                                                 list = character()),
                         email_subject = "ALA Biosecurity Alert",
                         email_send = NA, email_password = NA,
                         email_host = "smtp-relay.gmail.com", email_port = 587,
-                        template_path, cache_path, output_path = NULL,
                         test = TRUE) {
   ##### Defensive Programming #####
   this_call <- match.call(expand.dots = TRUE)
