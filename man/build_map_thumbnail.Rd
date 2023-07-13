@@ -10,27 +10,28 @@ build_map_thumbnail(list_row, cache_path)
 \item{list_row}{A `data.frame` object with a single row from a data.frame
 produced by `ala_record_download()`. Usually the larger data.frame is
 parsed through build_email, where it is then filtered twice to get down to
-one row. Must at least contain 'recordID', decimalLatitude' and
-'decimalLongitude' columns as these are used for plotting of the point on
+one row. Must at least contain `recordID`, `decimalLatitude` and
+`decimalLongitude` columns as these are used for plotting of the point on
 the map and naming of the produced .png file.}
 
 \item{cache_path}{A `character string` containing the path to the temporary
 cache folder in which species images and maps are saved.  Must begin with
-"./" and end  with "/". When this function it is called it should contain
-a 'species_images' and a 'maps'. This function saves images in `cache_path/maps/`}
+`"./"` and end  with `"/"`. When this function it is called it should contain
+"species_images" and "maps" directories. This function saves images in
+"./cache_path/maps/".}
 }
 \value{
 No returned file. Instead, a .png version of the produced thumbnail i
    is saved in the 'maps' directory of 'cache_path'.
 }
 \description{
-This function uses basemaps from OpenStreetMaps, called via `leaflet`,to
+This function uses basemaps from OpenStreetMaps, called via `leaflet`, to
    produce small map thumbnails that depict the locations of individual
    observations extracted from ALA. These images are saved as .png files and
-   imported into a `gt` table for rendering in a markdown document.
+   imported into a {gt} table for rendering in a markdown document.
 }
 \details{
-Note that this functino will install PhantomJS using the package `webshot` if
+Note that this function will install PhantomJS using the package `webshot` if
    it is not already installed on the machine being used. The map production
    cannot proceed without PhantomJS.
 }

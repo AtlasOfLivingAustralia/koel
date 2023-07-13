@@ -4,13 +4,13 @@
 \alias{collate_lists}
 \title{Combine user-supplied lists into data.frame}
 \usage{
-collate_lists(path, list_suffix = "_list")
+collate_lists(lists_path, list_suffix = "_list")
 }
 \arguments{
-\item{path}{Path to the directory where lists are saved, beginning with "./"
-and ending in "/".}
+\item{lists_path}{Path to the directory where lists are saved, ending in `"/"`.}
 
-\item{list_suffix}{Character string between the list name and file extension.}
+\item{list_suffix}{Character string (case insensitive) between the list name
+and file extension.}
 }
 \value{
 A data.frame containing four columns, with information about the

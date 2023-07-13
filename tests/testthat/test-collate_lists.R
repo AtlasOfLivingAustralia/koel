@@ -1,4 +1,4 @@
-test_that("arguments are supplied correctly", {
+test_that("collate_lists() takes correct input arguments", {
   # test for nice error if the path does not end in /
   expect_error(collate_lists("./dummy_path"))
   # test if both arguments are character strings

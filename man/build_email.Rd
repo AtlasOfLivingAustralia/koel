@@ -6,69 +6,69 @@
 \usage{
 build_email(
   alerts_data,
+  cache_path,
+  template_path = system.file("rmd", "email_template.Rmd", package = "koel"),
+  output_path = NULL,
   email_list = data.frame(email = character(), list = character()),
   email_subject = "ALA Biosecurity Alert",
   email_send = NA,
   email_password = NA,
   email_host = "smtp-relay.gmail.com",
   email_port = 587,
-  template_path,
-  cache_path,
-  output_path = NULL,
   test = TRUE
 )
 }
 \arguments{
-\item{alerts_data}{A `data.frame` ideally produced by `ala_record_download()`.
+\item{alerts_data}{A data.frame ideally produced by `download_occurrences()`.
 Each row contains ALA data pertaining to a single species occurrence record
-downloaded with galah. Should contain 29 default columns plus an extra
+downloaded with galah. Should contain __ default columns plus an extra
 logical column for each list in the dataset.}
 
-\item{email_list}{A `data.frame` of email details for each list. Should
-contain at least two columns, one named 'email' containing email addresses,
-and one named 'list' containing the lists each email is associated with.
-Defaults to an empty dataframe with these columns.}
-
-\item{email_subject}{An optional `character string` of the subject of the email.
-If not provided, default subject is "ALA Biosecurity Alerts".}
-
-\item{email_send}{A `character string` providing the email address from which
-the alerts are to be sent. Deafults to NA.}
-
-\item{email_password}{A `character_string` providing the password for the
-provided email address (`email_send` argument). Defaults to NA.}
-
-\item{email_host}{A `character_string` providing the email server host to be
-fed to the `{emayili}` function `server()`. Defaults to
-"smtp-relay.gmail.com" which supports the offocial ALA biosecurity alerts
-email address.}
-
-\item{email_port}{A `numeric` value providing the email server port to be
-fed to the `{emayili}` function `server()`. Defaults to `587` which
-supports the offocial ALA biosecurity alerts  email address.}
-
-\item{template_path}{A `character string` containing the path to the R
-markdown template to be rendered with the html table produced by
-`build_gt_table()`}
-
-\item{cache_path}{A `character string` containing the path to the temporary
+\item{cache_path}{A single string containing the path to the temporary
 cache folder in which species images and maps are saved.  Must begin with
-"./" and end  with "/". Should contain a 'species_images' and a 'maps'
+`"./"` and end  with `"/"`. Should contain a `species_images` and a `maps`
 directory, however these will be created if they do not exist.}
 
-\item{output_path}{An optional `character string` containing the path to the
+\item{template_path}{A single string containing the path to the R
+markdown template to be rendered with the html table produced by
+`build_gt_table()`. Defaults to the path to a minimal .Rmd file which will
+render the produced table. Must use object `table_df`.}
+
+\item{output_path}{An optional single string containing the path to the
 permanent directory in which the produced .html and .csv files are saved
 for record-keeping purposes. Default value is `NULL`, and files are only
-saved if a file path is provided instead. Must begin with "./" and end
-with "/". Should contain a 'html' and a 'csv' directory, however these
+saved if a file path is provided instead. Must begin with `"./"` and end
+with `"/"`. Should contain a 'html' and a 'csv' directory, however these
 will be created if they do not exist.}
 
-\item{test}{A `logical` argument which indicates whether the email should be
+\item{email_list}{A data.frame of email details for each list. Should
+contain at least two columns, one named `email` containing email addresses,
+and one named `list` containing the lists each email is associated with.
+Defaults to an empty dataframe with these columns. Emails provided with
+`"universal"` in the `list` column receive emails for all lists}
+
+\item{email_subject}{An optional single string of the subject of the email.
+If not provided, default subject is "ALA Biosecurity Alerts".}
+
+\item{email_send}{A single string providing the email address from which
+the alerts are to be sent. Deafults to `NA`.}
+
+\item{email_password}{A single string providing the password for the
+provided email address (`email_send` argument). Defaults to `NA`.}
+
+\item{email_host}{A single string providing the email server host to be
+fed to the {emayili} function `server()`. Defaults to
+`"smtp-relay.gmail.com"` which supports the official ALA biosecurity alerts
+email address.}
+
+\item{email_port}{A single numeric value providing the email server port to be
+fed to the {emayili} function `server()`. Defaults to `587` which
+supports the official ALA biosecurity alerts email address.}
+
+\item{test}{A logical argument which indicates whether the email should be
 sent as a test email (TRUE) or as an official email (FALSE). If the email
-is a test then it is addressed to recipients directly and not to the
-sending email address. If the email is not a test then it is bcc'd to all
-recipients and is also addressed to the sending email address. Defaults to
-TRUE.}
+is a test then it is not addressed to the sending email address. Defaults
+to `TRUE`.}
 }
 \description{
 This function compiles the downloaded ALA species occurrences into an

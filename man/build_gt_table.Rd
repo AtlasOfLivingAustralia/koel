@@ -7,19 +7,19 @@
 build_gt_table(df, cache_path)
 }
 \arguments{
-\item{df}{A `data.frame` produced by `ala_record_download()` that is filtered
-down to a given list in `build_email()`. Contains 29 data columns and l
-ogical columns for each list of interest.}
+\item{df}{A data.frame produced by `download_occurrences()` that is filtered
+down to a given list in `build_email()`. Contains __ data columns and
+logical columns for each list of interest.}
 
-\item{cache_path}{A `character string` containing the path to the temporary
+\item{cache_path}{A single string containing the path to the temporary
 cache folder in which species images and maps are saved.  Must begin with
-"./" and end  with "/". When this function it is called it should contain
-a 'species_images' and a 'maps' directory containing relevant images.}
+`"./"` and end  with `"/"`. When this function it is called it should contain
+a `species_images` and a `maps` directory containing relevant images.}
 }
 \value{
-A `data.frame` that is passed on to some RMarkdown (.Rmd) to be
-   rendered as a gt table. Contains four columns: 'species', 'observation',
-   'location' and 'image'.
+A tibble that is passed on to some RMarkdown (.Rmd) file to be
+   rendered as a gt table. Contains four columns: `species`, `observation`,
+   `location` and `image`.
 }
 \description{
 This implementation uses {gt} to create an HTML table of ALA occurrences from
