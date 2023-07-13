@@ -174,7 +174,9 @@ koel_defensive <- function(...) {
       ## No checks yet - assume is either numeric or string
       # template_path
       if (exists("template_path", inherits = FALSE)) {
-        check_file_path(template_path, "template_path", file_ext = ".Rmd")
+        if (!is.null(template_path)) {
+          check_file_path(template_path, "template_path", file_ext = ".Rmd")
+        }
       }
     }
   }

@@ -14,8 +14,9 @@
 #'    logical column for each list in the dataset.
 #' @param template_path A single string containing the path to the R
 #'    markdown template to be rendered with the html table produced by
-#'    `build_gt_table()`. Defaults to the path to a minimal .Rmd file which will
-#'    render the produced table. Must use object `table_df`.
+#'    `build_gt_table()`. Defaults to NULL which triggers the use of a minimal
+#'    .Rmd file to render the produced table. Markdown file must use object
+#'    `table_df`.
 #' @param cache_path A single string containing the path to the temporary
 #'    cache folder in which species images and maps are saved.  Must begin with
 #'    `"./"` and end  with `"/"`. Should contain a `species_images` and a `maps`
@@ -61,7 +62,7 @@
 #' @export
 
 build_email <- function(alerts_data, cache_path,
-                        template_path = system.file("rmd", "email_template.Rmd", package = "koel"),
+                        template_path = NULL,
                         output_path = NULL,
                         email_list = data.frame(email = character(),
                                                 list = character()),
@@ -80,6 +81,12 @@ build_email <- function(alerts_data, cache_path,
     gsub("\\s", "_", x = _) |>
     gsub(":", "-", x = _)
 
+  # set template_path if not provided
+  if (is.null(template_path)) {
+    template_path <- system.file("rmd", "email_template.Rmd", package = "koel")
+  }
+
+  # build tables if there are occurrences in alerts_data
   if (nrow(alerts_data) > 0) {
 
     # identify list names from alerts_data
