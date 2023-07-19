@@ -18,6 +18,7 @@
 #' @importFrom rlang abort
 #' @importFrom rlang inform
 #' @importFrom rlang warn
+#' @export
 
 
 koel_defensive <- function(...) {
@@ -244,6 +245,7 @@ koel_defensive <- function(...) {
 #'
 #' @importFrom glue glue
 #' @importFrom rlang abort
+#' @noRd
 
 check_dir_path <- function(var, var_name) {
   # is character type
@@ -272,6 +274,7 @@ check_dir_path <- function(var, var_name) {
 #'
 #' @importFrom glue glue
 #' @importFrom rlang abort
+#' @noRd
 
 check_file_path <- function(var, var_name, file_ext) {
   # is character type
@@ -299,6 +302,7 @@ check_file_path <- function(var, var_name, file_ext) {
 #'
 #' @importFrom glue glue
 #' @importFrom rlang abort
+#' @noRd
 
 check_string <- function(var, var_name) {
   # is character type
@@ -319,6 +323,7 @@ check_string <- function(var, var_name) {
 #'
 #' @importFrom glue glue
 #' @importFrom rlang abort
+#' @noRd
 
 check_df <- function(var, var_name, req_cols = NULL) {
   # is data.frame/tibble
@@ -342,6 +347,7 @@ check_df <- function(var, var_name, req_cols = NULL) {
 #'
 #' @importFrom glue glue
 #' @importFrom rlang abort
+#' @noRd
 
 check_date <- function(var, var_name) {
   # is either numeric or character
@@ -368,6 +374,7 @@ check_date <- function(var, var_name) {
 #'
 #' @importFrom glue glue
 #' @importFrom rlang abort
+#' @noRd
 
 check_log <- function(var, var_name) {
   # is character type

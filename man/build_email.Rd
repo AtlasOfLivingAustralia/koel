@@ -7,7 +7,7 @@
 build_email(
   alerts_data,
   cache_path,
-  template_path = system.file("rmd", "email_template.Rmd", package = "koel"),
+  template_path = NULL,
   output_path = NULL,
   email_list = data.frame(email = character(), list = character()),
   email_subject = "ALA Biosecurity Alert",
@@ -31,8 +31,9 @@ directory, however these will be created if they do not exist.}
 
 \item{template_path}{A single string containing the path to the R
 markdown template to be rendered with the html table produced by
-`build_gt_table()`. Defaults to the path to a minimal .Rmd file which will
-render the produced table. Must use object `table_df`.}
+`build_gt_table()`. Defaults to NULL which triggers the use of a minimal
+.Rmd file to render the produced table. Markdown file must use object
+`table_df`.}
 
 \item{output_path}{An optional single string containing the path to the
 permanent directory in which the produced .html and .csv files are saved

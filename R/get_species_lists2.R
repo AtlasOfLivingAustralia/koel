@@ -117,6 +117,7 @@ get_species_lists2 <- function(list_df, synonym_delimiter = ","){
 #'
 #' @importFrom magrittr %>%
 #' @importFrom stringr str_squish
+#' @noRd
 
 clean_names <- function(name) {
   cleaned_name <- name %>%

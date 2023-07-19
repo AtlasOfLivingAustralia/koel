@@ -353,6 +353,7 @@ download_occurrences <- function(occ_list, cache_path) {
 #' @importFrom rlang .data
 #' @importFrom rlang abort
 #' @importFrom rlang inform
+#' @noRd
 
 search_name_fields <- function(field,
                                event_date_start, event_date_end,
