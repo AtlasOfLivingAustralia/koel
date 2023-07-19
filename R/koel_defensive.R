@@ -378,7 +378,7 @@ check_date <- function(var, var_name) {
 
 check_log <- function(var, var_name) {
   # is character type
-  if (!is.logial(var)) {
+  if (!is.logical(var)) {
     abort(glue("{var_name} argument must be a logical."))
   }
   # length 1 only
