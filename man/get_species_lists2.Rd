@@ -18,11 +18,9 @@ to `", "`.}
 \value{
 A data.frame of unique scientific names, the search term used to
   match those names to the ALA taxonomy, a common name for each species, the
-  state and LGA jurisdictions of interest for each species, and a column for each
-  imported list. Each column associated with an imported list contains
-  logical information on whether or not a species appears on the list. This
-  data.frame may be passed to `assign_common_names()` and
-  `search_occurrences()`.
+  state and LGA jurisdictions of interest for each species, and a column for
+  the name of the list that name was provided by. This data.frame may be
+  passed to `assign_common_names()` and `search_occurrences()`.
 }
 \description{
 This function takes a small data.frame produced by `collate_lists()` and

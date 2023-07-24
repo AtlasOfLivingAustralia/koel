@@ -44,13 +44,10 @@
 #' @importFrom dplyr across
 #' @importFrom dplyr distinct
 #' @importFrom dplyr everything
-#' @importFrom dplyr group_by
 #' @importFrom dplyr if_else
 #' @importFrom dplyr left_join
 #' @importFrom dplyr mutate
 #' @importFrom dplyr select
-#' @importFrom dplyr slice_head
-#' @importFrom dplyr ungroup
 #' @importFrom galah galah_config
 #' @importFrom lubridate as_datetime
 #' @importFrom lubridate dmy
@@ -71,11 +68,6 @@ search_occurrences <- function(species_list, common_names,
   eval.parent(this_call)
 
   ##### Function Implementation #####
-  galah_config(
-    email = "callumwaite2000@gmail.com",
-    run_checks = FALSE,
-    verbose = TRUE)
-
   # manipulate date objects to create correct window
   event_date_start <- ifelse(
     is.numeric(event_date_start),
@@ -108,7 +100,7 @@ search_occurrences <- function(species_list, common_names,
   divisions <- seq(1, length(unique(species_df$search_term)), 100)
 
   # set up search fields
-  fields <- c("scientificName", "raw_scientificName", "species", "subspecies", "genus")
+  fields <- c("genus", "species", "subspecies", "scientificName", "raw_scientificName")
 
   # iterate search of Atlas for each search term. Store counts
   species_records <- map(
@@ -138,20 +130,21 @@ search_occurrences <- function(species_list, common_names,
     # turn all columns into character columns in case dfs are empty
     map(~mutate(., across(everything(), as.character))) |>
     list_rbind() |>
-    # remove duplicated records
-    group_by(across(-c(match, search_term))) |>
-    slice_head() |>
-    ungroup() |>
     mutate(eventDate = as_datetime(eventDate),
            across(c(decimalLatitude, decimalLongitude), as.numeric)) |>
-    # remove duplicates of the same record for the same search term
-    distinct(recordID, search_term, .keep_all = TRUE) |>
     # add on list-specific data and common names
     left_join(species_df,
               by = "search_term",
               relationship = "many-to-many") |>
     left_join(common_names,
-              by = "correct_name")
+              by = "correct_name") |>
+    relocate(common_name, .after = provided_name) |>
+    # remove duplicated records
+    # group_by(across(-c(match, search_term))) |>
+    # slice_head() |>
+    # ungroup() |>
+    # remove duplicates of the same record for the same search term
+    distinct(recordID, provided_name, list_name, .keep_all = TRUE)
 
   cat(paste0("Total: ", length(unique(species_records$recordID)),
              " records pre location filtering \n"))
@@ -219,13 +212,15 @@ filter_occurrences <- function(species_records, shapes_path = NULL) {
     occ_list <- tibble()
   } else {
     occ_list <- species_records |>
+      # filter by IBRA and IMCRA regions - may shift this line around a bit
+      filter(!is.na(cl966) | !is.na(cl1048) | !is.na(cl21)) |>
       # state-based filtering
       identify_state() |>
       identify_shape(shapes_path = shapes_path) |>
       # do ID'd states + LGAs match provided ones
       mutate(flagged_state = str_detect(state, cw_state),
              flagged_lga = !is.na(cl10923) &
-                            (cl10923 %in% str_split(lga, ", ")[[1]]),
+               (cl10923 %in% str_split(lga, ", ")[[1]]),
              flagged_shape = !is.na(shape_feature)) |>
       # filter out occurrences not in areas of interest
       filter(state == "AUS" |
@@ -233,8 +228,8 @@ filter_occurrences <- function(species_records, shapes_path = NULL) {
                (!is.na(lga) & flagged_lga) |
                (!is.na(shape) & flagged_shape)) |>
       select(-flagged_state, -flagged_lga, -flagged_shape) |>
-      # filter by IBRA and IMCRA regions - may shift this line around a bit
-      filter(!is.na(cl966) | !is.na(cl1048) | !is.na(cl21)) |>
+      # filter out excluded names
+      exclude_records() |>
       as_tibble()
 
     cat(paste0("Total: ", length(unique(occ_list$recordID)),
@@ -298,11 +293,12 @@ download_occurrences <- function(occ_list, cache_path) {
   if (nrow(occ_list) == 0) {
     occ_full <- tibble()
   } else {
+    # download records and save temp files in cache_path if they exist
     occ_media <- occ_list |>
       # introduce media data (if exists) for each occurrence (time sink)
       (\(.) if (any(!is.na(.$multimedia))) search_media(.) else mutate(., creator = NA))() |>
       # keep the first media item for each record
-      distinct(recordID, correct_name, provided_name, state, lga, shape, .keep_all = TRUE)
+      distinct(recordID, correct_name, provided_name, state, lga, shape, list_name, .keep_all = TRUE)
 
     # Note that collect_media() only retains records with media - need to
     # right_join to the search_media() output
@@ -315,9 +311,9 @@ download_occurrences <- function(occ_list, cache_path) {
       } else {
         mutate(., url = NA, download_path = NA, creator = NA)
       })() |>
-      select(recordID, state, lga, shape, url, download_path, creator) |>
-      right_join(occ_media, by = c("recordID", "creator", "state", "lga", "shape")) |>
-      relocate(c(state, lga, shape), .before = common_name) |>
+      select(recordID, state, lga, shape, list_name, url, download_path, creator) |>
+      right_join(occ_media, by = c("recordID", "creator", "state", "lga", "shape", "list_name")) |>
+      relocate(c(state, lga, shape, list_name), .after = common_name) |>
       relocate(creator, .after = basisOfRecord)
   }
 
@@ -360,9 +356,6 @@ search_name_fields <- function(field,
                                upload_date_start, upload_date_end,
                                search_terms) {
 ##### Function Implementation #####
-  # field_fixed <- ifelse(field == "raw_scientificName",
-  #                       "verbatimScientificName",
-  #                       field)
   occ_search <- galah_call() |>
     galah_filter(firstLoadedDate >= upload_date_start,
                  firstLoadedDate <= upload_date_end,
@@ -540,4 +533,45 @@ identify_shape <- function(species_records, shapes_path = NULL) {
   }
 
   return(sr_shapes)
+}
+
+#' Exclude records that have been marked for exclusion
+#'
+#' An internal function to exclude records for species that have been marked
+#'    with an exclamation mark at the start of `provided_name`. Use case is when
+#'    a larger group is listed, such as a genus name, but that same list also
+#'    wishes to exclude a subset of species in that genus. Can also be used for
+#'    species and subspecies.
+#'
+#' @param species_records A dataframe/tibble produced by `atlas_occurrences()` or
+#'    otherwise, containing at minimum columns `provided_name`, `recordID`, and
+#'    `list_name`. Each row represents a unique occurrence.
+#' @param exlcusion_prefix Character indicating prefix before provided name used
+#'    to denote species to be excluded. Defaults to `"!"`.
+#'
+#' @return Returns the exact provided dataframe, with occurrences filtered out
+#'    that were marked for exclusion.
+#'
+#' @importFrom dplyr filter
+#' @importFrom dplyr left_join
+#' @importFrom dplyr mutate
+#' @importFrom dplyr select
+#' @importFrom stringr str_sub
+#' @noRd
+
+exclude_records <- function(species_records, exclusion_prefix = "!") {
+  # find recordID and list combos that have provided name begin with !
+  exclusions <- species_records |>
+    # identify rows to exclude by !
+    filter(str_sub(provided_name, 1, 1) == exclusion_prefix) |>
+    select(recordID, list_name) |>
+    mutate(exclude = TRUE)
+
+  # exclude flagged rows
+  inc_species_records <- species_records |>
+    left_join(exclusions, by = c("recordID", "list_name")) |>
+    filter(is.na(exclude)) |>
+    select(-exclude)
+
+  return(inc_species_records)
 }

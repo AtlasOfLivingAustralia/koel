@@ -14,17 +14,13 @@
 #'
 #' @return A data.frame of unique scientific names, the search term used to
 #'   match those names to the ALA taxonomy, a common name for each species, the
-#'   state and LGA jurisdictions of interest for each species, and a column for each
-#'   imported list. Each column associated with an imported list contains
-#'   logical information on whether or not a species appears on the list. This
-#'   data.frame may be passed to `assign_common_names()` and
-#'   `search_occurrences()`.
+#'   state and LGA jurisdictions of interest for each species, and a column for
+#'   the name of the list that name was provided by. This data.frame may be
+#'   passed to `assign_common_names()` and `search_occurrences()`.
 #'
 #' @importFrom dplyr across
-#' @importFrom dplyr bind_rows
 #' @importFrom dplyr distinct
 #' @importFrom dplyr filter
-#' @importFrom dplyr left_join
 #' @importFrom dplyr mutate
 #' @importFrom dplyr relocate
 #' @importFrom dplyr select
@@ -32,11 +28,9 @@
 #' @importFrom rlang abort
 #' @importFrom rlang inform
 #' @importFrom purrr list_rbind
-#' @importFrom purrr map_chr
 #' @importFrom purrr pmap
+#' @importFrom tibble add_column
 #' @importFrom tidyr pivot_longer
-#' @importFrom tidyr pivot_wider
-#' @importFrom tidyr replace_na
 #' @importFrom tidyr separate_longer_delim
 #' @importFrom tools toTitleCase
 #' @export
@@ -69,9 +63,7 @@ get_species_lists2 <- function(list_df, synonym_delimiter = ","){
     relocate(c(state, lga, shape), .after = common_name) |>
     # empty state rows (with no provided LGA or shape) default to "AUS"
     mutate(state = ifelse(is.na(state) & is.na(lga) & is.na(shape), "AUS", state),
-           across(1:7, as.character))
-
-  combined_df_clean <- combined_df |>
+           across(1:7, as.character)) |>
     # split multiple synonyms
     separate_longer_delim(synonyms, synonym_delimiter) |>
     mutate(correct_name2 = correct_name) |>
@@ -83,26 +75,11 @@ get_species_lists2 <- function(list_df, synonym_delimiter = ","){
     relocate(search_term, .after = provided_name) |>
     filter(!is.na(search_term)) |>
     mutate(search_term = clean_names(search_term)) |>
-    distinct()
-
-  # group unique species+states together from multiple lists
-  unique_species <- combined_df_clean |>
-    select(correct_name, state, lga, shape, list_name) |>
-    distinct() |>
-    mutate(dummy_values = TRUE) |>
-    pivot_wider(id_cols = c(correct_name, state, lga, shape),
-                names_from = list_name,
-                values_from = dummy_values,
-                values_fill = FALSE)
-
-  combined_df_joined <- combined_df_clean |>
-    left_join(unique_species, by = c("correct_name", "state", "lga", "shape")) |>
-    select(-list_name) |>
     mutate(common_name = toTitleCase(common_name),
            lga = toupper(lga)) |>
     distinct()
 
-  return(combined_df_joined)
+  return(combined_df)
 }
 
 
