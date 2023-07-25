@@ -122,7 +122,7 @@ search_occurrences <- function(species_list, common_names,
             search_terms = search_terms) |>
         list_rbind()
       # informative output of no. of occurrences
-      cat(paste0("Names ", divisions[num], "-",
+      cat(paste0("\nNames ", divisions[num], "-",
                  min(divisions[num] + 99, length(unique(species_df$search_term))), ": ",
                  length(unique(ala_search$recordID)), " records", "\n"))
       return(ala_search)
@@ -220,7 +220,7 @@ filter_occurrences <- function(species_records, shapes_path = NULL) {
       # do ID'd states + LGAs match provided ones
       mutate(flagged_state = str_detect(state, cw_state),
              flagged_lga = !is.na(cl10923) &
-               (cl10923 %in% str_split(lga, ", ")[[1]]),
+               (cl10923 %in% ifelse(is.na(lga), NA, str_split(lga, ", ")[[1]])),
              flagged_shape = !is.na(shape_feature)) |>
       # filter out occurrences not in areas of interest
       filter(state == "AUS" |
@@ -233,7 +233,7 @@ filter_occurrences <- function(species_records, shapes_path = NULL) {
       as_tibble()
 
     cat(paste0("Total: ", length(unique(occ_list$recordID)),
-               " records post location filtering\n"))
+               " records post location and exclusion filtering\n"))
   }
   return(occ_list)
 }
@@ -412,7 +412,11 @@ identify_state <- function(species_records) {
   eval.parent(this_call)
 
   ##### Function Implementation #####
-  species_records |>
+  if (nrow(species_records) == 0) {
+    sr_states <- species_records |>
+      mutate(cw_state = character(0))
+  } else {
+    sr_states <- species_records |>
     st_as_sf(coords = c("decimalLongitude", "decimalLatitude"),
              crs = st_crs(coastal_waters_shp),
              remove = FALSE) |>
@@ -423,6 +427,9 @@ identify_state <- function(species_records) {
                               coastal_waters_shp$state_abbr[intersection])) |>
     select(-intersection) |>
     st_drop_geometry()
+  }
+
+  return(sr_states)
 }
 
 #' Identify the presence of species occurrences in a set of shapefiles
@@ -480,7 +487,10 @@ identify_shape <- function(species_records, shapes_path = NULL) {
   # first need to download all relevant shape files
   shape_names <- unique(species_records$shape) |> na.omit()
   # only proceed if we have at least one shape named and a path provided
-  if (length(shape_names) == 0 | is.null(shapes_path)) {
+  if (nrow(species_records) == 0) {
+    sr_shapes <- species_records |>
+      mutate(shape_feature = character(0))
+  } else if (length(shape_names) == 0 | is.null(shapes_path)) {
     sr_shapes <- species_records |>
       mutate(shape_feature = NA)
   } else {

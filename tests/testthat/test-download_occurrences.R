@@ -11,7 +11,7 @@ test_that("download_occurrences() takes correct input arguments", {
     state = c("AUS"),
     lga = c(NA),
     shape = c(NA),
-    list1 = c(TRUE)
+    list_name = c("list1")
   )
   common_names <- tibble(
     correct_name = c("Onychoprion fuscatus"),
@@ -46,7 +46,7 @@ test_that("download_occurrences() works as intended", {
     state = c("AUS"),
     lga = c(NA),
     shape = c(NA),
-    list1 = c(TRUE)
+    list_name = c("list1")
   )
   common_names <- tibble(
     correct_name = c("Onychoprion fuscatus"),
@@ -88,7 +88,7 @@ test_that("download_occurrences() works for a set of records without media", {
     state = c("AUS"),
     lga = c(NA),
     shape = c(NA),
-    list1 = c(TRUE)
+    list_name = c("list1")
   )
   common_names <- tibble(
     correct_name = c("Onychoprion fuscatus"),
@@ -127,7 +127,7 @@ test_that("download_occurrences() works for no records at all.", {
     state = c("AUS"),
     lga = c(NA),
     shape = c(NA),
-    list1 = c(TRUE)
+    list_name = c("list1")
   )
   common_names <- tibble(
     correct_name = c("Onychoprion fuscatus"),
