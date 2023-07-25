@@ -37,7 +37,7 @@
 #'    Contains 32 ALA-specific columns with data regarding taxonomy, location,
 #'    media, uploading user, data type; 5 user-supplied columns from `species_list`
 #'    containing correct, provided, common and searched names and jurisdictions,
-#'    logical columns for each list as per `species_list`, and a column
+#'    a column denoting the list that record is matched to, and a column
 #'    indicating the Australian state/territory jurisdiction each occurrence was
 #'    located as per the Australian Coastal Waters Act 1980.
 #'
@@ -187,7 +187,7 @@ search_occurrences <- function(species_list, common_names,
 #'    filtered to only include rows for those with state, LGA or shapefile
 #'    matches. Contains __ ALA-specific columns with data regarding taxonomy,
 #'    location and record data, 7 user-supplied columns from `species_list`,
-#'    logical columns for each list as per `species_list`, and a column
+#'    a column denoting the list that record is matched to, and a column
 #'    indicating the Australian state/territory of the location.
 #'
 #' @importFrom dplyr filter
@@ -266,8 +266,8 @@ filter_occurrences <- function(species_records, shapes_path = NULL) {
 #'    `occ_list`, along with media data for each record including a
 #'    `download_path` column to the stored media files. Contains __ ALA-specific
 #'    columns with data regarding taxonomy, location, record and media data, 7
-#'    user-supplied columns from `species_list`, logical columns for each list
-#'    as per `species_list`, and a column indicating the Australian state/
+#'    user-supplied columns from `species_list`, a column denoting the list that
+#'    record is matched to, and a column indicating the Australian state/
 #'    territory of the location.
 #'
 #' @importFrom dplyr distinct

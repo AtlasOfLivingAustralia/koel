@@ -10,8 +10,7 @@
 #'
 #' @param alerts_data A data.frame ideally produced by `download_occurrences()`.
 #'    Each row contains ALA data pertaining to a single species occurrence record
-#'    downloaded with galah. Should contain __ default columns plus an extra
-#'    logical column for each list in the dataset.
+#'    downloaded with galah. Should contain 8 default columns.
 #' @param template_path A single string containing the path to the R
 #'    markdown template to be rendered with the html table produced by
 #'    `build_gt_table()`. Defaults to NULL which triggers the use of a minimal

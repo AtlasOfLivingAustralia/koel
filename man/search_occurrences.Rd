@@ -45,7 +45,7 @@ A tibble containing the downloaded data for each occurrence record.
    Contains 32 ALA-specific columns with data regarding taxonomy, location,
    media, uploading user, data type; 5 user-supplied columns from `species_list`
    containing correct, provided, common and searched names and jurisdictions,
-   logical columns for each list as per `species_list`, and a column
+   a column denoting the list that record is matched to, and a column
    indicating the Australian state/territory jurisdiction each occurrence was
    located as per the Australian Coastal Waters Act 1980.
 }

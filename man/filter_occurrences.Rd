@@ -24,7 +24,7 @@ A tibble containing provided data for each occurrence record,
    filtered to only include rows for those with state, LGA or shapefile
    matches. Contains __ ALA-specific columns with data regarding taxonomy,
    location and record data, 7 user-supplied columns from `species_list`,
-   logical columns for each list as per `species_list`, and a column
+   a column denoting the list that record is matched to, and a column
    indicating the Australian state/territory of the location.
 }
 \description{
