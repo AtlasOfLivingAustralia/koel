@@ -35,7 +35,7 @@
 #' @importFrom tools toTitleCase
 #' @export
 
-get_species_lists2 <- function(list_df, synonym_delimiter = ","){
+get_species_lists <- function(list_df, synonym_delimiter = ","){
 
   ##### Defensive Programming #####
   this_call <- match.call(expand.dots = TRUE)

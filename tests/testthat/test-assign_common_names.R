@@ -27,8 +27,8 @@ test_that("assign_common_names() returns the correct data.frame output", {
               paste0(dir_path, "/list2_list.csv"),
               row.names = FALSE)}
   df <- collate_lists(paste0(dir_path, "/"))
-  # run get_species_lists2
-  species_names <- get_species_lists2(df)
+  # run get_species_lists
+  species_names <- get_species_lists(df)
   # run assign_common_names
   common_names <- assign_common_names(species_names)
 
