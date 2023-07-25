@@ -11,7 +11,7 @@ test_that("search_occurrences() takes correct input arguments", {
     state = c("AUS"),
     lga = c("some_LGA"),
     shape = c("shape1"),
-    list1 = c(TRUE)
+    list_name = c("list1")
   )
   common_names <- tibble(
     correct_name = c("Onychoprion fuscatus"),
@@ -67,7 +67,7 @@ test_that("search_occurrences() produces all intended output", {
     state = c("AUS"),
     lga = c("some_LGA"),
     shape = c("shape1"),
-    list1 = c(TRUE)
+    list_name = c("list1")
   )
   common_names <- data.frame(
     correct_name = c("Onychoprion fuscatus"),
@@ -99,7 +99,7 @@ test_that("search_occurrences() filters by upload date correctly.", {
     state = c("AUS"),
     lga = c("some_LGA"),
     shape = c("shape1"),
-    list1 = c(TRUE)
+    list_name = c("list1")
   )
   common_names <- data.frame(
     correct_name = c("Onychoprion fuscatus"),
@@ -129,7 +129,7 @@ test_that("search_occurrences() handles the absence of records", {
     state = c("AUS"),
     lga = c("some_LGA"),
     shape = c("shape1"),
-    list1 = c(TRUE)
+    list_name = c("list1")
   )
   common_names <- data.frame(
     correct_name = c("Onychoprion fuscatus"),
@@ -157,7 +157,7 @@ test_that("search_occurrences() handles different date formats", {
     state = c("AUS"),
     lga = c("some_LGA"),
     shape = c("shape1"),
-    list1 = c(TRUE)
+    list_name = c("list1")
   )
   common_names <- data.frame(
     correct_name = c("Onychoprion fuscatus"),
@@ -186,7 +186,7 @@ test_that("search_occurrences() can search on multiple terms/species", {
     state = c("AUS"),
     lga = c("some_LGA"),
     shape = c("shape1"),
-    list1 = c(TRUE)
+    list_name = c("list1")
   )
   common_names <- data.frame(
     correct_name = c("Onychoprion fuscatus", "Thalassarche bulleri"),
@@ -212,8 +212,8 @@ test_that("search_occurrences() can search on multiple terms/species", {
     state = c("AUS"),
     lga = c("some_LGA"),
     shape = c("shape1"),
-    list1 = c(TRUE)
-    )
+    list_name = c("list1")
+  )
   so_output <- search_occurrences(species_list, common_names,
                                   event_date_start, event_date_end)
   # dataframe is of expected dimensions
@@ -232,8 +232,7 @@ test_that("search_occurrences() duplicates the same species for different lists"
     state = c("AUS", "QLD"),
     lga = c(NA, NA),
     shape = c(NA, NA),
-    list1 = c(TRUE, FALSE),
-    list2 = c(FALSE, TRUE)
+    list_name = c("list1", "list2")
   )
   common_names <- data.frame(
     correct_name = c("Onychoprion fuscatus"),
@@ -247,5 +246,34 @@ test_that("search_occurrences() duplicates the same species for different lists"
   # output is of expected type
   expect_s3_class(so_output, "data.frame")
   # dataframe is of expected dimensions
-  expect_equal(dim(so_output), c(2, 34))
+  expect_equal(dim(so_output), c(2, 33))
+})
+
+# check that the function duplicates records in preparation for exclusion
+test_that("search_occurrences() duplicates records for exclusions.", {
+  # set up arguments for 2 search terms
+  species_list <- data.frame(
+    correct_name = c("Onychoprion", "Onychoprion anaethetus"),
+    provided_name = c("Onychoprion", "!Onychoprion anaethetus"),
+    search_term = c("Onychoprion", "Onychoprion anaethetus"),
+    common_name = c("Onychoprion Terns", "Bridled Tern"),
+    state = c("AUS", "AUS"),
+    lga = c(NA, NA),
+    shape = c(NA, NA),
+    list_name = c("list1", "list1")
+  )
+  common_names <- data.frame(
+    correct_name = c("Onychoprion", "Onychoprion anaethetus"),
+    common_name = c("Onychoprion Terns", "Bridled Terns")
+  )
+  event_date_start <- "03-10-2022"
+  event_date_end <- "04-10-2022"
+
+  so_output <- search_occurrences(species_list, common_names,
+                                  event_date_start, event_date_end)
+  # output is of expected type
+  expect_s3_class(so_output, "data.frame")
+  # dataframe is of expected dimensions
+  expect_equal(dim(so_output), c(19, 33))
+  expect_equal(length(unique(so_output$recordID)), 10)
 })

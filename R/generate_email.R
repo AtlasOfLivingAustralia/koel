@@ -10,8 +10,7 @@
 #'
 #' @param alerts_data A data.frame ideally produced by `download_occurrences()`.
 #'    Each row contains ALA data pertaining to a single species occurrence record
-#'    downloaded with galah. Should contain __ default columns plus an extra
-#'    logical column for each list in the dataset.
+#'    downloaded with galah. Should contain 8 default columns.
 #' @param template_path A single string containing the path to the R
 #'    markdown template to be rendered with the html table produced by
 #'    `build_gt_table()`. Defaults to NULL which triggers the use of a minimal
@@ -90,21 +89,19 @@ build_email <- function(alerts_data, cache_path,
   if (nrow(alerts_data) > 0) {
 
     # identify list names from alerts_data
-    list_names <- colnames(alerts_data)[(which(colnames(alerts_data) == "provided_name") + 1):
-                                          (which(colnames(alerts_data) == "state") - 1)]
+    list_names <- unique(alerts_data$list_name)
 
     map(.x = list_names,
-       .f = function(list_name) {
-          list_col <- alerts_data[[list_name]]
-          if (any(list_col)) {
-            cat(paste0("Writing email for list: ", list_name, "\n"))
-            table_df <- build_gt_table(alerts_data |> filter(list_col), cache_path)
-            # render and save output
-            output_file <- ifelse(
-              is.null(output_path),
-              paste0(cache_path, "email_", date_time, "_", list_name, ".html"),
-              paste0(output_path, "html/email_", date_time, "_", list_name, ".html")
-              )
+        .f = function(list_entry) {
+          cat(paste0("Writing email for list: ", list_entry, "\n"))
+          table_df <- build_gt_table(alerts_data |> filter(list_name == list_entry),
+                                     cache_path)
+          # render and save output
+          output_file <- ifelse(
+            is.null(output_path),
+            paste0(cache_path, "email_", date_time, "_", list_entry, ".html"),
+            paste0(output_path, "html/email_", date_time, "_", list_entry, ".html")
+          )
             rmarkdown::render(template_path, output_file = output_file)
 
             recipients <- email_list |>
@@ -117,9 +114,6 @@ build_email <- function(alerts_data, cache_path,
                          email_subject = email_subject,
                          test = test)
             }
-          } else {
-            cat(paste0("No alert sent for list: ", list_name, "\n"))
-          }
         }
     )
 
@@ -249,7 +243,6 @@ build_gt_table <- function(df, cache_path) {
     ) |>
     select(species_names, observation, location, occ_media)
 
-  save(table_df, file = paste0(cache_path, "table_df.RData"))
   return(table_df)
 }
 
@@ -286,8 +279,6 @@ build_gt_table <- function(df, cache_path) {
 #' @importFrom leaflet leafletCRS
 #' @importFrom leaflet leafletOptions
 #' @importFrom leaflet setView
-#' @importFrom maptiles get_tiles
-#' @importFrom maptiles plot_tiles
 #' @importFrom mapview mapshot
 #' @importFrom rlang abort
 #' @importFrom rlang inform

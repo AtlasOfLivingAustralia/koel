@@ -26,8 +26,8 @@ A tibble containing provided data for each occurrence record in
    `occ_list`, along with media data for each record including a
    `download_path` column to the stored media files. Contains __ ALA-specific
    columns with data regarding taxonomy, location, record and media data, 7
-   user-supplied columns from `species_list`, logical columns for each list
-   as per `species_list`, and a column indicating the Australian state/
+   user-supplied columns from `species_list`, a column denoting the list that
+   record is matched to, and a column indicating the Australian state/
    territory of the location.
 }
 \description{

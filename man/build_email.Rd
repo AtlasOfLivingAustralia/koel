@@ -21,8 +21,7 @@ build_email(
 \arguments{
 \item{alerts_data}{A data.frame ideally produced by `download_occurrences()`.
 Each row contains ALA data pertaining to a single species occurrence record
-downloaded with galah. Should contain __ default columns plus an extra
-logical column for each list in the dataset.}
+downloaded with galah. Should contain 8 default columns.}
 
 \item{cache_path}{A single string containing the path to the temporary
 cache folder in which species images and maps are saved.  Must begin with

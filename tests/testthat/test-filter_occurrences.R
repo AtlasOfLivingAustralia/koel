@@ -11,7 +11,7 @@ test_that("filter_occurrences() takes correct input arguments", {
     state = c("AUS"),
     lga = c("some_LGA"),
     shape = c("shape1"),
-    list1 = c(TRUE)
+    list_name = c("list1")
   )
   common_names <- tibble(
     correct_name = c("Onychoprion fuscatus"),
@@ -41,7 +41,7 @@ test_that("filter_occurrences() correctly filters occurrences.", {
     state = c("QLD"),
     lga = c("SHIRE OF EXMOUTH"),
     shape = c("lord_howe"),
-    list1 = c(TRUE)
+    list_name = c("list1")
   )
   common_names <- tibble(
     correct_name = c("Onychoprion fuscatus"),
@@ -80,7 +80,7 @@ test_that("filter_occurrences() correctly handles multiple states/LGAs.", {
     state = c("QLD, NT, WA"),
     lga = c(NA),
     shape = c(NA),
-    list1 = c(TRUE)
+    list_name = c("list1")
   )
   common_names <- tibble(
     correct_name = c("Onychoprion fuscatus"),
@@ -91,7 +91,7 @@ test_that("filter_occurrences() correctly handles multiple states/LGAs.", {
   species_records <- search_occurrences(species_list, common_names, event_date_start, event_date_end)
 
   # check for states
-  fo_output <- filter_occurrences(species_records, shapes_path)
+  fo_output <- filter_occurrences(species_records)
   # of five total records in species_records, 3 should be kept by filter_occurrences
   expect_equal(nrow(fo_output), 3)
 
@@ -120,8 +120,7 @@ test_that("filter_occurrences() handles different jurisdictions for same species
     state = c("QLD, NT", "WA"),
     lga = c(NA),
     shape = c(NA),
-    list1 = c(TRUE, FALSE),
-    list2 = c(FALSE, TRUE)
+    list_name = c("list1", "list2")
   )
   common_names <- tibble(
     correct_name = c("Onychoprion fuscatus"),
@@ -135,8 +134,8 @@ test_that("filter_occurrences() handles different jurisdictions for same species
   fo_output <- filter_occurrences(species_records)
   # of five total records in species_records, 3 should be kept by filter_occurrences
   expect_equal(nrow(fo_output), 3)
-  expect_equal(sum(fo_output$list1), 2)
-  expect_equal(sum(fo_output$list2), 1)
+  expect_equal(sum(fo_output$list_name == "list1"), 2)
+  expect_equal(sum(fo_output$list_name == "list2"), 1)
 })
 
 # check that the function handles nested jurisdictions for same/different lists
@@ -151,8 +150,7 @@ test_that("filter_occurrences() treats nested jurisdictions correctly.", {
     state = c("QLD, NT", "AUS"),
     lga = c(NA),
     shape = c(NA),
-    list1 = c(TRUE, FALSE),
-    list2 = c(FALSE, TRUE)
+    list_name = c("list1", "list2")
   )
   common_names <- tibble(
     correct_name = c("Onychoprion fuscatus"),
@@ -163,11 +161,11 @@ test_that("filter_occurrences() treats nested jurisdictions correctly.", {
   species_records <- search_occurrences(species_list, common_names, event_date_start, event_date_end)
 
   # check for states
-  fo_output <- filter_occurrences(species_records, shapes_path)
+  fo_output <- filter_occurrences(species_records)
   # of five total records in species_records, 3 should be kept by filter_occurrences
   expect_equal(nrow(fo_output), 7)
-  expect_equal(sum(fo_output$list1), 2)
-  expect_equal(sum(fo_output$list2), 5)
+  expect_equal(sum(fo_output$list_name == "list1"), 2)
+  expect_equal(sum(fo_output$list_name == "list2"), 5)
 
   # For the same list
   # set up correct arguments
@@ -179,7 +177,7 @@ test_that("filter_occurrences() treats nested jurisdictions correctly.", {
     state = c("QLD, NT"),
     lga = c("DARWIN MUNICIPALITY"),
     shape = c(NA),
-    list1 = c(TRUE)
+    list_name = c("list1")
   )
   common_names <- tibble(
     correct_name = c("Onychoprion fuscatus"),
@@ -206,7 +204,7 @@ test_that("filter_occurrences() respects IMCRA and IBRA boundaries", {
     state = c("AUS"),
     lga = c(NA),
     shape = c(NA),
-    list1 = c(TRUE)
+    list_name = c("list1")
   )
   common_names <- data.frame(
     correct_name = c("Onychoprion fuscatus"),
@@ -229,7 +227,8 @@ test_that("filter_occurrences() respects IMCRA and IBRA boundaries", {
   expect_equal(nrow(fo_output), 1)
   expect_equal(fo_output$cw_state, as.character(NA))
 
-  # check that sightings outside IMCRA regions are excluded
+  # check that sightings outside IMCRA regions are excluded (also tests that
+  # identify_states() and identify_shapes() handle empty dfs)
   species_list <- data.frame(
     correct_name = c("Thalassarche bulleri"),
     provided_name = c("Thalassarche bulleri"),
@@ -238,7 +237,7 @@ test_that("filter_occurrences() respects IMCRA and IBRA boundaries", {
     state = c("AUS"),
     lga = c(NA),
     shape = c(NA),
-    list1 = c(TRUE)
+    list_name = c("list1")
   )
   common_names <- data.frame(
     correct_name = c("Thalassarche bulleri"),
@@ -251,4 +250,31 @@ test_that("filter_occurrences() respects IMCRA and IBRA boundaries", {
   fo_output <- filter_occurrences(species_records)
 
   expect_equal(nrow(fo_output), 0)
+})
+
+# exclusion of species
+test_that("filter_occurrences() performs species exclusions correctly", {
+  # set up arguments for genus + excluded species
+  species_list <- data.frame(
+    correct_name = c("Onychoprion", "Onychoprion anaethetus"),
+    provided_name = c("Onychoprion", "!Onychoprion anaethetus"),
+    search_term = c("Onychoprion", "Onychoprion anaethetus"),
+    common_name = c("Onychoprion Terns", "Bridled Tern"),
+    state = c("AUS", "AUS"),
+    lga = c(NA, NA),
+    shape = c(NA, NA),
+    list_name = c("list1", "list1")
+  )
+  common_names <- data.frame(
+    correct_name = c("Onychoprion", "Onychoprion anaethetus"),
+    common_name = c("Onychoprion Terns", "Bridled Terns")
+  )
+  event_date_start <- "03-10-2022"
+  event_date_end <- "04-10-2022"
+
+  species_records <- search_occurrences(species_list, common_names, event_date_start, event_date_end)
+  fo_output <- filter_occurrences(species_records)
+
+  expect_equal(nrow(fo_output), 1)
+  expect_true(!("Onychoprion anaethetus" %in% fo_output$correct_name))
 })
