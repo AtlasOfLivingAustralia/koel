@@ -279,8 +279,6 @@ build_gt_table <- function(df, cache_path) {
 #' @importFrom leaflet leafletCRS
 #' @importFrom leaflet leafletOptions
 #' @importFrom leaflet setView
-#' @importFrom maptiles get_tiles
-#' @importFrom maptiles plot_tiles
 #' @importFrom mapview mapshot
 #' @importFrom rlang abort
 #' @importFrom rlang inform
