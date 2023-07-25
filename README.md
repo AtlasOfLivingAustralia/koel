@@ -1,6 +1,6 @@
 # koel
 
-`koel` provides a workflow to facilitate the process of searching for certain taxa within spatial and temporal constraints, summarising this information in a html table, and sending the table as an email. `koel` uses the [`galah`](https://galah.ala.org.au) package to query biodiversity data within the [Atlas of Living Australia](https://www.ala.org.au) (ALA), and the [`emayili`](https://github.com/datawookie/emayili/) package to send emails from R. `koel` is developed and being maintained by the [Science and Decision Support Team](https://labs.ala.org.au/about.html) at the ALA. 
+`koel` provides a workflow to facilitate the process of searching for taxa within spatial and temporal constraints, summarising this information in a html table, and sending the table as an email. `koel` uses the [`galah`](https://galah.ala.org.au) package to query biodiversity data within the [Atlas of Living Australia](https://www.ala.org.au) (ALA), and the [`emayili`](https://github.com/datawookie/emayili/) package to send emails from R. `koel` is developed and maintained by the [Science and Decision Support Team](https://labs.ala.org.au/about.html) at the ALA. 
 
 The package is named after the Eastern Koel (*Eudynamys orientalis*), a large, canopy-dwelling cuckoo with [distinctive calls](https://xeno-canto.org/explore?query=Eudynamys%20orientalis). 
 
@@ -17,27 +17,31 @@ remotes::install_github("atlasoflivingaustralia/koel")
 
 ## Workflow
 
-The figure below provides an overview of the suggested workflow when using `koel`. 
+The figure below provides an overview of the suggested workflow when using `koel`. Users must provide one or more csv files containing taxon information. Where multiple csv files are provided, all files must be located in the same directory. The filepath to this directory is provided as an argument to the first function in the suggested workflow, `collate_lists()`, which summarises the information provided in the lists. 
+
+TODO: check workflow and function names
 
 <img src="man/figures/koel_workflow.svg" align="left"/>
 
-#### 1. Providing taxon names
-`koel` requires one or more csv files of taxon names be provided as input, in this format: 
-- The following four columns must be provided: `"correct_name"`, `"provided_name"`, `"synonyms"`, `"common_name"`
-  
+### 1. Taxonomic information
+
+Taxonomic information is provided as one or more csv files, where each species is listed on a separate row. The following four columns must be included: `"correct_name"`, `"provided_name"`, `"synonyms"`, `"common_name"`
+
   - `"correct_name"` is the accepted scientific name of a species e.g. `"Urodynamis taitensis"`. The correct name should not contain authorities, commas, or double spaces.
     
   - `"provided_name"` is the verbatim name of the species as provided for the list e.g. `"Urodynamis taitensis (Sparrman, 1787)"`. It is not used when searching for species occurrences and may be identical to `"correct_name"` or `"common_name"`.
     
-  -  `"synonyms"` is a comma-delimited (`", "`) string of additional search terms for each species e.g. `"Urodynamis taitensis belli, Cuculus taitensis, Eudynamis taitensis"`. The naming convention for `synonyms` is identical to that described for `correct_name`. This field may be left blank.
+  -  `"synonyms"` is a comma-delimited string of additional search terms for each species e.g. `"Urodynamis taitensis belli, Cuculus taitensis, Eudynamis taitensis"`. The naming convention for `synonyms` is identical to that described for `correct_name`. This field may be left blank.
     
   -  `"common_name"` is the common name of the species e.g. `"Long-Tailed Koel"`. This field may be left blank.
 
-- The following three columns are optional, and are used for spatial filtering: `"state"`, `"lga"`, `"shape"`
+### 2. Spatial filters
+
+By default, `koel` retrieves Australia-wide species occurrence records from the ALA. It is possible to restrict records to particular spatial regions by including any of the following optional columns in the provided csv files: `"state"`, `"lga"`, `"shape"`
+
+  - `"state"` is a comma-delimited string of Australian states and/or territories e.g. `"QLD, SA, NT"`. Standard upper case initialisms, abbreviations, and contractions (QLD, NSW, VIC, SA, WA, NT, ACT) are used. If the abbreviation `"AUS"` is provided, or if this field is left blank, no state-based spatial filters will be applied. This may be useful if it is necessary to search for records from island territories e.g. Norfolk Island, Christmas Island.
   
-  - `"state"` is a comma-delimited (`", "`) string of Australian states and/or territories e.g. `"QLD, SA, NT"`. Standard upper case initialisms, abbreviations, and contractions (QLD, NSW, VIC, SA, WA, NT, ACT) are used. If the abbreviation `"AUS"` is provided, or if this field is left blank, no state-based spatial filters will be applied. This may be useful if it is necessary to search for records from island territories e.g. Norfolk Island, Christmas Island.
-  
-  -  `"lga"` is a comma-delimited (`", "`) string of Australian local government areas (LGAs) e.g. `"CITY OF PERTH, KANGAROO ISLAND COUNCIL"`. Names should be provided in upper case and the full list of LGA names is available through the ALA as a contextual layer (cl10923). This may be accessed through the [spatial portal](https://spatial.ala.org.au) or using the `galah` package (see below). If this field is left blank, no spatial filters at the level of LGA will be applied.
+  -  `"lga"` is a comma-delimited string of Australian local government areas (LGAs), provided in upper case e.g. `"CITY OF PERTH, KANGAROO ISLAND COUNCIL"`. The full list of LGA names is available through the ALA as a contextual layer (cl10923). This may be accessed through the [spatial portal](https://spatial.ala.org.au) or using the `galah` package (see below). 
  
 ``` r
 # view LGA names
@@ -45,25 +49,8 @@ galah::search_fields("cl10923") |>
   galah::show_values() |>
 ```
 
-  - `"shape"` is an optional column to provide the name of a supplied shape (.shp) file folder, which can be used to filter recorded occurrences that lie within that shape file for each species. The column entry should match verbatim the name of the folder and spatial files. If multiple feature shapes are provided in the one shape file then the name of the feature an occurrence sits in will be provided in the email table output. If the `"shape"` column is left blank for a species or not provided for an entire list, then it will default to `NA`.
-
-
-
-- Each taxon should be listed on a separate row
-- If multiple csv files are to be provided, all files should be located in the same directory
-
-
-
-
-
-
-
-
-
-The path to the folder containing all the list .csv files is the argument for the first function in the workflow, `collate_lists()`, which summarises the list names and paths for import and tidying with `get_species_lists2()`. `assign_common_names()` summarises duplicate common names and the outputs pass through to `lookup_species_count()`, which identifies species occurrences in the timeframe, and then `download_records()`, which downloads occurrence data and media. `build_email()` is the final function called in the workflow, and it facilitates the creation and sending of biosecurity alert emails to and from pre-specified email addresses.
-
-
-
+  - `"shape"` is the filepath to a shapefile (.shp) within a directory containing other asscoiated spatial files (e.g. .shx, .dbf, .prj). Multiple feature shapes may be provided within a single shapefile. 
+  
 #### Email sending
 
 Emails are sent using the R package `{emayili}` and require the provision of an email address and password in the `build_email()` and `send_email()` functions. Currently there is only support for emails such as the official ALA biosecurity alerts email which can be interfaced with the `emayili::server()` function by way of the `host` and `port` arguments.
