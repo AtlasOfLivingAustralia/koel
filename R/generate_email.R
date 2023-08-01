@@ -105,7 +105,7 @@ build_email <- function(alerts_data, cache_path,
             rmarkdown::render(template_path, output_file = output_file)
 
             recipients <- email_list |>
-              filter(list == list_name | list == "universal") |>
+              filter(list == list_entry | list == "universal") |>
               pull(email)
             if (!is.na(email_send) & !is.na(email_password)) {
               send_email(recipients, output_file,
