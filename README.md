@@ -33,12 +33,12 @@ Taxonomic information is provided as one or more csv files, where each species i
 
 ### Exclusions
 
-Instances may occur where alerts are desired for an entire genus, with the exception of a few native or established species in that genus. Exclusions/exceptions are supported by the workflow but require specific formatting. In such a situation, the genus should be provided as usual, while an extra row should be provided for each species to be excluded. Each taxa to be excluded should simply be marked with an exclamation mark at the beginning of the`provided_name`. e.g.
+Instances may occur where alerts are desired for an entire genus, with the exception of a few native or established species in that genus. Exclusions/exceptions are supported by the workflow but require specific formatting. In such a situation, the genus should be provided as usual, while an extra row should be provided for each species to be excluded. Each taxa to be excluded should simply be marked with an exclamation mark at the beginning of the`provided_name`. e.g. To receive alerts for all *Trichoglossus* species except for the rainbow lorikeet, names should be provided as follows:
 
 ``` r
- correct_name             provided_name             synonyms common_name     
- Trichoglossus            Trichoglossus             NA       Lorikeets       
- Trichoglossus haematodus !Trichoglossus haematodus NA       Rainbow Lorikeet
+ correct_name               provided_name               synonyms common_name     
+ "Trichoglossus"            "Trichoglossus"             NA       "Lorikeets"       
+ "Trichoglossus haematodus" "!Trichoglossus haematodus" NA       "Rainbow Lorikeet"
 ```
 
 ### Spatial filters
