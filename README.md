@@ -34,7 +34,7 @@ Taxonomic information is provided as one or more csv files, where each species i
 
 -   `"common_name"` is the common name of the species e.g. `"Long-Tailed Koel"`. This field may be left blank.
 
-It is possible to exclude alerts for certain species from a genus, or subspecies from a species; this may be practical where users do not require alerts for taxa that are known to be native or established in an area. In this instance, each taxon to be excluded should br provided in a separate row, prefixed with an exclamation point (!) in `provided_name`. For example, to receive alerts for all *Trichoglossus* except the rainbow lorikeet (*Trichoglossus haematodus*): 
+It is possible to exclude alerts for certain species from a genus, or subspecies from a species; this may be practical where users do not require alerts for taxa that are known to be native or established in an area. In this instance, each taxon to be excluded should be provided in a separate row, prefixed with an exclamation point (!) in `provided_name`. For example, to receive alerts for all *Trichoglossus* except the Rainbow Lorikeet (*Trichoglossus haematodus*): 
 
 ``` r
  correct_name               provided_name               synonyms common_name     
