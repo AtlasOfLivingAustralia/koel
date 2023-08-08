@@ -2,7 +2,10 @@
 
 `koel` provides a workflow to facilitate the process of searching for taxa within spatial and temporal constraints, summarising this information in a table, and sending the table as an email. `koel` uses the [`galah`](https://galah.ala.org.au) package to query biodiversity data within the [Atlas of Living Australia](https://www.ala.org.au) (ALA), and the [`emayili`](https://github.com/datawookie/emayili/) package to send emails from R. `koel` is developed and maintained by the [Science and Decision Support Team](https://labs.ala.org.au/about.html) at the ALA.
 
-The package is named after the Eastern Koel (*Eudynamys orientalis*), a large, canopy-dwelling cuckoo with [distinctive calls](https://xeno-canto.org/explore?query=Eudynamys%20orientalis).
+The package is named after the Eastern Koel (*Eudynamys orientalis*), a large, canopy-dwelling cuckoo with [distinctive calls](https://xeno-canto.org/explore?query=Eudynamys%20orientalis). 
+
+If you have any questions or suggestions, please [contact us](mailto:support@ala.org.au).
+
 
 ## Installation
 
@@ -31,9 +34,7 @@ Taxonomic information is provided as one or more csv files, where each species i
 
 -   `"common_name"` is the common name of the species e.g. `"Long-Tailed Koel"`. This field may be left blank.
 
-### Exclusions
-
-Instances may occur where alerts are desired for an entire genus, with the exception of a few native or established species in that genus. Exclusions/exceptions are supported by the workflow but require specific formatting. In such a situation, the genus should be provided as usual, while an extra row should be provided for each species to be excluded. Each taxa to be excluded should simply be marked with an exclamation mark at the beginning of the`provided_name`. e.g. To receive alerts for all *Trichoglossus* species except for the rainbow lorikeet, names should be provided as follows:
+It is possible to exclude alerts for certain species from a genus, or subspecies from a species; this may be practical where users do not require alerts for taxa that are known to be native or established in an area. In this instance, each taxon to be excluded should br provided in a separate row, prefixed with an exclamation point (!) in `provided_name`. For example, to receive alerts for all *Trichoglossus* except the rainbow lorikeet (*Trichoglossus haematodus*): 
 
 ``` r
  correct_name               provided_name               synonyms common_name     
