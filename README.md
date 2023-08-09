@@ -56,13 +56,13 @@ galah::search_fields("cl10923") |>
   galah::show_values()
 ```
 
--   `"shape"` is the filepath to a shapefile (.shp) within a directory containing other associated spatial files (e.g. .shx, .dbf, .prj). Multiple feature shapes may be provided within a single shapefile. Records will be filtered to those falling within the shapefile(s). Where multiple feature shapes are provided, the name of the feature matching to the record location will be provided in the final html table.
+-   `"shape"` is the filepath to a shapefile (.shp) within a directory containing other associated spatial files (e.g. .shx, .dbf, .prj). Multiple feature shapes may be provided within a single shapefile. Records will be filtered to those falling within the shapefile(s). Where multiple feature shapes are provided, the name of the feature matching to the record location will be provided in the final HTML table.
 
 ### Sending an email
 
-The email summarising the results of this workflow contains a table that includes information on each species of interest, details of each observation, a map thumbnail of each location, and an image (if available) of each species.
+The email summarising the results of this workflow contains a table with information on each species of interest, a map thumbnail of record location, and an image (if available) of each species.
 
-To produce the html file containing the table and send this table in an email, users should provide an .rmd file. Within `build_email()`, the table is built with the `gt` package using data in the tibble output from `download_occurrences()`. It is stored as an object named `table_df` which consists of one row per occurrence, and four columns (`species`, `observation`, `location`, `image`) of html code referencing data and media related to each occurrence. We recommend providing the following code in the .rmd template to render the table
+To produce the HTML file containing the table and send this table in an email, users should provide an .rmd file. Within `build_email()`, the table is built with the `gt` package using data in the tibble output from `download_occurrences()`. It is stored as an object named `table_df` which consists of one row per occurrence, and four columns (`species`, `observation`, `location`, `image`) of HTML code referencing data and media related to each occurrence. We recommend providing the following code in the .rmd template to render the table:
 
 ``` r
 table_df |>
@@ -77,8 +77,8 @@ table_df |>
   gt::tab_options(table.width = pct(95))
 ```
 
-Sending an email is performed using the package `emayili` in the `send_email()` function, which is nested in `build_email()`. If users wish to send emails then they must supply values for the `username`, `password`, `host` and `port` arguments. `build_email()` requires the provision of a data.frame for the `email_list` argument. However, if the user wishes to simply render the .html document without sending emails then the `email_list` argument can be provided as an empty dataframe with the necessary columns (`email_list <- data.frame(email = character(), list = character())`). html tables are saved in the specified output folder path regardless of whether emails are sent.
+An email is sent via the `send_email()` function, which is called by `build_email()`. To send an email, users must supply values for the `username`, `password`, `host`, and `port` arguments, and a data.frame for the `email_list` argument. Alternatively, users may render the HTML document without sending it as an email. For the latter, an empty data.frame with the necessary columns (`email_list <- data.frame(email = character(), list = character())`) may be provided. HTML tables are saved in the specified output folder regardless of whether emails are sent.
 
 ### Multiple input files
 
-Users may provide multiple csv files as inputs. In these cases, all files must be located in the same directory. The html tables resulting from the searching and filtering process are grouped by lists, so providing multiple lists results in multiple html tables being produced. Thus providing multiple lists may be useful if it is necessary to group species into different tables, or if tables are to be emailed to different addresses.
+Users may provide multiple csv files as inputs. In these cases, all files must be located in the same directory. The HTML tables resulting from the searching and filtering process are grouped by lists, so providing multiple lists results in multiple HTML tables being produced. Thus providing multiple lists may be useful if it is necessary to group species into different tables, or if tables are to be emailed to different addresses.
