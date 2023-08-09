@@ -102,18 +102,18 @@ build_email <- function(alerts_data, cache_path,
             paste0(cache_path, "email_", date_time, "_", list_entry, ".html"),
             paste0(output_path, "html/email_", date_time, "_", list_entry, ".html")
           )
-            rmarkdown::render(template_path, output_file = output_file)
+          rmarkdown::render(template_path, output_file = output_file)
 
-            recipients <- email_list |>
-              filter(list == list_name | list == "universal") |>
-              pull(email)
-            if (!is.na(email_send) & !is.na(email_password)) {
-              send_email(recipients, output_file,
-                         email_send, email_password,
-                         email_host = email_host, email_port = email_port,
-                         email_subject = email_subject,
-                         test = test)
-            }
+          recipients <- email_list |>
+            filter(list == list_entry | list == "universal") |>
+            pull(email)
+          if (!is.na(email_send) & !is.na(email_password)) {
+            send_email(recipients, output_file,
+                       email_send, email_password,
+                       email_host = email_host, email_port = email_port,
+                       email_subject = email_subject,
+                       test = test)
+          }
         }
     )
 
@@ -211,7 +211,14 @@ build_gt_table <- function(df, cache_path) {
           if_else(is.na(creator), "", "<b>{creator}</b><br>"),
           "{date_html}<br>",
           if_else(is.na(shape), "", "<font size='-1'>{shape_feature}</font><br>"),
-          if_else(is.na(lga), "", "<font size='-1'>{cl10923}</font><br>"),
+          if_else(
+            is.na(cl10923),
+            if_else(
+              is.na(cl966),
+              if_else(
+                is.na(cl21), "", "<font size='-1'>{cl21}</font><br>"),
+              "<font size='-1'>{cl966}</font><br>"),
+            "<font size='-1'>{cl10923}</font><br>"),
           "{cw_state}<br>",
           "(<a href='https://www.google.com/maps/search/?api=1&query={decimalLatitude}%2C{decimalLongitude}'
             target='_blank'>{decimalLongitude}, {decimalLatitude}</a>)<br>",
@@ -223,8 +230,8 @@ build_gt_table <- function(df, cache_path) {
         glue(
           "<a href='https://www.google.com/maps/search/?api=1&query={decimalLatitude}%2C{decimalLongitude}'
               target='_blank'>
-            <img src='{cache_path}maps/{recordID}.png' width='200' height='150'
-                 style='width:200px;max-width:200px;height:150px;max-height:150px;'/>
+            <img src='{cache_path}maps/{recordID}.png' width='267' height='200'
+                 style='width:267px;max-width:267px;height:200px;max-height:200px;'/>
           </a>"
         ),
         gt::html
@@ -273,63 +280,18 @@ build_gt_table <- function(df, cache_path) {
 #' @return No returned file. Instead, a .png version of the produced thumbnail i
 #'    is saved in the 'maps' directory of 'cache_path'.
 #'
+#' @importFrom htmlwidgets saveWidget
 #' @importFrom leaflet addCircleMarkers
 #' @importFrom leaflet addTiles
 #' @importFrom leaflet leaflet
 #' @importFrom leaflet leafletCRS
 #' @importFrom leaflet leafletOptions
 #' @importFrom leaflet setView
-#' @importFrom mapview mapshot
 #' @importFrom rlang abort
 #' @importFrom rlang inform
 #' @importFrom sf st_as_sf
-#' @importFrom webshot install_phantomjs
-#' @importFrom webshot is_phantomjs_installed
+#' @importFrom webshot2 webshot
 #' @export
-
-# build_map_thumbnail <- function(list_row, cache_path){
-#
-#   ##### Defensive Programming #####
-#   # list row
-#   if (!("data.frame" %in% class(list_row))) {
-#     abort("`list_row` argument must be a data.frame or tibble")
-#   } else if (nrow(list_row) != 1) {
-#     abort("`list_row` requires exactly one row to compile a map")
-#   } else if (
-#     !(all(c("recordID", "decimalLatitude", "decimalLongitude") %in%
-#           colnames(list_row)))) {
-#     cols_needed <- c("recordID", "decimalLatitude", "decimalLongitude")
-#     abort(paste0("`list_row` requires a column named ",
-#                  cols_needed(which(!(cols_needed %in% col_names(list_row))))[1]))
-#   }
-#   # cache_path
-#   if (!is.character(cache_path) | substr(cache_path, nchar(cache_path), nchar(cache_path)) != "/") {
-#     abort("`cache_path` argument must be a string ending in '/'")
-#   } else if (!dir.exists(cache_path)) {
-#     abort("The directory specified by `cache_path` does not exist")
-#   } else if (!("maps" %in% list.files(cache_path))) {
-#     inform("No 'maps' directory exists in the provided `cache_path`. One has been created.")
-#     dir.create(paste0(cache_path, "maps"))
-#   }
-#   ##### Function Implementation #####
-#   # need to add defensive programming + check for existence of the maps directory
-#   box_size <- 0.15
-#   x <- list_row |> st_as_sf(
-#     coords = c("decimalLongitude", "decimalLatitude"),
-#     crs = "WGS84")
-#   x_box <- st_bbox(c(
-#     xmin = list_row$decimalLongitude - box_size,
-#     xmax = list_row$decimalLongitude + box_size,
-#     ymin = list_row$decimalLatitude - box_size,
-#     ymax = list_row$decimalLatitude + box_size),
-#     crs = "WGS84"
-#   )
-#   y <- get_tiles(x_box, zoom = 10, crop = TRUE)
-#   png(filename = paste0(cache_path, "maps/", list_row$recordID, ".png"))
-#   plot_tiles(y)
-#   plot(x, col = "black", cex = 5, pch = 16, add = TRUE) # errors here
-#   dev.off()
-# }
 
 build_map_thumbnail <- function(list_row, cache_path) {
   ##### Defensive Programming #####
@@ -337,21 +299,17 @@ build_map_thumbnail <- function(list_row, cache_path) {
   this_call[[1]] <- as.name("koel_defensive")
   eval.parent(this_call)
 
-  ##### Install PhantomJS if not installed #####
-  if (!is_phantomjs_installed()) {
-    inform("PhantomJS will be installed using package `webshot` to facilitate map creation.")
-    install_phantomjs()
-  }
-
   ##### Function Implementation #####
-  # need to add defensive programming + check for existence of the maps directory
   occurrence_map <- leaflet(options = leafletOptions(crs = leafletCRS(code = "WGS84"))) |>
     addTiles() |>
     #addProviderTiles(providers$Esri.WorldTopoMap) |>
-    setView(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude, zoom = 14) |>
+    setView(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude, zoom = 12) |>
     addCircleMarkers(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude,
-                     opacity = 0.75, color = "darkblue", radius = 25)
-  mapshot(occurrence_map, file = paste0(cache_path, "maps/", list_row$recordID, ".png"))
+                     opacity = 0.75, color = "darkblue", radius = 15)
+  saveWidget(widget = occurrence_map, file = paste0(cache_path, "maps/", list_row$recordID, ".html"))
+  webshot(url = paste0(cache_path, "maps/", list_row$recordID, ".html"),
+          file = paste0(cache_path, "maps/", list_row$recordID, ".png"),
+          delay = 1, zoom = 2)
 }
 
 #' Function to send html tables of occurrences in emails to stakeholders

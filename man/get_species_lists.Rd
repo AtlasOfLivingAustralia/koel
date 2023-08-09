@@ -2,13 +2,29 @@
 % Please edit documentation in R/get_species_lists.R
 \name{get_species_lists}
 \alias{get_species_lists}
-\title{Import all files, formatting with logical columns stating source}
+\title{Import user-supplied species lists from a single directory}
 \usage{
-get_species_lists(df)
+get_species_lists(list_df, synonym_delimiter = ",")
 }
 \arguments{
-\item{df}{A `data.frame` containing columns 'path' and 'label'}
+\item{list_df}{A data.frame preferably produced by `collate_lists()`
+containing at minimum two columns named `path` and `label` which denote
+respectively the path to and name of each list being searched.}
+
+\item{synonym_delimiter}{An optional character string detailing the delimiter
+used for multiple synonyms in the synonym columns of the lists. Defaults
+to `", "`.}
+}
+\value{
+A data.frame of unique scientific names, the search term used to
+  match those names to the ALA taxonomy, a common name for each species, the
+  state and LGA jurisdictions of interest for each species, and a column for
+  the name of the list that name was provided by. This data.frame may be
+  passed to `assign_common_names()` and `search_occurrences()`.
 }
 \description{
-Early days
+This function takes a small data.frame produced by `collate_lists()` and
+   facilitates the import of species list files described there. The rest of
+   the function utilises {dplyr} and {tidyr} functions to clean and combine
+   the species lists into a single data.frame suitable for use with {galah}.
 }
