@@ -290,7 +290,7 @@ build_gt_table <- function(df, cache_path) {
 #' @importFrom rlang abort
 #' @importFrom rlang inform
 #' @importFrom sf st_as_sf
-#' @importFrom webshot2 webshot
+#' @importFrom webshot webshot
 #' @export
 
 build_map_thumbnail <- function(list_row, cache_path) {

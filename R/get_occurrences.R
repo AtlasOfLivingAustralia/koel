@@ -48,7 +48,6 @@
 #' @importFrom dplyr left_join
 #' @importFrom dplyr mutate
 #' @importFrom dplyr select
-#' @importFrom galah galah_config
 #' @importFrom lubridate as_datetime
 #' @importFrom lubridate dmy
 #' @importFrom purrr list_rbind
