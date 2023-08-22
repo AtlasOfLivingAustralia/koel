@@ -2,7 +2,8 @@ library(tidyverse)
 library(sf)
 library(sfheaders)
 
-CWA <- st_read("C:/Users/WAI045/OneDrive - CSIRO/ALA/Biosecurity/shapefiles/CWA1980_zones/Coastal_Waters_AMB2020_Areas.shp")
+# shapefiles downloaded from https://d28rz98at9flks.cloudfront.net/144567/144567_01_0.zip
+CWA <- st_read("path/to/file.shp")
 
 coastal_waters_shp <- CWA |>
   rbind(

@@ -9,12 +9,12 @@ identify_state(species_records)
 \arguments{
 \item{species_records}{A dataframe/tibble prodcued by `atlas_occurrences()` or
 otherwise, containing at minimum columns containing longitude and latitude
-columns. Each row represents a unique occurrence}
+columns. Each row represents a unique occurrence.}
 }
 \value{
 Returns the exact provided dataframe with an additional character
    column `cw_state` (Coastal Waters state) containing Australian state
-   abbreviations
+   abbreviations.
 }
 \description{
 When provided with some (potentially modified) dataframe/tibble as produced
