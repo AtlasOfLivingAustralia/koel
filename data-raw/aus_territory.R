@@ -1,9 +1,6 @@
 library(tidyverse)
 library(sf)
 library(sfheaders)
-library(ozmaps)
-
-aus <- ozmap_data(data = "states")
 
 # shapefiles downloaded from https://d28rz98at9flks.cloudfront.net/144571/144571_01_0.zip
 
@@ -26,4 +23,3 @@ aus_territory <- rbind(EEZ_treaty, TS, CZ) |>
   sf_remove_holes()
 
 usethis::use_data(aus_territory, overwrite = TRUE)
-
