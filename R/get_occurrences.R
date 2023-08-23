@@ -52,8 +52,6 @@
 #' @importFrom lubridate dmy
 #' @importFrom purrr list_rbind
 #' @importFrom purrr map
-#' @importFrom rlang abort
-#' @importFrom rlang inform
 #' @importFrom tidyr as_tibble
 #' @export
 
@@ -193,8 +191,6 @@ search_occurrences <- function(species_list, common_names,
 #' @importFrom dplyr mutate
 #' @importFrom dplyr select
 #' @importFrom dplyr tibble
-#' @importFrom rlang abort
-#' @importFrom rlang inform
 #' @importFrom stringr str_detect
 #' @importFrom stringr str_split
 #' @importFrom tidyr as_tibble
@@ -211,9 +207,10 @@ filter_occurrences <- function(species_records, shapes_path = NULL) {
     occ_list <- tibble()
   } else {
     occ_list <- species_records |>
-      # filter by IBRA and IMCRA regions - may shift this line around a bit
-      filter(!is.na(cl966) | !is.na(cl1048) | !is.na(cl21)) |>
+      # records need both latitude and longitude
+      filter(!is.na(decimalLatitude) & !is.na(decimalLongitude)) |>
       # state-based filtering
+      identify_aus() |>
       identify_state() |>
       identify_shape(shapes_path = shapes_path) |>
       # do ID'd states + LGAs match provided ones
@@ -277,8 +274,6 @@ filter_occurrences <- function(species_records, shapes_path = NULL) {
 #' @importFrom dplyr tibble
 #' @importFrom galah collect_media
 #' @importFrom galah search_media
-#' @importFrom rlang abort
-#' @importFrom rlang inform
 #' @export
 
 download_occurrences <- function(occ_list, cache_path) {
@@ -346,8 +341,6 @@ download_occurrences <- function(occ_list, cache_path) {
 #' @importFrom galah galah_filter
 #' @importFrom galah galah_select
 #' @importFrom rlang .data
-#' @importFrom rlang abort
-#' @importFrom rlang inform
 #' @noRd
 
 search_name_fields <- function(field,
@@ -374,6 +367,53 @@ search_name_fields <- function(field,
   return(occ_search)
 }
 
+#' Identify whether each record in a dataframe sits in Australian territory
+#'
+#' When provided with some (potentially modified) dataframe/tibble as produced
+#'    by `atlas_occurrences()` or other, occurrence rows will be filtered out if
+#'    they do not sit in Australian terrestrial or maritime territory as defined
+#'    by the Seas and Submerged Lands Act (SSLA) 1973 and subsequent treaties.
+#'    This relies on the presence of numeric columns `decimalLongitude` and
+#'    `decimalLatitude` (default {galah} coordinate columns) to match the
+#'    coordinates of the occurrences to Australian territory boundaries.
+#'
+#' @param species_records A dataframe/tibble prodcued by `atlas_occurrences()` or
+#'    otherwise, containing at minimum columns containing longitude and latitude
+#'    columns. Each row represents a unique occurrence.
+#' @return Returns the exact provided dataframe with non-Australian occurrences
+#'    removed.
+#'
+#' @importFrom dplyr filter
+#' @importFrom dplyr mutate
+#' @importFrom dplyr select
+#' @importFrom sf st_crs
+#' @importFrom sf st_drop_geometry
+#' @importFrom sf st_intersects
+#' @export
+
+identify_aus <- function(species_records) {
+  ##### Defensive Programming #####
+  this_call <- match.call(expand.dots = TRUE)
+  this_call[[1]] <- as.name("koel_defensive")
+  eval.parent(this_call)
+
+  ##### Function Implementation #####
+  if (nrow(species_records) == 0) {
+    sr_aus <- species_records
+  } else {
+    sr_aus <- species_records |>
+      st_as_sf(coords = c("decimalLongitude", "decimalLatitude"),
+               crs = st_crs(aus_territory),
+               remove = FALSE) |>
+      mutate(intersection = st_intersects(geometry, aus_territory) |> as.logical()) |>
+      filter(!is.na(intersection)) |>
+      select(-intersection) |>
+      st_drop_geometry()
+  }
+
+  return(sr_aus)
+}
+
 #' Identify the Australian state of each record in a dataframe
 #'
 #' When provided with some (potentially modified) dataframe/tibble as produced
@@ -388,17 +428,15 @@ search_name_fields <- function(field,
 #'
 #' @param species_records A dataframe/tibble prodcued by `atlas_occurrences()` or
 #'    otherwise, containing at minimum columns containing longitude and latitude
-#'    columns. Each row represents a unique occurrence
+#'    columns. Each row represents a unique occurrence.
 #' @return Returns the exact provided dataframe with an additional character
 #'    column `cw_state` (Coastal Waters state) containing Australian state
-#'    abbreviations
+#'    abbreviations.
 #'
 #' @importFrom dplyr if_else
 #' @importFrom dplyr mutate
 #' @importFrom dplyr select
 #' @importFrom sf st_as_sf
-#' @importFrom rlang abort
-#' @importFrom rlang inform
 #' @importFrom sf st_crs
 #' @importFrom sf st_drop_geometry
 #' @importFrom sf st_intersects
@@ -464,8 +502,6 @@ identify_state <- function(species_records) {
 #' @importFrom dplyr select
 #' @importFrom purrr list_rbind
 #' @importFrom purrr map
-#' @importFrom rlang abort
-#' @importFrom rlang inform
 #' @importFrom sf st_as_sf
 #' @importFrom sf st_crs
 #' @importFrom sf st_drop_geometry

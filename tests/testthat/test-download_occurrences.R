@@ -1,4 +1,8 @@
 # testing for download_occurrences()
+galah_config(
+  email = "callumwaite2000@gmail.com",
+  run_checks = FALSE,
+  verbose = TRUE)
 
 # check that incorrect inputs are flagged and corrected
 test_that("download_occurrences() takes correct input arguments", {
