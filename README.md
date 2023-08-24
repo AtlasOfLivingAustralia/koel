@@ -1,5 +1,5 @@
 
-<img src="man/figures/koel_female.png" align="left" style="margin: 0px 20px 10px 0px;" width=180/>
+<img src="man/figures/koel_female.png" align="left" style="margin: 0px 20px 20px 0px;" width=180/>
 
 # koel
 
