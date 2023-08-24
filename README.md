@@ -1,5 +1,5 @@
 
-<img src="man/figures/koel_female.png" align="left" style="margin: 0px 20px 0px 0px;" width=160/>
+<img src="man/figures/koel_female.png" align="left" style="margin: 0px 20px 10px 0px;" width=180/>
 
 # koel
 
@@ -23,8 +23,8 @@ at the ALA.
 
 The package is named after the Eastern Koel (*Eudynamys orientalis*), a
 large, canopy-dwelling cuckoo with [distinctive
-calls](https://xeno-canto.org/explore?query=Eudynamys%20orientalis). We
-named the package after this species because the suggested workflow is
+calls](https://xeno-canto.org/explore?query=Eudynamys%20orientalis). The
+package is named after this species because the suggested workflow is
 primarily used for sending alerts, and the Eastern Koel is frequently
 identified through its distinctive call before it is seen.
 

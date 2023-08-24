@@ -3,7 +3,7 @@ output: github_document
 ---
 
 
-<img src="man/figures/koel_female.png" align="left" style="margin: 0px 20px 0px 0px;" width=160/>  
+<img src="man/figures/koel_female.png" align="left" style="margin: 0px 20px 10px 0px;" width=180/>  
 
 # koel  
 
@@ -16,7 +16,7 @@ output: github_document
 
 `koel` provides a workflow to facilitate the process of searching for taxa within spatial and temporal constraints, summarising this information in a table, and sending the table as an email. `koel` uses the [`galah`](https://galah.ala.org.au) package to query biodiversity data within the [Atlas of Living Australia](https://www.ala.org.au) (ALA), and the [`emayili`](https://github.com/datawookie/emayili/) package to send emails from R. `koel` is developed and maintained by the [Science and Decision Support Team](https://labs.ala.org.au/about.html) at the ALA.
 
-The package is named after the Eastern Koel (*Eudynamys orientalis*), a large, canopy-dwelling cuckoo with [distinctive calls](https://xeno-canto.org/explore?query=Eudynamys%20orientalis). We named the package after this species because the suggested workflow is primarily used for sending alerts, and the Eastern Koel is frequently identified through its distinctive call before it is seen.
+The package is named after the Eastern Koel (*Eudynamys orientalis*), a large, canopy-dwelling cuckoo with [distinctive calls](https://xeno-canto.org/explore?query=Eudynamys%20orientalis). The package is named after this species because the suggested workflow is primarily used for sending alerts, and the Eastern Koel is frequently identified through its distinctive call before it is seen.
 
 If you have any questions or suggestions, please [contact us](mailto:support@ala.org.au).
 
