@@ -189,8 +189,10 @@ search_occurrences <- function(species_list, common_names,
 #'
 #' @importFrom dplyr filter
 #' @importFrom dplyr mutate
+#' @importFrom dplyr rowwise
 #' @importFrom dplyr select
 #' @importFrom dplyr tibble
+#' @importFrom dplyr ungroup
 #' @importFrom stringr str_detect
 #' @importFrom stringr str_split
 #' @importFrom tidyr as_tibble
@@ -215,9 +217,11 @@ filter_occurrences <- function(species_records, shapes_path = NULL) {
       identify_shape(shapes_path = shapes_path) |>
       # do ID'd states + LGAs match provided ones
       mutate(flagged_state = str_detect(state, cw_state),
-             flagged_lga = !is.na(cl10923) &
-               (cl10923 %in% ifelse(is.na(lga), NA, str_split(lga, ", ")[[1]])),
              flagged_shape = !is.na(shape_feature)) |>
+      rowwise() |>
+      mutate(flagged_lga = !is.na(cl10923) &
+               (cl10923 %in% ifelse(is.na(lga), NA, str_split(lga, ", ")[[1]]))) |>
+      ungroup() |>
       # filter out occurrences not in areas of interest
       filter(state == "AUS" |
                (!is.na(state) & flagged_state) |
