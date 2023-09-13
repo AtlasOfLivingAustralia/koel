@@ -9,8 +9,8 @@ send_email(
   output_file,
   email_send,
   email_password,
-  email_host = "smtp-relay.gmail.com",
-  email_port = 587,
+  email_host = NA,
+  email_port = NA,
   email_subject = "ALA Biosecurity Alert",
   test = TRUE
 )
@@ -31,13 +31,10 @@ the alerts are to be sent.}
 provided email address (`email_send` argument)}
 
 \item{email_host}{A single string providing the email server host to be
-fed to the {emayili} function `server()`. Defaults to
-`"smtp-relay.gmail.com"` which supports the official ALA biosecurity alerts
-email address.}
+fed to the {emayili} function `server()`. Defaults to `NA`}
 
 \item{email_port}{A numeric value providing the email server port to be
-fed to the {emayili} function `server()`. Defaults to `587` which
-supports the offocial ALA biosecurity alerts  email address.}
+fed to the {emayili} function `server()`. Defaults to `NA`.}
 
 \item{email_subject}{An optional single string of the subject of the email.
 If not provided, default subject is "ALA Biosecurity Alerts".}

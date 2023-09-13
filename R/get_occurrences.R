@@ -234,7 +234,7 @@ filter_occurrences <- function(species_records, shapes_path = NULL) {
 
     cat(paste0("\nTotal: ", length(unique(occ_list$recordID)),
                " records post location and exclusion filtering\n",
-               "       across ", length(unique(occ_list$list_name)), "lists\n"))
+               "       across ", length(unique(occ_list$list_name)), " lists\n"))
   }
   return(occ_list)
 }

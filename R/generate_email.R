@@ -38,12 +38,9 @@
 #' @param email_password A single string providing the password for the
 #'    provided email address (`email_send` argument). Defaults to `NA`.
 #' @param email_host A single string providing the email server host to be
-#'    fed to the {emayili} function `server()`. Defaults to
-#'    `"smtp-relay.gmail.com"` which supports the official ALA biosecurity alerts
-#'    email address.
+#'    fed to the {emayili} function `server()`. Defaults to `NA`.
 #' @param email_port A single numeric value providing the email server port to be
-#'    fed to the {emayili} function `server()`. Defaults to `587` which
-#'    supports the official ALA biosecurity alerts email address.
+#'    fed to the {emayili} function `server()`. Defaults to `NA`.
 #' @param test A logical argument which indicates whether the email should be
 #'    sent as a test email (TRUE) or as an official email (FALSE). If the email
 #'    is a test then it is not addressed to the sending email address. Defaults
@@ -67,7 +64,7 @@ build_email <- function(alerts_data, cache_path,
                                                 list = character()),
                         email_subject = "ALA Biosecurity Alert",
                         email_send = NA, email_password = NA,
-                        email_host = "smtp-relay.gmail.com", email_port = 587,
+                        email_host = NA, email_port = NA,
                         test = TRUE) {
   ##### Defensive Programming #####
   this_call <- match.call(expand.dots = TRUE)
@@ -190,7 +187,7 @@ build_gt_table <- function(df, cache_path) {
 
   # build table info
   table_df <- df2 |>
-    arrange(scientificName, eventDate, cw_state) |>
+    arrange(dataResourceName, eventDate) |>
     mutate(
       path = here(),
       image_url = sub("thumbnail$", "original", url)
@@ -331,12 +328,9 @@ build_map_thumbnail <- function(list_row, cache_path) {
 #' @param email_password A single string providing the password for the
 #'    provided email address (`email_send` argument)
 #' @param email_host A single string providing the email server host to be
-#'    fed to the {emayili} function `server()`. Defaults to
-#'    `"smtp-relay.gmail.com"` which supports the official ALA biosecurity alerts
-#'    email address.
+#'    fed to the {emayili} function `server()`. Defaults to `NA`
 #' @param email_port A numeric value providing the email server port to be
-#'    fed to the {emayili} function `server()`. Defaults to `587` which
-#'    supports the offocial ALA biosecurity alerts  email address.
+#'    fed to the {emayili} function `server()`. Defaults to `NA`.
 #' @param email_subject An optional single string of the subject of the email.
 #'    If not provided, default subject is "ALA Biosecurity Alerts".
 #' @param test A logical argument which indicates whether the email should be
@@ -358,7 +352,7 @@ build_map_thumbnail <- function(list_row, cache_path) {
 #' @export
 
 send_email <- function(recipients, output_file, email_send, email_password,
-                       email_host = "smtp-relay.gmail.com", email_port = 587,
+                       email_host = NA, email_port = NA,
                        email_subject = "ALA Biosecurity Alert",
                        test = TRUE) {
 
