@@ -28,7 +28,7 @@ name for each correct species name. May be produced by
 \item{event_date_start, event_date_end}{Dates to begin and end ALA occurrences
 filter for event date field. Allows filtering of records that have been
 uploaded in some time period. May be in one of two forms: either a single
-dbl indicating how many days prior from the currentdate to begin the
+dbl indicating how many days prior from the current date to begin the
 search, or a character vector indicating the date to search from in
 `"ddmmyyyy"` format.  `event_date_end` defaults to 0 (current date).}
 
@@ -45,7 +45,7 @@ A tibble containing the downloaded data for each occurrence record.
    Contains 32 ALA-specific columns with data regarding taxonomy, location,
    media, uploading user, data type; 5 user-supplied columns from `species_list`
    containing correct, provided, common and searched names and jurisdictions,
-   logical columns for each list as per `species_list`, and a column
+   a column denoting the list that record is matched to, and a column
    indicating the Australian state/territory jurisdiction each occurrence was
    located as per the Australian Coastal Waters Act 1980.
 }

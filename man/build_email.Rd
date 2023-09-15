@@ -13,16 +13,15 @@ build_email(
   email_subject = "ALA Biosecurity Alert",
   email_send = NA,
   email_password = NA,
-  email_host = "smtp-relay.gmail.com",
-  email_port = 587,
+  email_host = NA,
+  email_port = NA,
   test = TRUE
 )
 }
 \arguments{
 \item{alerts_data}{A data.frame ideally produced by `download_occurrences()`.
 Each row contains ALA data pertaining to a single species occurrence record
-downloaded with galah. Should contain __ default columns plus an extra
-logical column for each list in the dataset.}
+downloaded with galah. Should contain 8 default columns.}
 
 \item{cache_path}{A single string containing the path to the temporary
 cache folder in which species images and maps are saved.  Must begin with
@@ -58,13 +57,10 @@ the alerts are to be sent. Deafults to `NA`.}
 provided email address (`email_send` argument). Defaults to `NA`.}
 
 \item{email_host}{A single string providing the email server host to be
-fed to the {emayili} function `server()`. Defaults to
-`"smtp-relay.gmail.com"` which supports the official ALA biosecurity alerts
-email address.}
+fed to the {emayili} function `server()`. Defaults to `NA`.}
 
 \item{email_port}{A single numeric value providing the email server port to be
-fed to the {emayili} function `server()`. Defaults to `587` which
-supports the official ALA biosecurity alerts email address.}
+fed to the {emayili} function `server()`. Defaults to `NA`.}
 
 \item{test}{A logical argument which indicates whether the email should be
 sent as a test email (TRUE) or as an official email (FALSE). If the email

@@ -1,4 +1,8 @@
 # testing for filter_occurrences()
+galah_config(
+  email = "callumwaite2000@gmail.com",
+  run_checks = FALSE,
+  verbose = TRUE)
 
 # check that incorrect inputs are flagged and corrected
 test_that("filter_occurrences() takes correct input arguments", {
@@ -11,7 +15,7 @@ test_that("filter_occurrences() takes correct input arguments", {
     state = c("AUS"),
     lga = c("some_LGA"),
     shape = c("shape1"),
-    list1 = c(TRUE)
+    list_name = c("list1")
   )
   common_names <- tibble(
     correct_name = c("Onychoprion fuscatus"),
@@ -41,7 +45,7 @@ test_that("filter_occurrences() correctly filters occurrences.", {
     state = c("QLD"),
     lga = c("SHIRE OF EXMOUTH"),
     shape = c("lord_howe"),
-    list1 = c(TRUE)
+    list_name = c("list1")
   )
   common_names <- tibble(
     correct_name = c("Onychoprion fuscatus"),
@@ -69,6 +73,7 @@ test_that("filter_occurrences() correctly filters occurrences.", {
   expect_equal(nrow(fo_output), 4)
 })
 
+
 # check that the function handles multiple states / multiple LGAs
 test_that("filter_occurrences() correctly handles multiple states/LGAs.", {
   # set up correct arguments
@@ -80,7 +85,7 @@ test_that("filter_occurrences() correctly handles multiple states/LGAs.", {
     state = c("QLD, NT, WA"),
     lga = c(NA),
     shape = c(NA),
-    list1 = c(TRUE)
+    list_name = c("list1")
   )
   common_names <- tibble(
     correct_name = c("Onychoprion fuscatus"),
@@ -91,7 +96,7 @@ test_that("filter_occurrences() correctly handles multiple states/LGAs.", {
   species_records <- search_occurrences(species_list, common_names, event_date_start, event_date_end)
 
   # check for states
-  fo_output <- filter_occurrences(species_records, shapes_path)
+  fo_output <- filter_occurrences(species_records)
   # of five total records in species_records, 3 should be kept by filter_occurrences
   expect_equal(nrow(fo_output), 3)
 
@@ -120,8 +125,7 @@ test_that("filter_occurrences() handles different jurisdictions for same species
     state = c("QLD, NT", "WA"),
     lga = c(NA),
     shape = c(NA),
-    list1 = c(TRUE, FALSE),
-    list2 = c(FALSE, TRUE)
+    list_name = c("list1", "list2")
   )
   common_names <- tibble(
     correct_name = c("Onychoprion fuscatus"),
@@ -135,8 +139,8 @@ test_that("filter_occurrences() handles different jurisdictions for same species
   fo_output <- filter_occurrences(species_records)
   # of five total records in species_records, 3 should be kept by filter_occurrences
   expect_equal(nrow(fo_output), 3)
-  expect_equal(sum(fo_output$list1), 2)
-  expect_equal(sum(fo_output$list2), 1)
+  expect_equal(sum(fo_output$list_name == "list1"), 2)
+  expect_equal(sum(fo_output$list_name == "list2"), 1)
 })
 
 # check that the function handles nested jurisdictions for same/different lists
@@ -151,8 +155,7 @@ test_that("filter_occurrences() treats nested jurisdictions correctly.", {
     state = c("QLD, NT", "AUS"),
     lga = c(NA),
     shape = c(NA),
-    list1 = c(TRUE, FALSE),
-    list2 = c(FALSE, TRUE)
+    list_name = c("list1", "list2")
   )
   common_names <- tibble(
     correct_name = c("Onychoprion fuscatus"),
@@ -163,11 +166,11 @@ test_that("filter_occurrences() treats nested jurisdictions correctly.", {
   species_records <- search_occurrences(species_list, common_names, event_date_start, event_date_end)
 
   # check for states
-  fo_output <- filter_occurrences(species_records, shapes_path)
+  fo_output <- filter_occurrences(species_records)
   # of five total records in species_records, 3 should be kept by filter_occurrences
   expect_equal(nrow(fo_output), 7)
-  expect_equal(sum(fo_output$list1), 2)
-  expect_equal(sum(fo_output$list2), 5)
+  expect_equal(sum(fo_output$list_name == "list1"), 2)
+  expect_equal(sum(fo_output$list_name == "list2"), 5)
 
   # For the same list
   # set up correct arguments
@@ -179,7 +182,7 @@ test_that("filter_occurrences() treats nested jurisdictions correctly.", {
     state = c("QLD, NT"),
     lga = c("DARWIN MUNICIPALITY"),
     shape = c(NA),
-    list1 = c(TRUE)
+    list_name = c("list1")
   )
   common_names <- tibble(
     correct_name = c("Onychoprion fuscatus"),
@@ -206,7 +209,7 @@ test_that("filter_occurrences() respects IMCRA and IBRA boundaries", {
     state = c("AUS"),
     lga = c(NA),
     shape = c(NA),
-    list1 = c(TRUE)
+    list_name = c("list1")
   )
   common_names <- data.frame(
     correct_name = c("Onychoprion fuscatus"),
@@ -229,7 +232,8 @@ test_that("filter_occurrences() respects IMCRA and IBRA boundaries", {
   expect_equal(nrow(fo_output), 1)
   expect_equal(fo_output$cw_state, as.character(NA))
 
-  # check that sightings outside IMCRA regions are excluded
+  # check that sightings outside IMCRA regions are excluded (also tests that
+  # identify_states() and identify_shapes() handle empty dfs)
   species_list <- data.frame(
     correct_name = c("Thalassarche bulleri"),
     provided_name = c("Thalassarche bulleri"),
@@ -238,7 +242,7 @@ test_that("filter_occurrences() respects IMCRA and IBRA boundaries", {
     state = c("AUS"),
     lga = c(NA),
     shape = c(NA),
-    list1 = c(TRUE)
+    list_name = c("list1")
   )
   common_names <- data.frame(
     correct_name = c("Thalassarche bulleri"),
@@ -252,3 +256,173 @@ test_that("filter_occurrences() respects IMCRA and IBRA boundaries", {
 
   expect_equal(nrow(fo_output), 0)
 })
+
+# Australian territories inclusion (islands and EEZ, namely)
+test_that("filter_occurrences() includes all Australian teritories", {
+  # set up arguments
+  common_names <- data.frame(
+    correct_name = c("Onychoprion fuscatus",
+                     "Aptenodytes patagonicus",
+                     "Oceanites oceanicus",
+                     "Fregata andrewsi",
+                     "Gygis alba",
+                     "Sula dactylatra",
+                     "Anous minutus"),
+    common_name = c("Sooty Tern",
+                    "King Penguin",
+                    "Wilson's Storm Petrel",
+                    "Christmas Island Frigatebird",
+                    "White Tern",
+                    "Masked Gannet",
+                    "Black Noddy")
+  )
+  ### ISLANDS TO CHECK
+  # Norfolk Island
+  species_list <- data.frame(
+    correct_name = c("Sula dactylatra"),
+    provided_name = c("Sula dactylatra"),
+    search_term = c("Sula dactylatra"),
+    common_name = c("Masked Gannet"),
+    state = c("AUS"),
+    lga = c(NA),
+    shape = c(NA),
+    list_name = c("list1")
+  )
+  event_date_start <- "03-10-2022"
+  event_date_end <- "04-10-2022"
+  species_records <- search_occurrences(species_list, common_names, event_date_start, event_date_end)
+  fo_output <- filter_occurrences(species_records)
+
+  expect_equal(nrow(fo_output), 3)
+  # Ashmore & Cartier Islands
+  species_list <- data.frame(
+    correct_name = c("Onychoprion fuscatus"),
+    provided_name = c("Onychoprion fuscatus"),
+    search_term = c("Onychoprion fuscatus"),
+    common_name = c("Sooty Tern"),
+    state = c("AUS"),
+    lga = c(NA),
+    shape = c(NA),
+    list_name = c("list1")
+  )
+  event_date_start <- "12-05-2022"
+  event_date_end <- "14-05-2022"
+  species_records <- search_occurrences(species_list, common_names, event_date_start, event_date_end)
+  fo_output <- filter_occurrences(species_records)
+
+  expect_equal(nrow(fo_output), 2)
+  # Heard & McDonald Islands (also checks that records without coordinates are excluded)
+  species_list <- data.frame(
+    correct_name = c("Oceanites oceanicus"),
+    provided_name = c("Oceanites oceanicus"),
+    search_term = c("Oceanites oceanicus"),
+    common_name = c("Wilson's Storm Petrel"),
+    state = c("AUS"),
+    lga = c(NA),
+    shape = c(NA),
+    list_name = c("list1")
+  )
+  event_date_start <- "01-02-2016"
+  event_date_end <- "02-02-2016"
+  species_records <- search_occurrences(species_list, common_names, event_date_start, event_date_end)
+  fo_output <- filter_occurrences(species_records)
+
+  expect_equal(nrow(fo_output), 26)
+  # Christmas Island
+  species_list <- data.frame(
+    correct_name = c("Fregata andrewsi"),
+    provided_name = c("Fregata andrewsi"),
+    search_term = c("Fregata andrewsi"),
+    common_name = c("Christmas Island Frigatebird"),
+    state = c("AUS"),
+    lga = c(NA),
+    shape = c(NA),
+    list_name = c("list1")
+  )
+  event_date_start <- "15-11-2022"
+  event_date_end <- "17-11-2022"
+  species_records <- search_occurrences(species_list, common_names, event_date_start, event_date_end)
+  fo_output <- filter_occurrences(species_records)
+
+  expect_equal(nrow(fo_output), 3)
+  # Cocos Keeling Island
+  species_list <- data.frame(
+    correct_name = c("Gygis alba"),
+    provided_name = c("Gygis alba"),
+    search_term = c("Gygis alba"),
+    common_name = c("White Tern"),
+    state = c("AUS"),
+    lga = c(NA),
+    shape = c(NA),
+    list_name = c("list1")
+  )
+  event_date_start <- "09-01-2018"
+  event_date_end <- "10-01-2018"
+  species_records <- search_occurrences(species_list, common_names, event_date_start, event_date_end)
+  fo_output <- filter_occurrences(species_records)
+
+  expect_equal(nrow(fo_output), 17)
+  # Macquarie Island
+  species_list <- data.frame(
+    correct_name = c("Aptenodytes patagonicus"),
+    provided_name = c("Aptenodytes patagonicus"),
+    search_term = c("Aptenodytes patagonicus"),
+    common_name = c("King Penguin"),
+    state = c("AUS"),
+    lga = c(NA),
+    shape = c(NA),
+    list_name = c("list1")
+  )
+  event_date_start <- "23-12-2022"
+  event_date_end <- "25-12-2022"
+  species_records <- search_occurrences(species_list, common_names, event_date_start, event_date_end)
+  fo_output <- filter_occurrences(species_records)
+
+  expect_equal(nrow(fo_output), 14)
+
+  # EEZ waters
+  species_list <- data.frame(
+    correct_name = c("Anous minutus"),
+    provided_name = c("Anous minutus"),
+    search_term = c("Anous minutus"),
+    common_name = c("Black Noddy"),
+    state = c("AUS"),
+    lga = c(NA),
+    shape = c(NA),
+    list_name = c("list1")
+  )
+  event_date_start <- "22-02-2021"
+  event_date_end <- "24-02-2021"
+  species_records <- search_occurrences(species_list, common_names, event_date_start, event_date_end)
+  fo_output <- filter_occurrences(species_records)
+
+  expect_equal(nrow(fo_output), 6)
+})
+
+# exclusion of species
+test_that("filter_occurrences() performs species exclusions correctly", {
+  # set up arguments for genus + excluded species
+  species_list <- data.frame(
+    correct_name = c("Onychoprion", "Onychoprion anaethetus"),
+    provided_name = c("Onychoprion", "!Onychoprion anaethetus"),
+    search_term = c("Onychoprion", "Onychoprion anaethetus"),
+    common_name = c("Onychoprion Terns", "Bridled Tern"),
+    state = c("AUS", "AUS"),
+    lga = c(NA, NA),
+    shape = c(NA, NA),
+    list_name = c("list1", "list1")
+  )
+  common_names <- data.frame(
+    correct_name = c("Onychoprion", "Onychoprion anaethetus"),
+    common_name = c("Onychoprion Terns", "Bridled Terns")
+  )
+  event_date_start <- "03-10-2022"
+  event_date_end <- "04-10-2022"
+
+  species_records <- search_occurrences(species_list, common_names, event_date_start, event_date_end)
+  fo_output <- filter_occurrences(species_records)
+
+  expect_equal(nrow(fo_output), 4)
+  expect_true(!("Onychoprion anaethetus" %in% fo_output$correct_name))
+})
+

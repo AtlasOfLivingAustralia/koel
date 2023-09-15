@@ -1,9 +1,9 @@
-# tests for get_species_lists2
+# tests for get_species_lists
 
 # inputs must be in the correct format - df, correct columns
-test_that("get_species_lists2() arguments are supplied correctly",{
+test_that("get_species_lists() arguments are supplied correctly",{
   # throw an error if argument is not a data.frame or tibble
-  expect_error(get_species_lists2(12))
+  expect_error(get_species_lists(12))
   # throw an error if the argument does not have the correct form
   expect_error(get_species_list2(data.frame(path = NULL, source = NULL)))
 
@@ -14,7 +14,7 @@ test_that("get_species_lists2() arguments are supplied correctly",{
 })
 
 # test that the output is of the correct form
-test_that("get_species_lists2() returns the correct data.frame output",{
+test_that("get_species_lists() returns the correct data.frame output",{
   # set up lists_df object
   dir_path <- withr::local_tempdir()
   {write.csv(tibble(correct_name = c("Eudynamys orientalis", "Eolophus roseicapilla"),
@@ -37,23 +37,23 @@ test_that("get_species_lists2() returns the correct data.frame output",{
               paste0(dir_path, "/list2_list.csv"),
               row.names = FALSE)}
   df <- collate_lists(paste0(dir_path, "/"))
-  # run get_species_lists2
-  gsl2_output <- get_species_lists2(df)
+  # run get_species_lists
+  gsl2_output <- get_species_lists(df)
   # check that output is a dataframe
   expect_s3_class(gsl2_output, class = "data.frame")
   # check that df has as many columns as there are lists + 7
-  expect_equal(ncol(gsl2_output), 7 + nrow(df))
+  expect_equal(ncol(gsl2_output), 8)
   # check that df has the correct column names
   expect_equal(colnames(gsl2_output),
                c("correct_name", "provided_name", "search_term", "common_name",
-                 "state", "lga", "shape", df$label))
+                 "state", "lga", "shape", "list_name"))
   # check that the list columns are all logical
   expect_equal(purrr::map_chr(gsl2_output, .f = class) |> unname(),
-               rep(c("character", "logical"), times = c(7 , nrow(df))))
+               rep("character", times = 8))
 })
 
-# test that the function recognises same vs different states/LGAs/shapes
-test_that("get_species_lists2() deals with similar and different states", {
+# test that the function doesn't group same states/LGAs/shapes
+test_that("get_species_lists() deals with similar and different states", {
   # set up lists_df object with same states/LGAs
   dir_path <- withr::local_tempdir()
   {write.csv(tibble(correct_name = "Eudynamys orientalis",
@@ -76,7 +76,7 @@ test_that("get_species_lists2() deals with similar and different states", {
               row.names = FALSE)}
   df <- collate_lists(paste0(dir_path, "/"))
 
-  expect_equal(nrow(get_species_lists2(df)), 1)
+  expect_equal(nrow(get_species_lists(df)), 2)
   # set up lists_df object with different states/LGAs
   {write.csv(tibble(correct_name = "Eudynamys orientalis",
                     provided_name = "Eudynamys orientalis",
@@ -89,14 +89,13 @@ test_that("get_species_lists2() deals with similar and different states", {
               row.names = FALSE)}
   df <- collate_lists(paste0(dir_path, "/"))
 
-  expect_equal(nrow(get_species_lists2(df)), 2)
-  expect_equal(get_species_lists2(df)$state, c("QLD, VIC", "NSW, VIC"))
+  expect_equal(nrow(get_species_lists(df)), 2)
+  expect_equal(get_species_lists(df)$state, c("QLD, VIC", "NSW, VIC"))
   # correct treatment of NA in state column
-
 })
 
 # test that the function includes all synonyms as search terms
-test_that("get_species_lists2() returns the correct data.frame output",{
+test_that("get_species_lists() returns the correct data.frame output",{
   # set up lists_df object
   dir_path <- withr::local_tempdir()
   {write.csv(tibble(correct_name = "Eudynamys orientalis",
@@ -110,15 +109,15 @@ test_that("get_species_lists2() returns the correct data.frame output",{
              row.names = FALSE)}
   df <- collate_lists(paste0(dir_path, "/"))
 
-  expect_equal(nrow(get_species_lists2(df)), 3)
-  expect_equal(get_species_lists2(df)$search_term,
+  expect_equal(nrow(get_species_lists(df)), 3)
+  expect_equal(get_species_lists(df)$search_term,
                c("Eudynamys orientalis",
                  "Eudynamys orientalis cyanocephalus",
                  "Eudynamys orientalis subcyanocephalus"))
 })
 
 # check that state, lga and shape columns are created correctly when not provided
-test_that("get_species_lists2() creates state/lga columns when not provided", {
+test_that("get_species_lists() creates state/lga columns when not provided", {
   # create dummy list with no state, lga or shape columns
   dir_path <- withr::local_tempdir()
   {write.csv(tibble(correct_name = "Eudynamys orientalis",
@@ -129,12 +128,12 @@ test_that("get_species_lists2() creates state/lga columns when not provided", {
              row.names = FALSE)}
   df <- collate_lists(paste0(dir_path, "/"))
 
-  # run get_species_lists2
-  gsl2_output <- get_species_lists2(df)
+  # run get_species_lists
+  gsl2_output <- get_species_lists(df)
   # check that df has the correct column names
   expect_equal(colnames(gsl2_output),
                c("correct_name", "provided_name", "search_term", "common_name",
-                 "state", "lga", "shape", df$label))
+                 "state", "lga", "shape", "list_name"))
   # check that `state` is "AUS" and`lga` is NA
   expect_equal(gsl2_output$state, "AUS")
   expect_true(is.na(gsl2_output$lga))
@@ -152,12 +151,12 @@ test_that("get_species_lists2() creates state/lga columns when not provided", {
              row.names = FALSE)}
   df <- collate_lists(paste0(dir_path, "/"))
 
-  # run get_species_lists2
-  gsl2_output <- get_species_lists2(df)
+  # run get_species_lists
+  gsl2_output <- get_species_lists(df)
   # check that df has the correct column names
   expect_equal(colnames(gsl2_output),
                c("correct_name", "provided_name", "search_term", "common_name",
-                 "state", "lga", "shape", df$label))
+                 "state", "lga", "shape", "list_name"))
   # check that `state` is "AUS" and`lga` is NA
   expect_true(is.na(gsl2_output$shape))
 
@@ -179,8 +178,8 @@ test_that("get_species_list2() defaults state to 'AUS' correctly", {
              row.names = FALSE)}
   df <- collate_lists(paste0(dir_path, "/"))
 
-  # run get_species_lists2
-  gsl2_output <- get_species_lists2(df)
+  # run get_species_lists
+  gsl2_output <- get_species_lists(df)
 
   expect_equal(gsl2_output$state, c("AUS", NA, NA))
 })
