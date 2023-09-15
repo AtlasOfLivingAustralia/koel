@@ -28,7 +28,7 @@ name for each correct species name. May be produced by
 \item{event_date_start, event_date_end}{Dates to begin and end ALA occurrences
 filter for event date field. Allows filtering of records that have been
 uploaded in some time period. May be in one of two forms: either a single
-dbl indicating how many days prior from the currentdate to begin the
+dbl indicating how many days prior from the current date to begin the
 search, or a character vector indicating the date to search from in
 `"ddmmyyyy"` format.  `event_date_end` defaults to 0 (current date).}
 
