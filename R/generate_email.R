@@ -297,16 +297,21 @@ build_map_thumbnail <- function(list_row, cache_path) {
   eval.parent(this_call)
 
   ##### Function Implementation #####
-  occurrence_map <- leaflet(options = leafletOptions(crs = leafletCRS(code = "WGS84"))) |>
+  # check if the image has already been produced
+  map_in_dir <- paste0(cache_path, "maps/", list_row$recordID, ".png") %in%
+                  list.files(paste0(cache_path, "maps/"))
+  if (!map_in_dir) {
+    occurrence_map <- leaflet(options = leafletOptions(crs = leafletCRS(code = "WGS84"))) |>
     addTiles() |>
     #addProviderTiles(providers$Esri.WorldTopoMap) |>
     setView(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude, zoom = 12) |>
     addCircleMarkers(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude,
                      opacity = 0.75, color = "darkblue", radius = 15)
-  saveWidget(widget = occurrence_map, file = paste0(cache_path, "maps/", list_row$recordID, ".html"))
-  webshot(url = paste0(cache_path, "maps/", list_row$recordID, ".html"),
+    saveWidget(widget = occurrence_map, file = paste0(cache_path, "maps/", list_row$recordID, ".html"))
+    webshot(url = paste0(cache_path, "maps/", list_row$recordID, ".html"),
           file = paste0(cache_path, "maps/", list_row$recordID, ".png"),
           delay = 1, zoom = 2)
+  }
 }
 
 #' Function to send html tables of occurrences in emails to stakeholders
