@@ -91,26 +91,58 @@ build_email <- function(alerts_data, cache_path,
     map(.x = list_names,
         .f = function(list_entry) {
           cat(paste0("Writing email for list: ", list_entry, "\n"))
-          table_df <- build_gt_table(alerts_data |> filter(list_name == list_entry),
-                                     cache_path)
-          # render and save output
-          output_file <- ifelse(
-            is.null(output_path),
-            paste0(cache_path, "email_", date_time, "_", list_entry, ".html"),
-            paste0(output_path, "html/email_", date_time, "_", list_entry, ".html")
-          )
-          rmarkdown::render(template_path, output_file = output_file)
+          table_df_base <- build_gt_table(alerts_data |> filter(list_name == list_entry),
+                                          cache_path)
+          # is the email going to be a large file?
+          large_file <- (nrow(table_df_base) >= 30)
 
-          recipients <- email_list |>
-            filter(list == list_entry | list == "universal") |>
-            pull(email)
-          if (!is.na(email_send) & !is.na(email_password)) {
-            send_email(recipients, output_file,
-                       email_send, email_password,
-                       email_host = email_host, email_port = email_port,
-                       email_subject = email_subject,
-                       test = test)
-          }
+          divisions <- seq(1, nrow(table_df_base), 20)
+
+          map(.x = 1:length(divisions),
+              .f = function(num) {
+                # create set of 20 row dataframes
+                table_df <- if (num != length(divisions)) {
+                  table_df_base[divisions[num]:(divisions[num+1] - 1),]
+                } else {
+                  table_df_base[divisions[num]:nrow(table_df_base),]
+                }
+
+                # set up
+                output_file <- if (large_file) {
+                  ifelse(
+                    is.null(output_path),
+                    paste0(cache_path, "email_", date_time, "_", list_entry, ".html"),
+                    paste0(output_path, "html/email_", date_time, "_", list_entry, ".html")
+                  )
+                } else {
+                  ifelse(
+                    is.null(output_path),
+                    paste0(cache_path, "email_", date_time, "_", list_entry, "_", num, ".html"),
+                    paste0(output_path, "html/email_", date_time, "_", list_entry, "_", num, ".html")
+                  )
+                }
+
+                # render and save output
+                rmarkdown::render(template_path, output_file = output_file)
+
+                email_subject <- ifelse(
+                  large_file,
+                  email_subject,
+                  paste0(email_subject, " (", num, "/", nrow(table_df_base), ")")
+                )
+
+                recipients <- email_list |>
+                  filter(list == list_entry | list == "universal") |>
+                  pull(email)
+                if (!is.na(email_send) & !is.na(email_password)) {
+                  send_email(recipients, output_file,
+                             email_send, email_password,
+                             email_host = email_host, email_port = email_port,
+                             email_subject = email_subject,
+                             test = test)
+                }
+              }
+          )
         }
     )
 
