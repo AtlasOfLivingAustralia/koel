@@ -108,7 +108,7 @@ build_email <- function(alerts_data, cache_path,
                 }
 
                 # set up
-                output_file <- if (large_file) {
+                output_file <- if (!large_file) {
                   ifelse(
                     is.null(output_path),
                     paste0(cache_path, "email_", date_time, "_", list_entry, ".html"),
