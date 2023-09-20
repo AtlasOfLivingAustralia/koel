@@ -126,7 +126,7 @@ build_email <- function(alerts_data, cache_path,
                 rmarkdown::render(template_path, output_file = output_file)
 
                 email_subject <- ifelse(
-                  large_file,
+                  !large_file,
                   email_subject,
                   paste0(email_subject, " (", num, "/", nrow(table_df_base), ")")
                 )
