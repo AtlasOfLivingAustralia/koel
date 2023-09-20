@@ -128,7 +128,7 @@ build_email <- function(alerts_data, cache_path,
                 email_subject <- ifelse(
                   !large_file,
                   email_subject,
-                  paste0(email_subject, " (", num, "/", nrow(table_df_base), ")")
+                  paste0(email_subject, " (", num, "/", length(divisions), ")")
                 )
 
                 recipients <- email_list |>
