@@ -310,7 +310,7 @@ build_map_thumbnail <- function(list_row, cache_path) {
     saveWidget(widget = occurrence_map, file = paste0(cache_path, "maps/", list_row$recordID, ".html"))
     webshot(url = paste0(cache_path, "maps/", list_row$recordID, ".html"),
           file = paste0(cache_path, "maps/", list_row$recordID, ".png"),
-          delay = 1, zoom = 2)
+          delay = 1, zoom = 1)
   }
 }
 
