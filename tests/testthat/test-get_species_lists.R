@@ -2,15 +2,15 @@
 
 # inputs must be in the correct format - df, correct columns
 test_that("get_species_lists() arguments are supplied correctly",{
-  # throw an error if argument is not a data.frame or tibble
+  # test if `lists_path` is supplied properly
   expect_error(get_species_lists(12))
-  # throw an error if the argument does not have the correct form
-  expect_error(get_species_list2(data.frame(path = NULL, source = NULL)))
-
-  # testing synonym delimiter
-  expect_error(get_species_list2(data.frame(path = NULL, label = NULL), 5))
-  expect_error(get_species_list2(data.frame(path = NULL, label = NULL),
-                                 c(", ", "| ")))
+  expect_error(get_species_lists("./dummy_path"))
+  # test if `list_suffix` is supplied properly
+  expect_error(get_species_list2("./dummy_path/", 12))
+  expect_error(get_species_list2("./dummy_path/", c("_list", "_List")))
+  # test if `synonym_delimiter` is supplied properly
+  expect_error(get_species_list2("./dummy_path/", "_list", 12))
+  expect_error(get_species_list2("./dummy_path/", "_list", c(", ", "|")))
 })
 
 # test that the output is of the correct form
@@ -36,19 +36,18 @@ test_that("get_species_lists() returns the correct data.frame output",{
                      shape = c(NA, NA)),
               paste0(dir_path, "/list2_list.csv"),
               row.names = FALSE)}
-  df <- collate_lists(paste0(dir_path, "/"))
   # run get_species_lists
-  gsl2_output <- get_species_lists(df)
+  gsl_output <- get_species_lists(paste0(dir_path, "/"))
   # check that output is a dataframe
-  expect_s3_class(gsl2_output, class = "data.frame")
+  expect_s3_class(gsl_output, class = "data.frame")
   # check that df has as many columns as there are lists + 7
-  expect_equal(ncol(gsl2_output), 8)
+  expect_equal(ncol(gsl_output), 8)
   # check that df has the correct column names
-  expect_equal(colnames(gsl2_output),
+  expect_equal(colnames(gsl_output),
                c("correct_name", "provided_name", "search_term", "common_name",
                  "state", "lga", "shape", "list_name"))
   # check that the list columns are all logical
-  expect_equal(purrr::map_chr(gsl2_output, .f = class) |> unname(),
+  expect_equal(purrr::map_chr(gsl_output, .f = class) |> unname(),
                rep("character", times = 8))
 })
 
@@ -74,9 +73,7 @@ test_that("get_species_lists() deals with similar and different states", {
                     shape = NA),
               paste0(dir_path, "/list2_list.csv"),
               row.names = FALSE)}
-  df <- collate_lists(paste0(dir_path, "/"))
-
-  expect_equal(nrow(get_species_lists(df)), 2)
+  expect_equal(nrow(get_species_lists(paste0(dir_path, "/"))), 2)
   # set up lists_df object with different states/LGAs
   {write.csv(tibble(correct_name = "Eudynamys orientalis",
                     provided_name = "Eudynamys orientalis",
@@ -87,10 +84,8 @@ test_that("get_species_lists() deals with similar and different states", {
                     shape = NA),
               paste0(dir_path, "/list2_list.csv"),
               row.names = FALSE)}
-  df <- collate_lists(paste0(dir_path, "/"))
-
-  expect_equal(nrow(get_species_lists(df)), 2)
-  expect_equal(get_species_lists(df)$state, c("QLD, VIC", "NSW, VIC"))
+  expect_equal(nrow(get_species_lists(paste0(dir_path, "/"))), 2)
+  expect_equal(get_species_lists(paste0(dir_path, "/"))$state, c("QLD, VIC", "NSW, VIC"))
   # correct treatment of NA in state column
 })
 
@@ -107,10 +102,8 @@ test_that("get_species_lists() returns the correct data.frame output",{
                     shape = NA),
              paste0(dir_path, "/list1_list.csv"),
              row.names = FALSE)}
-  df <- collate_lists(paste0(dir_path, "/"))
-
-  expect_equal(nrow(get_species_lists(df)), 3)
-  expect_equal(get_species_lists(df)$search_term,
+  expect_equal(nrow(get_species_lists(paste0(dir_path, "/"))), 3)
+  expect_equal(get_species_lists(paste0(dir_path, "/"))$search_term,
                c("Eudynamys orientalis",
                  "Eudynamys orientalis cyanocephalus",
                  "Eudynamys orientalis subcyanocephalus"))
@@ -126,18 +119,16 @@ test_that("get_species_lists() creates state/lga columns when not provided", {
                     common_name = "Eastern Koel"),
              paste0(dir_path, "/list1_list.csv"),
              row.names = FALSE)}
-  df <- collate_lists(paste0(dir_path, "/"))
-
   # run get_species_lists
-  gsl2_output <- get_species_lists(df)
+  gsl_output <- get_species_lists(paste0(dir_path, "/"))
   # check that df has the correct column names
-  expect_equal(colnames(gsl2_output),
+  expect_equal(colnames(gsl_output),
                c("correct_name", "provided_name", "search_term", "common_name",
                  "state", "lga", "shape", "list_name"))
   # check that `state` is "AUS" and`lga` is NA
-  expect_equal(gsl2_output$state, "AUS")
-  expect_true(is.na(gsl2_output$lga))
-  expect_true(is.na(gsl2_output$shape))
+  expect_equal(gsl_output$state, "AUS")
+  expect_true(is.na(gsl_output$lga))
+  expect_true(is.na(gsl_output$shape))
 
   # create dummy list with no shape column
   dir_path <- withr::local_tempdir()
@@ -149,16 +140,14 @@ test_that("get_species_lists() creates state/lga columns when not provided", {
                     lga = "BRISBANE CITY"),
              paste0(dir_path, "/list1_list.csv"),
              row.names = FALSE)}
-  df <- collate_lists(paste0(dir_path, "/"))
-
   # run get_species_lists
-  gsl2_output <- get_species_lists(df)
+  gsl_output <- get_species_lists(paste0(dir_path, "/"))
   # check that df has the correct column names
-  expect_equal(colnames(gsl2_output),
+  expect_equal(colnames(gsl_output),
                c("correct_name", "provided_name", "search_term", "common_name",
                  "state", "lga", "shape", "list_name"))
   # check that `state` is "AUS" and`lga` is NA
-  expect_true(is.na(gsl2_output$shape))
+  expect_true(is.na(gsl_output$shape))
 
   # Could check for other combos of state/lga/shape provided if necessary
 })
@@ -176,10 +165,8 @@ test_that("get_species_list2() defaults state to 'AUS' correctly", {
                     shape = c(NA, NA, "shape1")),
              paste0(dir_path, "/list1_list.csv"),
              row.names = FALSE)}
-  df <- collate_lists(paste0(dir_path, "/"))
-
   # run get_species_lists
-  gsl2_output <- get_species_lists(df)
+  gsl_output <- get_species_lists(paste0(dir_path, "/"))
 
-  expect_equal(gsl2_output$state, c("AUS", NA, NA))
+  expect_equal(gsl_output$state, c("AUS", NA, NA))
 })

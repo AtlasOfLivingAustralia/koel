@@ -28,23 +28,15 @@ koel_defensive <- function(...) {
   list2env(input_list, envir = environment())
 
   ##### Defensive Programming #####
-  ###### collate_lists() ######
+  ###### get_species_lists() ######
   # lists_path
   if (exists("lists_path", inherits = FALSE)) {
     check_dir_path(lists_path, "lists_path")
   }
-
   # list_suffix
   if (exists("list_suffix", inherits = FALSE)) {
     check_string(list_suffix, "list_suffix")
   }
-
-  ###### get_species_lists2() ######
-  # list_df
-  if (exists("list_df", inherits = FALSE)) {
-    check_df(list_df, "list_df", req_cols = c("label", "path"))
-  }
-
   # synonym_delimiter
   if (exists("synonym_delimiter", inherits = FALSE)) {
     check_string(synonym_delimiter, "synonym_delimiter")
@@ -131,7 +123,7 @@ koel_defensive <- function(...) {
     }
   }
 
-  ###### build_email() ######
+  ###### build_email() + build_email_large() ######
   if (exists("alerts_data", inherits = FALSE)) {
     if (nrow(alerts_data) > 0) {
       # alerts_data
@@ -143,6 +135,14 @@ koel_defensive <- function(...) {
                        "cw_state", "shape_feature")
 
       check_df(alerts_data, "alerts_data", req_cols = ad_req_cols)
+      # records_threshold
+      if (exists("records_threshold", inherits = FALSE)) {
+        check_numeric(records_threshold, "records_threshold")
+      }
+      # records_per_email
+      if (exists("records_per_email", inherits = FALSE)) {
+        check_numeric(records_per_email, "records_per_email")
+      }
       # email_list
       if (exists("email_list", inherits = FALSE)) {
         check_df(email_list, "email_list",
@@ -384,5 +384,29 @@ check_log <- function(var, var_name) {
   # length 1 only
   if (length(var) > 1) {
     abort(glue("{var_name} must be a single value."))
+  }
+}
+
+#' Internal checks to run on provided numeric values
+#'
+#' @param var variable value to be checked
+#' @param var_name name of variable value to be checked as a string
+#'
+#' @importFrom glue glue
+#' @importFrom rlang abort
+#' @noRd
+
+check_numeric <- function(var, var_name) {
+  # is character type
+  if (!is.numeric(var)) {
+    abort(glue("{var_name} argument must be numeric."))
+  }
+  # length 1 only
+  if (length(var) > 1) {
+    abort(glue("{var_name} must be a single value."))
+  }
+  # positive value
+  if (var <= 0) {
+    abort(glue("{var_name} argument must be positive."))
   }
 }
