@@ -129,6 +129,9 @@ build_email <- function(alerts_data, cache_path,
 
   #unlink("./cache", recursive = TRUE)
 }
+
+#' Build and send large biosecurity alert emails
+#'
 #' This function is identical in every regard to `build_email()` with the
 #'    exception that it will split emails into multiple emails if a list has too
 #'    many records for a single email. It compiles the downloaded ALA species
@@ -469,7 +472,7 @@ build_map_thumbnail <- function(list_row, cache_path) {
   # check if the image has already been produced
   map_in_dir <- paste0(cache_path, "maps/", list_row$recordID, ".png") %in%
                   list.files(paste0(cache_path, "maps/"))
-  if (map_in_dir) {
+  if (!map_in_dir) {
     occurrence_map <- leaflet(options = leafletOptions(crs = leafletCRS(code = "WGS84"))) |>
     addTiles() |>
     #addProviderTiles(providers$Esri.WorldTopoMap) |>
