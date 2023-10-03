@@ -136,6 +136,10 @@ search_occurrences <- function(species_list, common_names,
     left_join(common_names,
               by = "correct_name") |>
     relocate(common_name, .after = provided_name) |>
+    # remove duplicated records
+    # group_by(across(-c(match, search_term))) |>
+    # slice_head() |>
+    # ungroup() |>
     # remove duplicates of the same record for the same search term
     distinct(recordID, provided_name, list_name, .keep_all = TRUE)
 
@@ -309,8 +313,7 @@ download_occurrences <- function(occ_list, cache_path) {
       select(recordID, state, lga, shape, list_name, url, download_path, creator) |>
       right_join(occ_media, by = c("recordID", "creator", "state", "lga", "shape", "list_name")) |>
       relocate(c(state, lga, shape, list_name), .after = common_name) |>
-      relocate(creator, .after = basisOfRecord) |>
-      distinct()
+      relocate(creator, .after = basisOfRecord)
   }
 
   write.csv(occ_full,
