@@ -5,12 +5,12 @@
 #'    the function utilises {dplyr} and {tidyr} functions to clean and combine
 #'    the species lists into a single data.frame suitable for use with {galah}.
 #'
-#' @param list_df A data.frame preferably produced by `collate_lists()`
-#'    containing at minimum two columns named `path` and `label` which denote
-#'    respectively the path to and name of each list being searched.
+#' @param lists_path Path to the directory where lists are saved, ending in `"/"`.
+#' @param list_suffix Character string (case insensitive) between the list name
+#'    and file extension.
 #' @param synonym_delimiter An optional character string detailing the delimiter
-#'    used for multiple synonyms in the synonym columns of the lists. Defaults
-#'    to `", "`.
+#'    used for multiple synonyms in the synonym column of the lists. Defaults to
+#'    `", "` or `","`.
 #'
 #' @return A data.frame of unique scientific names, the search term used to
 #'   match those names to the ALA taxonomy, a common name for each species, the
@@ -24,6 +24,7 @@
 #' @importFrom dplyr mutate
 #' @importFrom dplyr relocate
 #' @importFrom dplyr select
+#' @importFrom dplyr tibble
 #' @importFrom readr read_csv
 #' @importFrom rlang abort
 #' @importFrom rlang inform
@@ -35,7 +36,9 @@
 #' @importFrom tools toTitleCase
 #' @export
 
-get_species_lists <- function(list_df, synonym_delimiter = ","){
+get_species_lists <- function(lists_path,
+                              list_suffix = "_list",
+                              synonym_delimiter = ",") {
 
   ##### Defensive Programming #####
   this_call <- match.call(expand.dots = TRUE)
@@ -43,6 +46,16 @@ get_species_lists <- function(list_df, synonym_delimiter = ","){
   eval.parent(this_call)
 
   ##### Function Implementation #####
+  file_names <- list.files(lists_path)
+  file_paths <- paste0(lists_path, file_names)
+  labels <- gsub(paste0(list_suffix, ".csv"), "", file_names, ignore.case = T)
+  labels_lower <- tolower(labels)
+
+  list_df <- tibble(label = labels,
+                    source = labels_lower,
+                    path = file_paths,
+                    csv_names = file_names)
+
   combined_df <- list_df |>
     pmap(.f = \(path, label, ...)
          read_csv(path, show_col_types = FALSE) |>

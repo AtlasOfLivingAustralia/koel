@@ -297,8 +297,6 @@ build_email_large <- function(alerts_data, cache_path,
                 file = paste0(output_path, "csv/alerts_data_", date_time, ".csv"))
     }
   }
-
-  #unlink("./cache", recursive = TRUE)
 }
 
 
