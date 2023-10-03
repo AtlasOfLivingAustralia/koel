@@ -471,7 +471,7 @@ build_map_thumbnail <- function(list_row, cache_path) {
   # check if the image has already been produced
   map_in_dir <- paste0(cache_path, "maps/", list_row$recordID, ".png") %in%
                   list.files(paste0(cache_path, "maps/"))
-  if (TRUE) {
+  if (map_in_dir) {
     occurrence_map <- leaflet(options = leafletOptions(crs = leafletCRS(code = "WGS84"))) |>
     addTiles() |>
     #addProviderTiles(providers$Esri.WorldTopoMap) |>
