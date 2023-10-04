@@ -4,7 +4,7 @@
 \alias{get_species_lists}
 \title{Import user-supplied species lists from a single directory}
 \usage{
-get_species_lists(lists_path, list_suffix = "_list", text_delimiter = ",")
+get_species_lists(lists_path, list_suffix = "_list", synonym_delimiter = ",")
 }
 \arguments{
 \item{lists_path}{Path to the directory where lists are saved, ending in `"/"`.}
@@ -12,9 +12,9 @@ get_species_lists(lists_path, list_suffix = "_list", text_delimiter = ",")
 \item{list_suffix}{Character string (case insensitive) between the list name
 and file extension.}
 
-\item{text_delimiter}{An optional character string detailing the delimiter
-used for multiple synonyms, states or LGAs in their respective columns of
-the lists. Defaults to `", "` or `","`.}
+\item{synonym_delimiter}{An optional character string detailing the delimiter
+used for multiple synonyms in the synonym column of the lists. Defaults to
+`", "` or `","`.}
 }
 \value{
 A data.frame of unique scientific names, the search term used to

@@ -2,15 +2,7 @@
 % Please edit documentation in R/generate_email.R
 \name{build_email_large}
 \alias{build_email_large}
-\title{This function is identical in every regard to `build_email()` with the
-   exception that it will split emails into multiple emails if a list has too
-   many records for a single email. It compiles the downloaded ALA species
-   occurrences into an informative table for each biosecurity list, and
-   facilitates the sending of emails containing these tables to relevant
-   addressees. It uses helper (internal and external) functions to format and
-   compile necessary map images, format the table, and send the emails. There
-   is no outputted value of this function, however it provides the option to
-   save .html and .csv files to local or temporary directories.}
+\title{Build and send large biosecurity alert emails}
 \usage{
 build_email_large(
   alerts_data,
