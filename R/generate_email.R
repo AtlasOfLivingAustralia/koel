@@ -11,15 +11,15 @@
 #' @param alerts_data A data.frame ideally produced by `download_occurrences()`.
 #'    Each row contains ALA data pertaining to a single species occurrence record
 #'    downloaded with galah. Should contain 8 default columns.
-#' @param cache_path A single string containing the path to the temporary
-#'    cache folder in which species images and maps are saved.  Must begin with
-#'    `"./"` and end  with `"/"`. Should contain a `species_images` and a `maps`
-#'    directory, however these will be created if they do not exist.
 #' @param template_path A single string containing the path to the R
 #'    markdown template to be rendered with the html table produced by
 #'    `build_gt_table()`. Defaults to NULL which triggers the use of a minimal
 #'    .Rmd file to render the produced table. Markdown file must use object
 #'    `table_df`.
+#' @param cache_path A single string containing the path to the temporary
+#'    cache folder in which species images and maps are saved.  Must begin with
+#'    `"./"` and end  with `"/"`. Should contain a `species_images` and a `maps`
+#'    directory, however these will be created if they do not exist.
 #' @param output_path An optional single string containing the path to the
 #'    permanent directory in which the produced .html and .csv files are saved
 #'    for record-keeping purposes. Default value is `NULL`, and files are only
@@ -302,7 +302,6 @@ build_email_large <- function(alerts_data, cache_path,
   }
 }
 
-
 #' Build an HTML table containing the ALA occurrences provided in a dataframe
 #'
 #' This implementation uses {gt} to create an HTML table of ALA occurrences from
@@ -479,10 +478,10 @@ build_map_thumbnail <- function(list_row, cache_path) {
     setView(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude, zoom = 12) |>
     addCircleMarkers(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude,
                      opacity = 0.75, color = "darkblue", radius = 15)
-    saveWidget(widget = occurrence_map, file = paste0(cache_path, "maps/", list_row$recordID, ".html"))
-    webshot(url = paste0(cache_path, "maps/", list_row$recordID, ".html"),
+  saveWidget(widget = occurrence_map, file = paste0(cache_path, "maps/", list_row$recordID, ".html"))
+  webshot(url = paste0(cache_path, "maps/", list_row$recordID, ".html"),
           file = paste0(cache_path, "maps/", list_row$recordID, ".png"),
-          delay = 1, zoom = 1)
+          delay = 1, zoom = 2)
   }
 }
 
