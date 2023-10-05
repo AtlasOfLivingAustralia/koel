@@ -130,6 +130,177 @@ build_email <- function(alerts_data, cache_path,
   #unlink("./cache", recursive = TRUE)
 }
 
+#' Build and send large biosecurity alert emails
+#'
+#' This function is identical in every regard to `build_email()` with the
+#'    exception that it will split emails into multiple emails if a list has too
+#'    many records for a single email. It compiles the downloaded ALA species
+#'    occurrences into an informative table for each biosecurity list, and
+#'    facilitates the sending of emails containing these tables to relevant
+#'    addressees. It uses helper (internal and external) functions to format and
+#'    compile necessary map images, format the table, and send the emails. There
+#'    is no outputted value of this function, however it provides the option to
+#'    save .html and .csv files to local or temporary directories.
+#'
+#' @param alerts_data A data.frame ideally produced by `download_occurrences()`.
+#'    Each row contains ALA data pertaining to a single species occurrence record
+#'    downloaded with galah. Should contain 8 default columns.
+#' @param cache_path A single string containing the path to the temporary
+#'    cache folder in which species images and maps are saved.  Must begin with
+#'    `"./"` and end  with `"/"`. Should contain a `species_images` and a `maps`
+#'    directory, however these will be created if they do not exist.
+#' @param records_threshold A (positive) numeric value indicating the minimum
+#'    number of records on a single list to trigger the splitting of the list's
+#'    records into multiple emails. Defaults to 30.
+#' @param records_per_email A (positive) numeric value indicating how many
+#'    records to include per email for a list if its total number of records
+#'    exceed `records_threshold`. Defaults to 20 records per email.
+#' @param template_path A single string containing the path to the R
+#'    markdown template to be rendered with the html table produced by
+#'    `build_gt_table()`. Defaults to NULL which triggers the use of a minimal
+#'    .Rmd file to render the produced table. Markdown file must use object
+#'    `table_df`.
+#' @param output_path An optional single string containing the path to the
+#'    permanent directory in which the produced .html and .csv files are saved
+#'    for record-keeping purposes. Default value is `NULL`, and files are only
+#'    saved if a file path is provided instead. Must begin with `"./"` and end
+#'    with `"/"`. Should contain a 'html' and a 'csv' directory, however these
+#'    will be created if they do not exist.
+#' @param email_list A data.frame of email details for each list. Should
+#'    contain at least two columns, one named `email` containing email addresses,
+#'    and one named `list` containing the lists each email is associated with.
+#'    Defaults to an empty dataframe with these columns. Emails provided with
+#'    `"universal"` in the `list` column receive emails for all lists
+#' @param email_subject An optional single string of the subject of the email.
+#'    If not provided, default subject is "ALA Biosecurity Alerts".
+#' @param email_send A single string providing the email address from which
+#'    the alerts are to be sent. Deafults to `NA`.
+#' @param email_password A single string providing the password for the
+#'    provided email address (`email_send` argument). Defaults to `NA`.
+#' @param email_host A single string providing the email server host to be
+#'    fed to the {emayili} function `server()`. Defaults to `NA`.
+#' @param email_port A single numeric value providing the email server port to be
+#'    fed to the {emayili} function `server()`. Defaults to `NA`.
+#' @param test A logical argument which indicates whether the email should be
+#'    sent as a test email (TRUE) or as an official email (FALSE). If the email
+#'    is a test then it is not addressed to the sending email address. Defaults
+#'    to `TRUE`.
+#'
+#' @importFrom dplyr filter
+#' @importFrom dplyr pull
+#' @importFrom dplyr select
+#' @importFrom purrr map
+#' @importFrom readr write_csv
+#' @importFrom rlang abort
+#' @importFrom rlang inform
+#' @importFrom rmarkdown render
+#'
+#' @export
+
+build_email_large <- function(alerts_data, cache_path,
+                              records_threshold = 30,
+                              records_per_email = 20,
+                              template_path = NULL,
+                              output_path = NULL,
+                              email_list = data.frame(email = character(),
+                                                      list = character()),
+                              email_subject = "ALA Biosecurity Alert",
+                              email_send = NA, email_password = NA,
+                              email_host = NA, email_port = NA,
+                              test = TRUE) {
+  ##### Defensive Programming #####
+  this_call <- match.call(expand.dots = TRUE)
+  this_call[[1]] <- as.name("koel_defensive")
+  eval.parent(this_call)
+
+  ##### Function Implementation #####
+  # set current date and time for inclusion in file names
+  date_time <- Sys.time() |>
+    gsub("\\s", "_", x = _) |>
+    gsub(":", "-", x = _)
+
+  # set template_path if not provided
+  if (is.null(template_path)) {
+    template_path <- system.file("rmd", "email_template.Rmd", package = "koel")
+  }
+
+  # build tables if there are occurrences in alerts_data
+  if (nrow(alerts_data) > 0) {
+
+    # identify list names from alerts_data
+    list_names <- unique(alerts_data$list_name)
+
+    map(.x = list_names,
+        .f = function(list_entry) {
+          cat(paste0("Writing email for list: ", list_entry, "\n"))
+          table_df_base <- build_gt_table(alerts_data |> filter(list_name == list_entry),
+                                          cache_path)
+          # is the email going to be a large file?
+          large_file <- (nrow(table_df_base) >= 30)
+
+          divisions <- seq(1, nrow(table_df_base), records_per_email)
+
+          map(.x = 1:length(divisions),
+              .f = function(num) {
+                # create set of 20 row dataframes
+                table_df <- if (num != length(divisions)) {
+                  table_df_base[divisions[num]:(divisions[num+1] - 1),]
+                } else {
+                  table_df_base[divisions[num]:nrow(table_df_base),]
+                }
+
+                # set up
+                output_file <- if (!large_file) {
+                  ifelse(
+                    is.null(output_path),
+                    paste0(cache_path, "email_", date_time, "_", list_entry, ".html"),
+                    paste0(output_path, "html/email_", date_time, "_", list_entry, ".html")
+                  )
+                } else {
+                  ifelse(
+                    is.null(output_path),
+                    paste0(cache_path, "email_", date_time, "_", list_entry, "_", num, ".html"),
+                    paste0(output_path, "html/email_", date_time, "_", list_entry, "_", num, ".html")
+                  )
+                }
+
+                # render and save output
+                rmarkdown::render(template_path, output_file = output_file)
+
+                email_subject <- ifelse(
+                  !large_file,
+                  email_subject,
+                  paste0(email_subject, " (", num, "/", length(divisions), ")")
+                )
+
+                recipients <- email_list |>
+                  filter(list == list_entry | list == "universal") |>
+                  pull(email)
+                if (!is.na(email_send) & !is.na(email_password)) {
+                  send_email(recipients, output_file,
+                             email_send, email_password,
+                             email_host = email_host, email_port = email_port,
+                             email_subject = email_subject,
+                             test = test)
+                }
+              }
+          )
+        }
+    )
+
+    if (!is.null(output_path)) {
+      # save out and clean up
+      write_csv(alerts_data,
+                file = paste0(output_path, "csv/alerts_data_", date_time, ".csv"))
+    }
+  } else {
+    # if no data returned, cache an empty csv file to show the script has run
+    if (!is.null(output_path)) {
+      write_csv(tibble(),
+                file = paste0(output_path, "csv/alerts_data_", date_time, ".csv"))
+    }
+  }
+}
 
 #' Build an HTML table containing the ALA occurrences provided in a dataframe
 #'
@@ -297,7 +468,11 @@ build_map_thumbnail <- function(list_row, cache_path) {
   eval.parent(this_call)
 
   ##### Function Implementation #####
-  occurrence_map <- leaflet(options = leafletOptions(crs = leafletCRS(code = "WGS84"))) |>
+  # check if the image has already been produced
+  map_in_dir <- paste0(cache_path, "maps/", list_row$recordID, ".png") %in%
+                  list.files(paste0(cache_path, "maps/"))
+  if (!map_in_dir) {
+    occurrence_map <- leaflet(options = leafletOptions(crs = leafletCRS(code = "WGS84"))) |>
     addTiles() |>
     #addProviderTiles(providers$Esri.WorldTopoMap) |>
     setView(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude, zoom = 12) |>
@@ -307,6 +482,7 @@ build_map_thumbnail <- function(list_row, cache_path) {
   webshot(url = paste0(cache_path, "maps/", list_row$recordID, ".html"),
           file = paste0(cache_path, "maps/", list_row$recordID, ".png"),
           delay = 1, zoom = 2)
+  }
 }
 
 #' Function to send html tables of occurrences in emails to stakeholders
