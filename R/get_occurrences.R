@@ -570,9 +570,9 @@ identify_shape <- function(species_records, shapes_path = NULL) {
                    shape_feature = ifelse(
                      is.na(intersection),
                      NA,
-                     shape),
+                     "in shape"),
                    shape_feature = ifelse(
-                     !is.na(shape_feature) & is_SHAPE_NAME,
+                     shape_feature == "in shape" & is_SHAPE_NAME,
                      shapefiles[[unique(shape)]]$SHAPE_NAME[intersection],
                      shape_feature)) |>
             select(-intersection) |>
