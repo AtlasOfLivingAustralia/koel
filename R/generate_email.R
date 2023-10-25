@@ -378,7 +378,7 @@ build_gt_table <- function(df, cache_path) {
         glue(
           if_else(is.na(creator), "", "<b>{creator}</b><br>"),
           "{date_html}<br>",
-          if_else(is.na(shape), "", "<font size='-1'>{shape_feature}</font><br>"),
+          if_else(is.na(shape) & shape_feature != "in shape", "", "<font size='-1'>{shape_feature}</font><br>"),
           if_else(
             is.na(cl10923),
             if_else(
