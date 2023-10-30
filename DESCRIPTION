@@ -4,6 +4,8 @@ Title: Email alerts from a biodiversity data resource
 Version: 0.1.0
 Authors@R:
     person("Martin", "Westgate", , "martin.westgate@csiro.au", role = c("aut", "cre"))
+    person("Callum", "Waite", , "callum.waite@csiro.au", role = c("aut"))
+    person("Shandiya", "Balasubramaniam", , "shandiya.balasubramaniam@csiro.au", role = c("aut"))
 Description: Simple package for running queries and bundling results into
     emails.
 License: MIT
@@ -11,11 +13,26 @@ Depends:
     R (>= 4.1.0)
 Imports:
     dplyr,
+    emayili,
+    galah,
     glue,
     gt,
-    maptiles,
+    here,
+    htmlwidgets,
+    leaflet,
+    lubridate,
+    magrittr,
     purrr,
-    readr
+    readr,
+    rlang,
+    rmarkdown,
+    sf,
+    stringr,
+    tibble,
+    tidyr,
+    tools,
+    webshot,
+    xml2
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
