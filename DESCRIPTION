@@ -2,10 +2,9 @@ Type: Package
 Package: koel
 Title: Email alerts from a biodiversity data resource
 Version: 0.1.0
-Authors@R:
-    person("Martin", "Westgate", , "martin.westgate@csiro.au", role = c("aut", "cre"))
-    person("Callum", "Waite", , "callum.waite@csiro.au", role = c("aut"))
-    person("Shandiya", "Balasubramaniam", , "shandiya.balasubramaniam@csiro.au", role = c("aut"))
+Authors@R: c(
+    person("Martin", "Westgate", , "martin.westgate@csiro.au", role = c("aut", "cre")),
+    person("Callum", "Waite", , "callumwaite2000@gmail.com", role = "aut"))
 Description: Simple package for running queries and bundling results into
     emails.
 License: MIT
