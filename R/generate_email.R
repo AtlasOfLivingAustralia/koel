@@ -232,7 +232,7 @@ build_email_large <- function(alerts_data, cache_path,
 
     map(.x = list_names,
         .f = function(list_entry) {
-          cat(paste0("Writing email for list: ", list_entry, "\n"))
+          cat(paste0("\nWriting email for list: ", list_entry, "\n"))
           table_df_base <- build_gt_table(alerts_data |> filter(list_name == list_entry),
                                           cache_path)
           # is the email going to be a large file?
@@ -474,15 +474,17 @@ build_map_thumbnail <- function(list_row, cache_path) {
                   list.files(paste0(cache_path, "maps/"))
   if (!map_in_dir) {
     occurrence_map <- leaflet(options = leafletOptions(crs = leafletCRS(code = "WGS84"))) |>
-    addTiles() |>
-    #addProviderTiles(providers$Esri.WorldTopoMap) |>
-    setView(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude, zoom = 12) |>
-    addCircleMarkers(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude,
-                     opacity = 0.75, color = "darkblue", radius = 15)
-  saveWidget(widget = occurrence_map, file = paste0(cache_path, "maps/", list_row$recordID, ".html"))
-  webshot(url = paste0(cache_path, "maps/", list_row$recordID, ".html"),
-          file = paste0(cache_path, "maps/", list_row$recordID, ".png"),
-          delay = 1, zoom = 2)
+      addTiles() |>
+      #addProviderTiles(providers$Esri.WorldTopoMap) |>
+      setView(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude, zoom = 12) |>
+      addCircleMarkers(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude,
+                       opacity = 0.75, color = "darkblue", radius = 15)
+    saveWidget(widget = occurrence_map,
+               file = paste0(cache_path, "maps/", list_row$recordID, ".html"),
+               selfcontained = FALSE)
+    webshot(url = paste0(cache_path, "maps/", list_row$recordID, ".html"),
+            file = paste0(cache_path, "maps/", list_row$recordID, ".png"),
+            delay = 1, zoom = 2)
   }
 }
 
