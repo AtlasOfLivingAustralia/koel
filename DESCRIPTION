@@ -30,7 +30,7 @@ Imports:
     tibble,
     tidyr,
     tools,
-    webshot,
+    webshot2,
     xml2
 Suggests: 
     testthat (>= 3.0.0)

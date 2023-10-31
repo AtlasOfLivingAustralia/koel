@@ -219,8 +219,8 @@ filter_occurrences <- function(species_records, shapes_path = NULL) {
       mutate(flagged_state = str_detect(state, cw_state),
              flagged_shape = !is.na(shape_feature)) |>
       rowwise() |>
-      mutate(flagged_lga = !is.na(cl10923) &
-               (cl10923 %in% ifelse(is.na(lga), NA, str_split(lga, ", ")[[1]]))) |>
+      mutate(flagged_lga = !is.na(cl10923) & !is.na(lga) &
+               any(cl10923 == str_split(lga, ", ")[[1]])) |>
       ungroup() |>
       # filter out occurrences not in areas of interest
       filter(state == "AUS" |
