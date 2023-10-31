@@ -90,7 +90,7 @@ build_email <- function(alerts_data, cache_path,
 
     map(.x = list_names,
         .f = function(list_entry) {
-          cat(paste0("Writing email for list: ", list_entry, "\n"))
+          cat(paste0("\nWriting email for list: ", list_entry, "\n"))
           table_df <- build_gt_table(alerts_data |> filter(list_name == list_entry),
                                      cache_path)
           # render and save output
@@ -459,7 +459,7 @@ build_gt_table <- function(df, cache_path) {
 #' @importFrom rlang abort
 #' @importFrom rlang inform
 #' @importFrom sf st_as_sf
-#' @importFrom webshot webshot
+#' @importFrom webshot2 webshot
 #' @export
 
 build_map_thumbnail <- function(list_row, cache_path) {
@@ -480,8 +480,7 @@ build_map_thumbnail <- function(list_row, cache_path) {
       addCircleMarkers(lng = list_row$decimalLongitude, lat = list_row$decimalLatitude,
                        opacity = 0.75, color = "darkblue", radius = 15)
     saveWidget(widget = occurrence_map,
-               file = paste0(cache_path, "maps/", list_row$recordID, ".html"),
-               selfcontained = FALSE)
+               file = paste0(cache_path, "maps/", list_row$recordID, ".html"))
     webshot(url = paste0(cache_path, "maps/", list_row$recordID, ".html"),
             file = paste0(cache_path, "maps/", list_row$recordID, ".png"),
             delay = 1, zoom = 2)
