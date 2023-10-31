@@ -4,7 +4,7 @@
     "Repositories": [
       {
         "Name": "CRAN",
-        "URL": "https://cran.rstudio.com"
+        "URL": "https://packagemanager.posit.co/cran/latest"
       }
     ]
   },
@@ -1289,24 +1289,6 @@
       ],
       "Hash": "7ce2733a9826b3aeb1775d56fd305472"
     },
-    "maptiles": {
-      "Package": "maptiles",
-      "Version": "0.6.1",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "R",
-        "curl",
-        "grDevices",
-        "graphics",
-        "png",
-        "sf",
-        "slippymath",
-        "terra",
-        "tools"
-      ],
-      "Hash": "dc5799561bc4819a3e32921681745139"
-    },
     "markdown": {
       "Package": "markdown",
       "Version": "1.11",
@@ -1687,7 +1669,7 @@
       "Package": "renv",
       "Version": "1.0.3",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "CRAN",
       "Requirements": [
         "utils"
       ],
@@ -1878,20 +1860,6 @@
         "geometries"
       ],
       "Hash": "0b0a55852e87b8f8478efb505eba2ebe"
-    },
-    "slippymath": {
-      "Package": "slippymath",
-      "Version": "0.3.1",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "R",
-        "png",
-        "purrr",
-        "raster",
-        "stats"
-      ],
-      "Hash": "abdaf883004a4791545655d79ca3aae0"
     },
     "sp": {
       "Package": "sp",
