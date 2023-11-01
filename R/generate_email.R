@@ -561,7 +561,9 @@ send_email <- function(recipients, output_file, email_send, email_password,
       host = email_host,
       port = email_port,
       username = email_send,
-      password = email_password
+      password = email_password,
+      pause_base = 5,
+      max_times = 10
     )
 
     smtp(email, verbose = FALSE)
