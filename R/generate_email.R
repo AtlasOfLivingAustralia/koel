@@ -535,6 +535,8 @@ send_email <- function(recipients, output_file, email_send, email_password,
                        test = TRUE) {
 
   ##### Function Implementation #####
+  options(emayili.verbose = FALSE)
+
   if (length(recipients) == 0) {
     inform("No email recipients for this list. No email sent but .html table has been saved.")
   } else {
@@ -562,6 +564,6 @@ send_email <- function(recipients, output_file, email_send, email_password,
       password = email_password
     )
 
-    smtp(email, verbose = TRUE)
+    smtp(email, verbose = FALSE)
   }
 }
