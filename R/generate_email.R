@@ -483,7 +483,7 @@ build_map_thumbnail <- function(list_row, cache_path) {
                file = paste0(cache_path, "maps/", list_row$recordID, ".html"))
     webshot(url = paste0(cache_path, "maps/", list_row$recordID, ".html"),
             file = paste0(cache_path, "maps/", list_row$recordID, ".png"),
-            delay = 1, zoom = 2)
+            delay = 1, zoom = 1)
   }
 }
 
@@ -561,9 +561,7 @@ send_email <- function(recipients, output_file, email_send, email_password,
       host = email_host,
       port = email_port,
       username = email_send,
-      password = email_password,
-      pause_base = 5,
-      max_times = 10
+      password = email_password
     )
 
     smtp(email, verbose = FALSE)
