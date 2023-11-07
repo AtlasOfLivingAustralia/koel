@@ -97,7 +97,7 @@ search_occurrences <- function(species_list, common_names,
   divisions <- seq(1, length(unique(species_df$search_term)), 100)
 
   # set up search fields
-  fields <- c("genus", "species", "subspecies", "scientificName", "raw_scientificName")
+  fields <- c("genus", "species", "subspecies", "scientificName")
 
   # iterate search of Atlas for each search term. Store counts
   species_records <- map(
@@ -359,7 +359,7 @@ search_name_fields <- function(field,
                  eventDate >= event_date_start,
                  eventDate <= event_date_end,
                  {{field}} == search_terms) |>
-    galah_select(raw_scientificName, scientificName, vernacularName,
+    galah_select(scientificName, vernacularName,
                  genus, species, subspecies,
                  decimalLatitude, decimalLongitude,
                  cl22, cl10923, cl1048, cl966, cl21,
