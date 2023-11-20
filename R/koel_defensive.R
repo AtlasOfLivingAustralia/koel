@@ -82,7 +82,7 @@ koel_defensive <- function(...) {
   if (exists("species_records", inherits = FALSE)) {
     if (nrow(species_records) > 0) {
       sr_req_cols <- c("correct_name", "provided_name", "common_name",
-                       "state", "lga", "shape",
+                       "state", "lga", "shape", "list_name",
                        "decimalLongitude", "decimalLatitude",
                        "cl10923", "cl1048", "cl966", "cl21",
                        "recordID", "eventDate", "multimedia", "scientificName")
@@ -103,7 +103,7 @@ koel_defensive <- function(...) {
   if (exists("occ_list", inherits = FALSE)) {
     if (nrow(occ_list) > 0) {
       ol_req_cols <- c("correct_name", "provided_name", "common_name",
-                       "state", "lga", "shape", "basisOfRecord")
+                       "state", "lga", "shape", "list_name", "basisOfRecord")
       check_df(occ_list, "occ_list", req_cols = ol_req_cols)
     }
   }
@@ -128,11 +128,11 @@ koel_defensive <- function(...) {
     if (nrow(alerts_data) > 0) {
       # alerts_data
       ad_req_cols <- c("provided_name", "common_name",
-                       "state", "lga", "shape",
+                       "state", "lga", "shape", "list_name",
                        "decimalLongitude", "decimalLatitude", "cl10923",
                        "recordID", "eventDate", "multimedia", "scientificName",
-                       "url", "creator", "dataResourceName", "download_path",
-                       "cw_state", "shape_feature")
+                       "image_url", "creator", "dataResourceName", "download_path",
+                       "mimetype", "cw_state", "shape_feature")
 
       check_df(alerts_data, "alerts_data", req_cols = ad_req_cols)
       # records_threshold
@@ -216,7 +216,7 @@ koel_defensive <- function(...) {
                         "state", "lga", "shape",
                         "decimalLongitude", "decimalLatitude", "cl10923",
                         "recordID", "eventDate", "multimedia", "scientificName",
-                        "url", "creator", "dataResourceName", "download_path",
+                        "image_url", "creator", "dataResourceName", "download_path",
                         "cw_state", "shape_feature")
       check_df(df, "df", req_cols = df_req_cols)
     }

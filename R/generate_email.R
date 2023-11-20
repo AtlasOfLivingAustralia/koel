@@ -361,7 +361,6 @@ build_gt_table <- function(df, cache_path) {
     arrange(dataResourceName, eventDate) |>
     mutate(
       path = here(),
-      image_url = sub("thumbnail$", "original", url)
     ) |>
     rowwise() |>
     mutate(
@@ -407,7 +406,7 @@ build_gt_table <- function(df, cache_path) {
       ),
       occ_media = map(
         glue(
-          if_else(is.na(url),
+          if_else(is.na(multimedia),
                   "<b>NO MEDIA AVAILABLE</b>",
                   "<a href={image_url} target='_blank'>
                       <img src='{download_path}' height = '200'
