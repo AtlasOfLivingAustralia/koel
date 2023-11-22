@@ -313,7 +313,8 @@ download_occurrences <- function(occ_list, cache_path) {
       select(recordID, state, lga, shape, list_name, url, download_path, creator) |>
       right_join(occ_media, by = c("recordID", "creator", "state", "lga", "shape", "list_name")) |>
       relocate(c(state, lga, shape, list_name), .after = common_name) |>
-      relocate(creator, .after = basisOfRecord)
+      relocate(creator, .after = basisOfRecord) |>
+      distinct()
   }
 
   write.csv(occ_full,
