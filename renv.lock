@@ -2333,9 +2333,9 @@
     },
     "webshot2": {
       "Package": "webshot2",
-      "Version": "0.1.1",
+      "Version": "0.1.0",
       "Source": "Repository",
-      "Repository": "CRAN",
+      "Repository": "RSPM",
       "Requirements": [
         "R",
         "callr",
@@ -2344,7 +2344,7 @@
         "magrittr",
         "promises"
       ],
-      "Hash": "701b4be1af8d359271f82cb240853693"
+      "Hash": "501f4bf937637caf4fc982d264bcc839"
     },
     "websocket": {
       "Package": "websocket",
