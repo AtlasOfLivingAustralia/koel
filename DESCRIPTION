@@ -13,7 +13,7 @@ Depends:
 Imports:
     dplyr,
     emayili,
-    galah (<= 1.5.4),
+    galah,
     glue,
     gt,
     here,
