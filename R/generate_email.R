@@ -387,7 +387,7 @@ build_gt_table <- function(df, cache_path) {
                 is.na(cl21), "", "<font size='-1'>{cl21}</font><br>"),
               "<font size='-1'>{cl966}</font><br>"),
             "<font size='-1'>{cl10923}</font><br>"),
-          "{cw_state}<br>",
+          if_else(is.na(cw_state), "", "{cw_state}<br>"),
           "(<a href='https://www.google.com/maps/search/?api=1&query={decimalLatitude}%2C{decimalLongitude}'
             target='_blank'>{decimalLongitude}, {decimalLatitude}</a>)<br>",
           "<i>{dataResourceName}</i>"
