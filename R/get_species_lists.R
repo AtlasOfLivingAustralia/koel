@@ -111,7 +111,7 @@ get_species_lists <- function(lists_path,
 
 clean_names <- function(name) {
   cleaned_name <- name %>%
-    gsub("\u00A0", " ", .) %>%      # remove non-ASCII whitespaces
+    gsub("\u00A0", " ", .) %>%      # remove non-ASCII whitespaces (NBSP)
     gsub("\u200B", " ", .) %>%      # ... (ZWSP)
     gsub("\n", " ", .) %>%          # replace line breaks with spaces
     gsub(";", ",", .) %>%           # replace semi-colons with commas
