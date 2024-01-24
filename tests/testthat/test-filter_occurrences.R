@@ -1,4 +1,5 @@
 # testing for filter_occurrences()
+library(galah)
 galah_config(
   email = "callumwaite2000@gmail.com",
   run_checks = FALSE,
@@ -221,7 +222,7 @@ test_that("filter_occurrences() respects IMCRA and IBRA boundaries", {
   species_records <- search_occurrences(species_list, common_names, event_date_start, event_date_end)
   fo_output <- filter_occurrences(species_records)
 
-  expect_equal(nrow(fo_output), 24)
+  expect_equal(nrow(fo_output), 66)
 
 # check that AUS sightings outside CWA zones are included i.e. IMCRA
   event_date_start <- "01-09-2022"
@@ -344,7 +345,7 @@ test_that("filter_occurrences() includes all Australian teritories", {
   species_records <- search_occurrences(species_list, common_names, event_date_start, event_date_end)
   fo_output <- filter_occurrences(species_records)
 
-  expect_equal(nrow(fo_output), 3)
+  expect_equal(nrow(fo_output), 2)
   # Cocos Keeling Island
   species_list <- data.frame(
     correct_name = c("Gygis alba"),

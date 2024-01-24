@@ -14,16 +14,17 @@ columns. Each row represents a unique occurrence.}
 \value{
 Returns the exact provided dataframe with an additional character
    column `cw_state` (Coastal Waters state) containing Australian state
-   abbreviations.
+   abbreviations, and a logical column `flagged_state`.
 }
 \description{
 When provided with some (potentially modified) dataframe/tibble as produced
-   by `atlas_occurrences()` or other, a new column `cw_state` will be created
-   and appended to the end of the dataframe, identifying the Australian state
-   each occurrence sits in. This relies on the presence of numeric columns
-   `decimalLongitude` and `decimalLatitude` (default {galah} coordinate
-   columns) to match the coordinates of the occurrences to the Australian
-   state boundaries as described and delineated by the Coastal Waters Act
-   1980. If an occurrence does not occur in any state jurisdiction then
-   `NA` is returned.
+   by `atlas_occurrences()` or other, new columns `cw_state` and
+   `flagged_state` will be created and appended to the end of the dataframe,
+   identifying the Australian state each occurrence sits in, and flagging
+   (with `TRUE`) if it matches the provided state for that record. This
+   relies on the presence of numeric columns `decimalLongitude` and
+   `decimalLatitude` (default {galah} coordinate columns) to match the
+   coordinates of the occurrences to the Australian state boundaries as
+   described and delineated by the Coastal Waters Act 1980. If an occurrence
+   does not occur in any state jurisdiction then`NA` is returned.
 }

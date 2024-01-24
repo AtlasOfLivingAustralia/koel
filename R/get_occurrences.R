@@ -43,7 +43,6 @@
 #'
 #' @importFrom dplyr across
 #' @importFrom dplyr distinct
-#' @importFrom dplyr everything
 #' @importFrom dplyr if_else
 #' @importFrom dplyr left_join
 #' @importFrom dplyr mutate
@@ -125,7 +124,7 @@ search_occurrences <- function(species_list, common_names,
       return(ala_search)
     }, .progress = TRUE) |>
     # turn all columns into character columns in case dfs are empty
-    map(~mutate(., across(everything(), as.character))) |>
+    #map(~mutate(., across(everything(), as.character))) |>
     list_rbind() |>
     mutate(eventDate = as_datetime(eventDate),
            across(c(decimalLatitude, decimalLongitude), as.numeric)) |>
@@ -136,10 +135,6 @@ search_occurrences <- function(species_list, common_names,
     left_join(common_names,
               by = "correct_name") |>
     relocate(common_name, .after = provided_name) |>
-    # remove duplicated records
-    # group_by(across(-c(match, search_term))) |>
-    # slice_head() |>
-    # ungroup() |>
     # remove duplicates of the same record for the same search term
     distinct(recordID, provided_name, list_name, .keep_all = TRUE)
 
@@ -188,13 +183,9 @@ search_occurrences <- function(species_list, common_names,
 #'    indicating the Australian state/territory of the location.
 #'
 #' @importFrom dplyr filter
-#' @importFrom dplyr mutate
-#' @importFrom dplyr rowwise
 #' @importFrom dplyr select
 #' @importFrom dplyr tibble
 #' @importFrom dplyr ungroup
-#' @importFrom stringr str_detect
-#' @importFrom stringr str_split
 #' @importFrom tidyr as_tibble
 #' @export
 
@@ -215,13 +206,7 @@ filter_occurrences <- function(species_records, shapes_path = NULL) {
       identify_aus() |>
       identify_state() |>
       identify_shape(shapes_path = shapes_path) |>
-      # do ID'd states + LGAs match provided ones
-      mutate(flagged_state = str_detect(state, cw_state),
-             flagged_shape = !is.na(shape_feature)) |>
-      rowwise() |>
-      mutate(flagged_lga = !is.na(cl10923) & !is.na(lga) &
-               any(cl10923 == str_split(lga, ", ")[[1]])) |>
-      ungroup() |>
+      identify_lga() |>
       # filter out occurrences not in areas of interest
       filter(state == "AUS" |
                (!is.na(state) & flagged_state) |
@@ -271,14 +256,20 @@ filter_occurrences <- function(species_records, shapes_path = NULL) {
 #'    record is matched to, and a column indicating the Australian state/
 #'    territory of the location.
 #'
+#' @importFrom dplyr collect
 #' @importFrom dplyr distinct
+#' @importFrom dplyr filter
+#' @importFrom dplyr left_join
 #' @importFrom dplyr mutate
 #' @importFrom dplyr select
 #' @importFrom dplyr relocate
-#' @importFrom dplyr right_join
+#' @importFrom dplyr rename
+#' @importFrom dplyr rowwise
 #' @importFrom dplyr tibble
+#' @importFrom dplyr ungroup
+#' @importFrom galah request_metadata
 #' @importFrom galah collect_media
-#' @importFrom galah search_media
+#' @importFrom tidyr unnest_longer
 #' @export
 
 download_occurrences <- function(occ_list, cache_path) {
@@ -290,37 +281,41 @@ download_occurrences <- function(occ_list, cache_path) {
   ##### Function Implementation #####
   # download records and save temp files in cache_path if they exist
   if (nrow(occ_list) == 0) {
-    occ_full <- tibble()
+    occ_media <- tibble()
   } else {
+    galah_config(directory = paste0(cache_path, "species_images"))
     # download records and save temp files in cache_path if they exist
-    occ_media <- occ_list |>
-      # introduce media data (if exists) for each occurrence (time sink)
-      (\(.) if (any(!is.na(.$multimedia))) search_media(.) else mutate(., creator = NA))() |>
-      # keep the first media item for each record
-      distinct(recordID, correct_name, provided_name, state, lga, shape, list_name, .keep_all = TRUE)
-
-    # Note that collect_media() only retains records with media - need to
-    # right_join to the search_media() output
-    occ_full <- occ_media |>
-      # only collect_media if we have images present
-      (\(.) if (any(!is.na(.$multimedia))) {
-        collect_media(.,
-                      path = paste0(cache_path, "species_images"),
-                      type = "thumbnail")
-      } else {
-        mutate(., url = NA, download_path = NA, creator = NA)
-      })() |>
-      select(recordID, state, lga, shape, list_name, url, download_path, creator) |>
-      right_join(occ_media, by = c("recordID", "creator", "state", "lga", "shape", "list_name")) |>
-      relocate(c(state, lga, shape, list_name), .after = common_name) |>
-      relocate(creator, .after = basisOfRecord) |>
-      distinct()
+    if (any(!is.na(occ_list$multimedia))) {
+      occ_media <- occ_list |>
+        unnest_longer(col = c(images, sounds, videos)) |>
+        left_join(request_metadata() |> filter(media == occ_list) |>  collect(),
+                  by = c("images" = "image_id")) |>
+        rename("media_id" = "images") |>
+        distinct(recordID, correct_name, provided_name, state, lga, shape, list_name, .keep_all = TRUE) |>
+        rowwise() |>
+        mutate(download_path = if (is.na(multimedia)) {NA} else {
+          media_outfiles(media_id,
+                         mimetype,
+                         paste0(cache_path, "species_images"))}) |>
+        ungroup()
+      collect_media(occ_media |> filter(!is.na(media_id)), thumbnail = TRUE)
+    } else {
+      occ_media <- occ_list |>
+        unnest_longer(col = c(images, sounds, videos)) |>
+        mutate(creator = NA,
+               license = NA,
+               mimetype = NA,
+               width = NA,
+               height = NA,
+               image_url = NA,
+               download_path = NA)
+    }
   }
 
-  write.csv(occ_full,
+  write.csv(occ_media,
             file = paste0(cache_path, "alerts_data.csv"),
             row.names = FALSE)
-  return(occ_full)
+  return(occ_media)
 }
 
 #' Search ALA with multiple search terms and fields
@@ -340,12 +335,11 @@ download_occurrences <- function(occ_list, cache_path) {
 #'    `{galah}` errors.
 #'
 #' @importFrom dplyr across
-#' @importFrom dplyr everything
+#' @importFrom dplyr collect
 #' @importFrom dplyr mutate
-#' @importFrom galah atlas_occurrences
-#' @importFrom galah galah_call
 #' @importFrom galah galah_filter
 #' @importFrom galah galah_select
+#' @importFrom galah request_data
 #' @importFrom rlang .data
 #' @noRd
 
@@ -353,8 +347,8 @@ search_name_fields <- function(field,
                                event_date_start, event_date_end,
                                upload_date_start, upload_date_end,
                                search_terms) {
-##### Function Implementation #####
-  occ_search <- galah_call() |>
+  ##### Function Implementation #####
+  occ_search <- request_data() |>
     galah_filter(firstLoadedDate >= upload_date_start,
                  firstLoadedDate <= upload_date_end,
                  eventDate >= event_date_start,
@@ -366,10 +360,11 @@ search_name_fields <- function(field,
                  cl22, cl10923, cl1048, cl966, cl21,
                  firstLoadedDate, basisOfRecord,
                  group = c("basic", "media")) |>
-    atlas_occurrences() |>
+    collect() |>
     mutate(match = field,
            search_term = .data[[field]],
-           across(everything(), as.character))
+           across(-c(images, sounds, videos), as.character),
+           across(c(images, sounds, videos), as.list))
   return(occ_search)
 }
 
@@ -423,21 +418,22 @@ identify_aus <- function(species_records) {
 #' Identify the Australian state of each record in a dataframe
 #'
 #' When provided with some (potentially modified) dataframe/tibble as produced
-#'    by `atlas_occurrences()` or other, a new column `cw_state` will be created
-#'    and appended to the end of the dataframe, identifying the Australian state
-#'    each occurrence sits in. This relies on the presence of numeric columns
-#'    `decimalLongitude` and `decimalLatitude` (default {galah} coordinate
-#'    columns) to match the coordinates of the occurrences to the Australian
-#'    state boundaries as described and delineated by the Coastal Waters Act
-#'    1980. If an occurrence does not occur in any state jurisdiction then
-#'    `NA` is returned.
+#'    by `atlas_occurrences()` or other, new columns `cw_state` and
+#'    `flagged_state` will be created and appended to the end of the dataframe,
+#'    identifying the Australian state each occurrence sits in, and flagging
+#'    (with `TRUE`) if it matches the provided state for that record. This
+#'    relies on the presence of numeric columns `decimalLongitude` and
+#'    `decimalLatitude` (default {galah} coordinate columns) to match the
+#'    coordinates of the occurrences to the Australian state boundaries as
+#'    described and delineated by the Coastal Waters Act 1980. If an occurrence
+#'    does not occur in any state jurisdiction then`NA` is returned.
 #'
 #' @param species_records A dataframe/tibble prodcued by `atlas_occurrences()` or
 #'    otherwise, containing at minimum columns containing longitude and latitude
 #'    columns. Each row represents a unique occurrence.
 #' @return Returns the exact provided dataframe with an additional character
 #'    column `cw_state` (Coastal Waters state) containing Australian state
-#'    abbreviations.
+#'    abbreviations, and a logical column `flagged_state`.
 #'
 #' @importFrom dplyr if_else
 #' @importFrom dplyr mutate
@@ -446,6 +442,7 @@ identify_aus <- function(species_records) {
 #' @importFrom sf st_crs
 #' @importFrom sf st_drop_geometry
 #' @importFrom sf st_intersects
+#' @importFrom stringr str_detect
 #' @export
 
 identify_state <- function(species_records) {
@@ -457,7 +454,8 @@ identify_state <- function(species_records) {
   ##### Function Implementation #####
   if (nrow(species_records) == 0) {
     sr_states <- species_records |>
-      mutate(cw_state = character(0))
+      mutate(cw_state = character(0),
+             flagged_state = logical(0))
   } else {
     sr_states <- species_records |>
     st_as_sf(coords = c("decimalLongitude", "decimalLatitude"),
@@ -467,7 +465,8 @@ identify_state <- function(species_records) {
              as.integer(),
            cw_state = if_else(is.na(intersection),
                               NA,
-                              coastal_waters_shp$state_abbr[intersection])) |>
+                              coastal_waters_shp$state_abbr[intersection]),
+           flagged_state = str_detect(state, cw_state)) |>
     select(-intersection) |>
     st_drop_geometry()
   }
@@ -481,11 +480,12 @@ identify_state <- function(species_records) {
 #'    an optional `shape` argument specifying the name of the shapefile inside
 #'    which occurrences of that species should be kept. When provided with some
 #'    (potentially modified) dataframe/tibble as produced by
-#'    `atlas_occurrences()` or other, a new column `shape_feature` will be
-#'    created and appended to the end of the dataframe, identifying the feature
-#'    of its specified shapefile that each occurrence occurs in, if it does
-#'    occur in the shapefile. If an occurrence does not occur in the specified
-#'    shapefile then `NA` is returned.
+#'    `atlas_occurrences()` or other, new columns `shape_feature` and
+#'    `flagged_shape` will be created and appended to the end of the dataframe,
+#'    identifying the feature of its specified shapefile that each occurrence
+#'    occurs in, and flagging (with `TRUE`) if it does occur in the shapefile.
+#'    If an occurrence does not occur in the specified shapefile then `NA` is
+#'    returned.
 #'
 #' @param species_records A dataframe/tibble produced by `atlas_occurrences()` or
 #'    otherwise, containing at minimum columns containing longitude and latitude
@@ -500,7 +500,7 @@ identify_state <- function(species_records) {
 #' @return Returns the exact provided dataframe with an additional character
 #'    column `shape_feature` containing the name of the provided shapefile
 #'    feature if the occurrence does sit within the region specified by the
-#'    shapefile.
+#'    shapefile, and an additional logical column `flagged_shape`.
 #'
 #' @importFrom dplyr if_else
 #' @importFrom dplyr mutate
@@ -530,10 +530,12 @@ identify_shape <- function(species_records, shapes_path = NULL) {
   # only proceed if we have at least one shape named and a path provided
   if (nrow(species_records) == 0) {
     sr_shapes <- species_records |>
-      mutate(shape_feature = character(0))
+      mutate(shape_feature = character(0),
+             flagged_shape = logical(0))
   } else if (length(shape_names) == 0 | is.null(shapes_path)) {
     sr_shapes <- species_records |>
-      mutate(shape_feature = NA)
+      mutate(shape_feature = NA,
+             flagged_shape = FALSE)
   } else {
     shapefiles <- map(
       .x = shape_names,
@@ -575,7 +577,8 @@ identify_shape <- function(species_records, shapes_path = NULL) {
                    shape_feature = ifelse(
                      shape_feature == "in shape" & is_SHAPE_NAME,
                      shapefiles[[unique(shape)]]$SHAPE_NAME[intersection],
-                     shape_feature)) |>
+                     shape_feature),
+                   flagged_shape = !is.na(shape_feature)) |>
             select(-intersection) |>
             st_drop_geometry()
         }
@@ -584,6 +587,47 @@ identify_shape <- function(species_records, shapes_path = NULL) {
   }
 
   return(sr_shapes)
+}
+
+#' Identify matches for the Australian LGA of each record in a dataframe
+#'
+#' When provided with some (potentially modified) dataframe/tibble as produced
+#'    by `atlas_occurrences()` or other, a new logical column `flagged_lga` will
+#'    be created and appended to the end of the dataframe, identifying whether
+#'    the Australian LGA each occurrence sits in (as provided by the ALA field
+#'    `cl10923`) matches the provided LGA in the `lga` column.
+#'
+#' @param species_records A dataframe/tibble prodcued by `atlas_occurrences()` or
+#'    otherwise, containing at minimum columns containing longitude and latitude
+#'    columns. Each row represents a unique occurrence.
+#' @return Returns the exact provided dataframe with an additional logical
+#'    column `flagged_lga` indicating a match to the .
+#'
+#' @importFrom dplyr mutate
+#' @importFrom dplyr rowwise
+#' @importFrom dplyr ungroup
+#' @importFrom stringr str_split
+#' @export
+
+identify_lga <- function(species_records) {
+  ##### Defensive Programming #####
+  this_call <- match.call(expand.dots = TRUE)
+  this_call[[1]] <- as.name("koel_defensive")
+  eval.parent(this_call)
+
+  ##### Function Implementation #####
+  if (nrow(species_records) == 0) {
+    sr_lgas <- species_records |>
+      mutate(flagged_lga = logical(0))
+  } else {
+    sr_lgas <- species_records |>
+      rowwise() |>
+      mutate(flagged_lga = !is.na(cl10923) & !is.na(lga) &
+               any(cl10923 == str_split(lga, ", ")[[1]])) |>
+      ungroup()
+  }
+
+  return(sr_lgas)
 }
 
 #' Exclude records that have been marked for exclusion
@@ -625,4 +669,35 @@ exclude_records <- function(species_records, exclusion_prefix = "!") {
     select(-exclude)
 
   return(inc_species_records)
+}
+
+#' Add correct file extension to media files
+#'
+#' An internal function to create file paths for media downloads by adding the
+#'    correct file extensions to media file names. Takes values from an individual
+#'    row of a dataframe
+#'
+#' @param media_id `media_id` of a record's media to be added to the file path
+#' @param mimetype `mimetype` field of record - will be in the form
+#'    (image/audio/video)/(type of file)
+#' @param path Download path for media files, usually provided by
+#'    `"cache_path/species_images"`
+#'
+#' @return File path to the exact media file
+#' @noRd
+
+media_outfiles <- function(media_id, mimetype, path) {
+  ext <- switch(mimetype,
+                "image/jpeg" = ".jpg",
+                "image/png" = ".png",
+                "audio/mpeg" = ".mpg",
+                "audio/x-wav" = ".wav",
+                "audio/mp4" = ".mp4",
+                "image/gif" = ".gif",
+                "video/3gpp" = ".3gp",
+                "video/quicktime" = ".mov",
+                "audio/vnd.wave" = ".wav"
+  )
+
+  file.path(path, paste0(media_id, ext))
 }

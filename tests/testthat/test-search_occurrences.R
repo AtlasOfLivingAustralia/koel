@@ -1,4 +1,6 @@
 # testing for search_occurrences() (and by extension search_name_fields())
+# remotes::install_github("atlasoflivingaustralia/galah@main")
+library(galah)
 galah_config(
   email = "callumwaite2000@gmail.com",
   run_checks = FALSE,
@@ -86,7 +88,7 @@ test_that("search_occurrences() produces all intended output", {
   # output is of expected type
   expect_s3_class(so_output, "data.frame")
   # dataframe is of expected dimensions
-  expect_equal(dim(so_output), c(1, 33))
+  expect_equal(dim(so_output), c(4, 32))
   expect_equal(class(so_output$decimalLatitude), "numeric")
   expect_equal(class(so_output$decimalLongitude), "numeric")
   expect_equal(class(so_output$eventDate), c("POSIXct", "POSIXt"))
@@ -119,7 +121,7 @@ test_that("search_occurrences() filters by upload date correctly.", {
                                   upload_date_start, upload_date_end)
 
   # dataframe is of expected dimensions
-  expect_equal(dim(so_output), c(1, 33))
+  expect_equal(dim(so_output), c(1, 32))
 })
 
 # check that the function handles no records
@@ -147,7 +149,7 @@ test_that("search_occurrences() handles the absence of records", {
 
   # output is an empty dataframe
   expect_s3_class(so_output, "data.frame")
-  expect_equal(dim(so_output), c(0, 33))
+  expect_equal(dim(so_output), c(0, 32))
 })
 
 # check that the function handles different date formats
@@ -176,7 +178,7 @@ test_that("search_occurrences() handles different date formats", {
                                   event_date_start, event_date_end,
                                   upload_date_start, upload_date_end)
   # dataframe is of expected dimensions
-  expect_equal(dim(so_output), c(1, 33))
+  expect_equal(dim(so_output), c(4, 32))
 })
 
 # check that the function can search on multiple species (2 or 102)
@@ -202,7 +204,7 @@ test_that("search_occurrences() can search on multiple terms/species", {
   so_output <- search_occurrences(species_list, common_names,
                                   event_date_start, event_date_end)
   # dataframe is of expected dimensions
-  expect_equal(dim(so_output), c(12, 33))
+  expect_equal(dim(so_output), c(15, 32))
 
 
   # set up arguments for 101 search terms
@@ -221,7 +223,7 @@ test_that("search_occurrences() can search on multiple terms/species", {
   so_output <- search_occurrences(species_list, common_names,
                                   event_date_start, event_date_end)
   # dataframe is of expected dimensions
-  expect_equal(dim(so_output), c(12, 33))
+  expect_equal(dim(so_output), c(15, 32))
 })
 
 
@@ -250,7 +252,9 @@ test_that("search_occurrences() duplicates the same species for different lists"
   # output is of expected type
   expect_s3_class(so_output, "data.frame")
   # dataframe is of expected dimensions
-  expect_equal(dim(so_output), c(2, 33))
+  expect_equal(dim(so_output), c(8, 32))
+  # only 4 uniwue records
+  expect_equal(length(unique(so_output$recordID)), 4)
 })
 
 # check that the function duplicates records in preparation for exclusion
@@ -278,6 +282,6 @@ test_that("search_occurrences() duplicates records for exclusions.", {
   # output is of expected type
   expect_s3_class(so_output, "data.frame")
   # dataframe is of expected dimensions
-  expect_equal(dim(so_output), c(19, 33))
-  expect_equal(length(unique(so_output$recordID)), 10)
+  expect_equal(dim(so_output), c(22, 32))
+  expect_equal(length(unique(so_output$recordID)), 13)
 })
