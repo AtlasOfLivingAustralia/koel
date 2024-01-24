@@ -361,7 +361,6 @@ build_gt_table <- function(df, cache_path) {
     arrange(dataResourceName, eventDate) |>
     mutate(
       path = here(),
-      image_url = sub("thumbnail$", "original", url)
     ) |>
     rowwise() |>
     mutate(
@@ -388,7 +387,7 @@ build_gt_table <- function(df, cache_path) {
                 is.na(cl21), "", "<font size='-1'>{cl21}</font><br>"),
               "<font size='-1'>{cl966}</font><br>"),
             "<font size='-1'>{cl10923}</font><br>"),
-          "{cw_state}<br>",
+          if_else(is.na(cw_state), "", "{cw_state}<br>"),
           "(<a href='https://www.google.com/maps/search/?api=1&query={decimalLatitude}%2C{decimalLongitude}'
             target='_blank'>{decimalLongitude}, {decimalLatitude}</a>)<br>",
           "<i>{dataResourceName}</i>"
@@ -407,7 +406,7 @@ build_gt_table <- function(df, cache_path) {
       ),
       occ_media = map(
         glue(
-          if_else(is.na(url),
+          if_else(is.na(multimedia),
                   "<b>NO MEDIA AVAILABLE</b>",
                   "<a href={image_url} target='_blank'>
                       <img src='{download_path}' height = '200'

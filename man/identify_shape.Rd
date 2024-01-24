@@ -23,16 +23,17 @@ file suffixes. Each shapefile must contain a feature named `SHAPE_NAME`.}
 Returns the exact provided dataframe with an additional character
    column `shape_feature` containing the name of the provided shapefile
    feature if the occurrence does sit within the region specified by the
-   shapefile.
+   shapefile, and an additional logical column `flagged_shape`.
 }
 \description{
 Within the {koel} `get_occurrences()` workflow, species may be provided with
    an optional `shape` argument specifying the name of the shapefile inside
    which occurrences of that species should be kept. When provided with some
    (potentially modified) dataframe/tibble as produced by
-   `atlas_occurrences()` or other, a new column `shape_feature` will be
-   created and appended to the end of the dataframe, identifying the feature
-   of its specified shapefile that each occurrence occurs in, if it does
-   occur in the shapefile. If an occurrence does not occur in the specified
-   shapefile then `NA` is returned.
+   `atlas_occurrences()` or other, new columns `shape_feature` and
+   `flagged_shape` will be created and appended to the end of the dataframe,
+   identifying the feature of its specified shapefile that each occurrence
+   occurs in, and flagging (with `TRUE`) if it does occur in the shapefile.
+   If an occurrence does not occur in the specified shapefile then `NA` is
+   returned.
 }

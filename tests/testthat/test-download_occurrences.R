@@ -1,4 +1,5 @@
 # testing for download_occurrences()
+library(galah)
 galah_config(
   email = "callumwaite2000@gmail.com",
   run_checks = FALSE,
@@ -67,16 +68,16 @@ test_that("download_occurrences() works as intended", {
   do_output <- download_occurrences(occ_list, cache_path)
 
   expect_s3_class(do_output, "data.frame")
-  expect_equal(dim(do_output), c(2, 45))
-  expect_equal(colnames(do_output)[1:3],
-               c("recordID", "url", "download_path"))
-  expect_equal(sum(is.na(do_output$url)), 1)
+  expect_equal(dim(do_output), c(3, 41))
+  expect_equal(colnames(do_output)[c(1, 40, 41)],
+               c("recordID", "image_url", "download_path"))
+  expect_equal(sum(is.na(do_output$image_url)), 1)
   expect_equal(sum(is.na(do_output$download_path)), 1)
   expect_equal(sum(is.na(do_output$creator)), 1)
   # image downloaded
-  expect_equal(length(list.files(paste0(cache_path, "species_images"))), 1)
+  expect_equal(length(list.files(paste0(cache_path, "species_images"))), 2)
   expect_equal(list.files(paste0(cache_path, "species_images")),
-               paste0(do_output$media_id, ".jpg")[1])
+               paste0(do_output$media_id[2:3], ".jpg"))
   # csv document saved
   expect_true("alerts_data.csv" %in% list.files(cache_path))
 })
@@ -98,8 +99,8 @@ test_that("download_occurrences() works for a set of records without media", {
     correct_name = c("Onychoprion fuscatus"),
     common_name = c("Sooty Tern")
   )
-  event_date_start <- "28-01-2023"
-  event_date_end <- "29-01-2023"
+  event_date_start <- "29-01-2023"
+  event_date_end <- "30-01-2023"
   species_records <- search_occurrences(species_list, common_names, event_date_start, event_date_end)
   occ_list <- filter_occurrences(species_records)
 
@@ -108,10 +109,10 @@ test_that("download_occurrences() works for a set of records without media", {
 
   do_output <- download_occurrences(occ_list, cache_path)
 
-  expect_equal(dim(do_output), c(4, 38))
-  expect_equal(colnames(do_output)[1:3],
-               c("recordID", "url", "download_path"))
-  expect_true(all(is.na(do_output$url)))
+  expect_equal(dim(do_output), c(4, 41))
+  expect_equal(colnames(do_output)[c(1, 40, 41)],
+               c("recordID", "image_url", "download_path"))
+  expect_true(all(is.na(do_output$image_url)))
   expect_true(all(is.na(do_output$download_path)))
   expect_true(all(is.na(do_output$creator)))
   # image downloaded
