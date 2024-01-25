@@ -1,4 +1,5 @@
 # tests for get_species_lists
+library(tibble)
 
 # inputs must be in the correct format - df, correct columns
 test_that("get_species_lists() arguments are supplied correctly",{
@@ -170,3 +171,4 @@ test_that("get_species_list2() defaults state to 'AUS' correctly", {
 
   expect_equal(gsl_output$state, c("AUS", NA, NA))
 })
+

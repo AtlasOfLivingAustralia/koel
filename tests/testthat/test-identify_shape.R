@@ -11,7 +11,7 @@ test_that("identify_shape() takes correct input arguments", {
     state = c("AUS"),
     lga = c("some_LGA"),
     shape = c("shape1"),
-    list1 = c(TRUE)
+    list_name = c("list1")
   )
   common_names <- tibble(
     correct_name = c("Onychoprion fuscatus"),
@@ -44,7 +44,7 @@ test_that("identify_shape() behaves as intended for various inputs", {
     state = c(NA),
     lga = c(NA),
     shape = c("lord_howe"),
-    list1 = c(TRUE)
+    list_name = c("list1")
   )
   common_names <- tibble(
     correct_name = c("Onychoprion fuscatus"),
@@ -70,8 +70,8 @@ test_that("identify_shape() behaves as intended for various inputs", {
   is_output <- identify_shape(species_records, shapes_path)
   expect_s3_class(is_output, "data.frame")
   expect_equal(144, nrow(is_output |> filter(shape_feature == "Lord Howe Island")))
-  expect_equal(0, nrow(is_output |> filter(shape_feature == "lord_howe")))
-  expect_equal(510, nrow(is_output |> filter(is.na(shape_feature))))
+  expect_equal(0, nrow(is_output |> filter(shape_feature == "in shape")))
+  expect_equal(524, nrow(is_output |> filter(is.na(shape_feature))))
 
 
   # check the case where the shp file has no SHAPE_NAME field
@@ -86,8 +86,8 @@ test_that("identify_shape() behaves as intended for various inputs", {
   }
   is_output <- identify_shape(species_records, shapes_path)
   expect_equal(0, nrow(is_output |> filter(shape_feature == "Lord Howe Island")))
-  expect_equal(144, nrow(is_output |> filter(shape_feature == "lord_howe")))
-  expect_equal(510, nrow(is_output |> filter(is.na(shape_feature))))
+  expect_equal(144, nrow(is_output |> filter(shape_feature == "in shape")))
+  expect_equal(524, nrow(is_output |> filter(is.na(shape_feature))))
 
   # check the case where no shp file is provided
   species_records$shape <- NA
@@ -115,7 +115,7 @@ test_that("identify_shape() behaves as intended for various inputs", {
     state = c(NA),
     lga = c(NA),
     shape = c("lord_howe", "tasmania"),
-    list1 = c(TRUE)
+    list_name = c("list1")
   )
   common_names <- tibble(
     correct_name = c("Onychoprion fuscatus", "Thalassarche bulleri"),
@@ -150,6 +150,6 @@ test_that("identify_shape() behaves as intended for various inputs", {
   is_output <- identify_shape(species_records, shapes_path)
   expect_equal(144, nrow(is_output |> filter(shape_feature == "Lord Howe Island")))
   expect_equal(62, nrow(is_output |> filter(shape_feature == "Tasmania")))
-  expect_equal(585, nrow(is_output |> filter(is.na(shape_feature))))
+  expect_equal(599, nrow(is_output |> filter(is.na(shape_feature))))
 
 })
