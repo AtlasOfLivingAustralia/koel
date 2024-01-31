@@ -340,12 +340,12 @@ test_that("filter_occurrences() includes all Australian teritories", {
     shape = c(NA),
     list_name = c("list1")
   )
-  event_date_start <- "15-11-2022"
-  event_date_end <- "17-11-2022"
+  event_date_start <- "11-01-2019"
+  event_date_end <- "17-01-2019"
   species_records <- search_occurrences(species_list, common_names, event_date_start, event_date_end)
   fo_output <- filter_occurrences(species_records)
 
-  expect_equal(nrow(fo_output), 2)
+  expect_equal(nrow(fo_output), 9)
   # Cocos Keeling Island
   species_list <- data.frame(
     correct_name = c("Gygis alba"),
@@ -427,3 +427,109 @@ test_that("filter_occurrences() performs species exclusions correctly", {
   expect_true(!("Onychoprion anaethetus" %in% fo_output$correct_name))
 })
 
+# Australian territories inclusion from coastal waters shp
+test_that("filter_occurrences() includes all Australian teritories", {
+  # set up arguments
+  common_names <- data.frame(
+    correct_name = c("Onychoprion fuscatus",
+                     "Aptenodytes patagonicus",
+                     "Oceanites oceanicus",
+                     "Fregata andrewsi",
+                     "Gygis alba",
+                     "Sula dactylatra",
+                     "Anous minutus"),
+    common_name = c("Sooty Tern",
+                    "King Penguin",
+                    "Wilson's Storm Petrel",
+                    "Christmas Island Frigatebird",
+                    "White Tern",
+                    "Masked Gannet",
+                    "Black Noddy")
+  )
+  ### ISLANDS TO CHECK
+  # Norfolk Island
+  species_list <- data.frame(
+    correct_name = c("Sula dactylatra"),
+    provided_name = c("Sula dactylatra"),
+    search_term = c("Sula dactylatra"),
+    common_name = c("Masked Gannet"),
+    state = c("Norfolk Island"),
+    lga = c(NA),
+    shape = c(NA),
+    list_name = c("list1")
+  )
+  event_date_start <- "03-10-2022"
+  event_date_end <- "04-10-2022"
+  species_records <- search_occurrences(species_list, common_names, event_date_start, event_date_end)
+  fo_output <- filter_occurrences(species_records)
+
+  expect_equal(nrow(fo_output), 3)
+  # Ashmore & Cartier Islands
+  species_list <- data.frame(
+    correct_name = c("Onychoprion fuscatus"),
+    provided_name = c("Onychoprion fuscatus"),
+    search_term = c("Onychoprion fuscatus"),
+    common_name = c("Sooty Tern"),
+    state = c("Ashmore Island, Cartier Island"),
+    lga = c(NA),
+    shape = c(NA),
+    list_name = c("list1")
+  )
+  event_date_start <- "12-05-2022"
+  event_date_end <- "14-05-2022"
+  species_records <- search_occurrences(species_list, common_names, event_date_start, event_date_end)
+  fo_output <- filter_occurrences(species_records)
+
+  expect_equal(nrow(fo_output), 2)
+  # Heard & McDonald Islands (also checks that records without coordinates are excluded)
+  species_list <- data.frame(
+    correct_name = c("Oceanites oceanicus"),
+    provided_name = c("Oceanites oceanicus"),
+    search_term = c("Oceanites oceanicus"),
+    common_name = c("Wilson's Storm Petrel"),
+    state = c("Heard and McDonald Islands"),
+    lga = c(NA),
+    shape = c(NA),
+    list_name = c("list1")
+  )
+  event_date_start <- "01-02-2016"
+  event_date_end <- "02-02-2016"
+  species_records <- search_occurrences(species_list, common_names, event_date_start, event_date_end)
+  fo_output <- filter_occurrences(species_records)
+
+  expect_equal(nrow(fo_output), 21)
+  # Christmas Island
+  species_list <- data.frame(
+    correct_name = c("Fregata andrewsi"),
+    provided_name = c("Fregata andrewsi"),
+    search_term = c("Fregata andrewsi"),
+    common_name = c("Christmas Island Frigatebird"),
+    state = c("Christmas Island"),
+    lga = c(NA),
+    shape = c(NA),
+    list_name = c("list1")
+  )
+  event_date_start <- "11-01-2019"
+  event_date_end <- "17-01-2019"
+  species_records <- search_occurrences(species_list, common_names, event_date_start, event_date_end)
+  fo_output <- filter_occurrences(species_records)
+
+  expect_equal(nrow(fo_output), 9)
+  # Cocos (Keeling) Islands
+  species_list <- data.frame(
+    correct_name = c("Gygis alba"),
+    provided_name = c("Gygis alba"),
+    search_term = c("Gygis alba"),
+    common_name = c("White Tern"),
+    state = c("Cocos (Keeling) Islands"),
+    lga = c(NA),
+    shape = c(NA),
+    list_name = c("list1")
+  )
+  event_date_start <- "09-01-2018"
+  event_date_end <- "10-01-2018"
+  species_records <- search_occurrences(species_list, common_names, event_date_start, event_date_end)
+  fo_output <- filter_occurrences(species_records)
+
+  expect_equal(nrow(fo_output), 17)
+})
