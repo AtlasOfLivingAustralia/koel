@@ -466,7 +466,7 @@ identify_state <- function(species_records) {
              cw_state = if_else(is.na(intersection),
                                 NA,
                                 coastal_waters_shp$state_abbr[intersection]),
-             flagged_state = str_detect(state, cw_state) | state == cw_state) |>
+             flagged_state = str_detect(state, fixed(cw_state))) |>
       select(-intersection) |>
       st_drop_geometry()
   }

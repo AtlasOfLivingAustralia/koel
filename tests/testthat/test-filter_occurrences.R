@@ -113,6 +113,28 @@ test_that("filter_occurrences() correctly handles multiple states/LGAs.", {
   fo_output <- filter_occurrences(species_records)
   # of five total records in species_records, 3 should be kept by filter_occurrences
   expect_equal(nrow(fo_output), 0)
+
+  # check for 'state' values with bracketed strings
+  species_list <- data.frame(
+    correct_name = c("Gygis alba"),
+    provided_name = c("Gygis alba"),
+    search_term = c("Gygis alba"),
+    common_name = c("White Tern"),
+    state = c("NSW, Cocos (Keeling) Islands"),
+    lga = c(NA),
+    shape = c(NA),
+    list_name = c("list1")
+  )
+  common_names <- tibble(
+    correct_name = c("Gygis alba"),
+    common_name = c("White Tern")
+  )
+  event_date_start <- "09-01-2018"
+  event_date_end <- "15-01-2018"
+  species_records <- search_occurrences(species_list, common_names, event_date_start, event_date_end)
+  fo_output <- filter_occurrences(species_records)
+
+  expect_equal(nrow(fo_output), 23)
 })
 
 # check that the function handles different jurisdictions for same species
