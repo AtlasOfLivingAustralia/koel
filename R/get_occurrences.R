@@ -458,17 +458,17 @@ identify_state <- function(species_records) {
              flagged_state = logical(0))
   } else {
     sr_states <- species_records |>
-    st_as_sf(coords = c("decimalLongitude", "decimalLatitude"),
-             crs = st_crs(coastal_waters_shp),
-             remove = FALSE) |>
-    mutate(intersection = st_intersects(geometry, coastal_waters_shp) |>
-             as.integer(),
-           cw_state = if_else(is.na(intersection),
-                              NA,
-                              coastal_waters_shp$state_abbr[intersection]),
-           flagged_state = str_detect(state, cw_state)) |>
-    select(-intersection) |>
-    st_drop_geometry()
+      st_as_sf(coords = c("decimalLongitude", "decimalLatitude"),
+               crs = st_crs(coastal_waters_shp),
+               remove = FALSE) |>
+      mutate(intersection = st_intersects(geometry, coastal_waters_shp) |>
+               as.integer(),
+             cw_state = if_else(is.na(intersection),
+                                NA,
+                                coastal_waters_shp$state_abbr[intersection]),
+             flagged_state = str_detect(state, fixed(cw_state))) |>
+      select(-intersection) |>
+      st_drop_geometry()
   }
 
   return(sr_states)
