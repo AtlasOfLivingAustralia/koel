@@ -261,14 +261,13 @@ filter_occurrences <- function(species_records, shapes_path = NULL) {
 #' @importFrom dplyr filter
 #' @importFrom dplyr left_join
 #' @importFrom dplyr mutate
-#' @importFrom dplyr select
-#' @importFrom dplyr relocate
-#' @importFrom dplyr rename
+#' @importFrom dplyr na_if
 #' @importFrom dplyr rowwise
 #' @importFrom dplyr tibble
 #' @importFrom dplyr ungroup
 #' @importFrom galah request_metadata
 #' @importFrom galah collect_media
+#' @importFrom tidyr unite
 #' @importFrom tidyr unnest_longer
 #' @export
 
@@ -288,9 +287,10 @@ download_occurrences <- function(occ_list, cache_path) {
     if (any(!is.na(occ_list$multimedia))) {
       occ_media <- occ_list |>
         unnest_longer(col = c(images, sounds, videos)) |>
+        unite(media_id, images, sounds, videos, sep = "", remove = TRUE, na.rm = TRUE) |>
+        mutate(media_id = na_if(media_id, "")) |>
         left_join(request_metadata() |> filter(media == occ_list) |>  collect(),
-                  by = c("images" = "image_id")) |>
-        rename("media_id" = "images") |>
+                  by = c("media_id" = "image_id")) |>
         distinct(recordID, correct_name, provided_name, state, lga, shape, list_name, .keep_all = TRUE) |>
         rowwise() |>
         mutate(download_path = if (is.na(multimedia)) {NA} else {
@@ -298,7 +298,7 @@ download_occurrences <- function(occ_list, cache_path) {
                          mimetype,
                          paste0(cache_path, "species_images"))}) |>
         ungroup()
-      collect_media(occ_media |> filter(!is.na(media_id)), thumbnail = TRUE)
+      collect_media(occ_media |> filter(multimedia == "Image"), thumbnail = TRUE)
     } else {
       occ_media <- occ_list |>
         unnest_longer(col = c(images, sounds, videos)) |>
@@ -442,6 +442,7 @@ identify_aus <- function(species_records) {
 #' @importFrom sf st_crs
 #' @importFrom sf st_drop_geometry
 #' @importFrom sf st_intersects
+#' @importFrom stringr fixed
 #' @importFrom stringr str_detect
 #' @export
 
