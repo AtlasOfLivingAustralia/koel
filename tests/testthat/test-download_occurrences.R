@@ -68,8 +68,8 @@ test_that("download_occurrences() works as intended", {
   do_output <- download_occurrences(occ_list, cache_path)
 
   expect_s3_class(do_output, "data.frame")
-  expect_equal(dim(do_output), c(3, 41))
-  expect_equal(colnames(do_output)[c(1, 40, 41)],
+  expect_equal(dim(do_output), c(3, 39))
+  expect_equal(colnames(do_output)[c(1, 38, 39)],
                c("recordID", "image_url", "download_path"))
   expect_equal(sum(is.na(do_output$image_url)), 1)
   expect_equal(sum(is.na(do_output$download_path)), 1)
@@ -109,8 +109,8 @@ test_that("download_occurrences() works for a set of records without media", {
 
   do_output <- download_occurrences(occ_list, cache_path)
 
-  expect_equal(dim(do_output), c(4, 41))
-  expect_equal(colnames(do_output)[c(1, 40, 41)],
+  expect_equal(dim(do_output), c(4, 39))
+  expect_equal(colnames(do_output)[c(1, 38, 39)],
                c("recordID", "image_url", "download_path"))
   expect_true(all(is.na(do_output$image_url)))
   expect_true(all(is.na(do_output$download_path)))
