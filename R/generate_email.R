@@ -236,13 +236,17 @@ build_email_large <- function(alerts_data, cache_path,
           table_df_base <- build_gt_table(alerts_data |> filter(list_name == list_entry),
                                           cache_path)
           # is the email going to be a large file?
-          large_file <- (nrow(table_df_base) >= 30)
+          large_file <- (nrow(table_df_base) >= records_threshold)
 
-          divisions <- seq(1, nrow(table_df_base), records_per_email)
+          if (large_file) {
+            divisions <- seq(1, nrow(table_df_base), records_per_email)
+          } else {
+            divisions <- 1
+          }
 
           map(.x = 1:length(divisions),
               .f = function(num) {
-                # create set of 20 row dataframes
+                # create set of `records_per_email` row dataframes
                 table_df <- if (num != length(divisions)) {
                   table_df_base[divisions[num]:(divisions[num+1] - 1),]
                 } else {
@@ -321,6 +325,7 @@ build_email_large <- function(alerts_data, cache_path,
 #'    `location` and `image`.
 #'
 #' @importFrom dplyr arrange
+#' @importFrom dplyr case_when
 #' @importFrom dplyr filter
 #' @importFrom dplyr if_else
 #' @importFrom dplyr mutate
@@ -406,12 +411,20 @@ build_gt_table <- function(df, cache_path) {
       ),
       occ_media = map(
         glue(
-          if_else(is.na(multimedia),
-                  "<b>NO MEDIA AVAILABLE</b>",
-                  "<a href={image_url} target='_blank'>
-                      <img src='{download_path}' height = '200'
-                           style='max-width:267px;height:100%;max-height:200px;'>
-                  </a>")
+          case_when(
+            is.na(multimedia) ~ "<b>NO MEDIA AVAILABLE</b>",
+            multimedia == "Sound" ~ "<a href={image_url} target='_blank'>
+                                        <b>SOUND FILE PROVIDED<br>
+                                    </a>",
+            multimedia == "Video" ~ "<a href={image_url} target='_blank'>
+                                        <b>VIDEO FILE PROVIDED<br>
+                                    </a>",
+            multimedia == "Image" ~ "<a href={image_url} target='_blank'>
+                                      <img src='{download_path}' height = '200'
+                                            style='max-width:267px;height:100%;max-height:200px;'>
+                                     </a>",
+            .default = ""
+          )
         ),
         gt::html
       )
