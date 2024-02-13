@@ -302,6 +302,8 @@ download_occurrences <- function(occ_list, cache_path) {
     } else {
       occ_media <- occ_list |>
         unnest_longer(col = c(images, sounds, videos)) |>
+        unite(media_id, images, sounds, videos, sep = "", remove = TRUE, na.rm = TRUE) |>
+        mutate(media_id = na_if(media_id, "")) |>
         mutate(creator = NA,
                license = NA,
                mimetype = NA,
