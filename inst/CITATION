@@ -4,6 +4,6 @@ bibentry(
   author   = c(person("Martin", "Westgate"),
                person("Callum", "Waite"),
                person("Shandiya", "Balasubramaniam")),
-  year     = 2023,
+  year     = "2023",
   note     = "R package version 0.1.0",
   url      = "https://github.com/AtlasOfLivingAustralia/koel")
