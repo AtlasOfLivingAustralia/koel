@@ -1,5 +1,4 @@
 # tests for assign_common_names
-
 # test format of input
 test_that("dataframe argument is supplied correctly", {
   # throw an error if argument is not a data.frame or tibble

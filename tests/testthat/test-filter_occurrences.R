@@ -1,7 +1,7 @@
 # testing for filter_occurrences()
 library(galah)
 galah_config(
-  email = "callumwaite2000@gmail.com",
+  email = Sys.getenv("ALA_EMAIL"),
   run_checks = FALSE,
   verbose = TRUE)
 

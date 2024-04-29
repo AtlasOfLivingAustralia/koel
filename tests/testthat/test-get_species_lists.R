@@ -1,6 +1,4 @@
 # tests for get_species_lists
-library(tibble)
-
 # inputs must be in the correct format - df, correct columns
 test_that("get_species_lists() arguments are supplied correctly",{
   # test if `lists_path` is supplied properly

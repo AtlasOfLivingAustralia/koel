@@ -65,23 +65,23 @@ search_occurrences <- function(species_list, common_names,
 
   ##### Function Implementation #####
   # manipulate date objects to create correct window
-  event_date_start <- ifelse(
+  event_date_start_a <- ifelse(
     is.numeric(event_date_start),
     paste0(Sys.Date() - event_date_start, "T00:00:00Z"),
     paste0(dmy(event_date_start), "T00:00:00Z")
   )
-  event_date_end <- ifelse(
+  event_date_end_a <- ifelse(
     is.numeric(event_date_end),
     paste0(Sys.Date() - event_date_end + 1, "T00:00:00Z"),
     paste0(dmy(event_date_end) + 1, "T00:00:00Z")
   )
 
-  upload_date_start <- ifelse(
+  upload_date_start_a <- ifelse(
     is.numeric(upload_date_start),
     paste0(Sys.Date() - upload_date_start, "T00:00:00Z"),
     paste0(dmy(upload_date_start), "T00:00:00Z")
   )
-  upload_date_end <- ifelse(
+  upload_date_end_a <- ifelse(
     is.numeric(upload_date_end),
     paste0(Sys.Date() - upload_date_end + 1, "T00:00:00Z"),
     paste0(dmy(upload_date_end) + 1, "T00:00:00Z")
@@ -111,10 +111,10 @@ search_occurrences <- function(species_list, common_names,
       # search through each potential name field
       ala_search <- fields |>
         map(search_name_fields,
-            event_date_start = event_date_start,
-            event_date_end = event_date_end,
-            upload_date_start = upload_date_start,
-            upload_date_end = upload_date_end,
+            event_date_start = event_date_start_a,
+            event_date_end = event_date_end_a,
+            upload_date_start = upload_date_start_a,
+            upload_date_end = upload_date_end_a,
             search_terms = search_terms) |>
         list_rbind()
       # informative output of no. of occurrences

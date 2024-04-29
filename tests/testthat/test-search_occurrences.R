@@ -2,7 +2,7 @@
 # remotes::install_github("atlasoflivingaustralia/galah@main")
 library(galah)
 galah_config(
-  email = "callumwaite2000@gmail.com",
+  email = Sys.getenv("ALA_EMAIL"),
   run_checks = FALSE,
   verbose = TRUE)
 

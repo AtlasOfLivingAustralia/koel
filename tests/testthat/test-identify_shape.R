@@ -1,5 +1,4 @@
 # testing for identify_shape()
-
 # check that incorrect inputs are flagged and corrected
 test_that("identify_shape() takes correct input arguments", {
   # set up correct arguments
