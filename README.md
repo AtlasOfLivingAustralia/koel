@@ -51,7 +51,7 @@ functions pass the species names through a series of filtering,
 checking, and downloading steps to return a tibble containing
 information on the requested species.
 
-<img src="man/figures/koel_workflow.svg" align="left"/>
+<img src="man/figures/flowchart.svg" align="left"/>
 
 ### Taxonomic filters
 
