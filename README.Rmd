@@ -13,7 +13,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# koel <img src="man/figures/koel_female.png" align="left" height="150" style="padding: 10px;" />
+# koel <img src="man/figures/koel_female.png" align="right" height="138" style="padding: 20px;" />
 
 <!-- badges: start -->
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-yellow.svg)](https://www.tidyverse.org/lifecycle/#experimental)
