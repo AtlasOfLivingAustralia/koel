@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# koel <img src="man/figures/koel_female.png" align="right" height="200" style="padding: 10px;" />
+# koel <img src="man/figures/koel_female.png" align="left" height="150" style="padding: 10px;" />
 
 <!-- badges: start -->
 
