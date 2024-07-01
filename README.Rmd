@@ -41,7 +41,7 @@ remotes::install_github("AtlasOfLivingAustralia/koel")
 
 ## Suggested workflow
 
-The figure below provides an overview of the suggested workflow when using `koel`. Users provide a csv file containing taxon information, and the filepath to this is passed as an argument to the first function in the suggested workflow, `collate_lists()`. This summarises the information provided in the species list(s), and the subsequent functions pass the species names through a series of filtering, checking, and downloading steps to return a tibble containing information on the requested species.
+The figure below provides an overview of the suggested workflow when using `koel`. Users provide a directory with one or more csv files containing taxon information, and the filepath to this directory is passed as an argument to the first function in the suggested workflow, `get_species_lists()`. This checks and combines the list(s) into a single dataframe, and the subsequent functions pass the taxon names through a series of filtering, checking, and downloading steps to return a tibble containing information on the requested taxa.
 
 <img src="man/figures/flowchart.svg" align="left"/>
 
