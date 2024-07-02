@@ -1,22 +1,24 @@
-#' Import user-supplied species lists from a single directory
+#' Import and tidy species lists
 #'
-#' This function takes a small data.frame produced by `collate_lists()` and
-#'    facilitates the import of species list files described there. The rest of
-#'    the function utilises {dplyr} and {tidyr} functions to clean and combine
-#'    the species lists into a single data.frame suitable for use with {galah}.
+#' This function imports species lists saved as csv files in a directory and
+#' combines them into a single data.frame. Names in the lists are cleaned by
+#' removing whitespace, punctuation, and unnecessary text to make them suitable
+#' for use with the galah package.
 #'
-#' @param lists_path Path to the directory where lists are saved, ending in `"/"`.
-#' @param list_suffix Character string (case insensitive) between the list name
-#'    and file extension.
-#' @param synonym_delimiter An optional character string detailing the delimiter
-#'    used for multiple synonyms in the synonym column of the lists. Defaults to
-#'    `", "` or `","`.
+#' @param lists_path Filepath to the directory where lists are saved, ending in
+#'   `"/"`.
+#' @param list_suffix String between the name of the list and the file
+#'   extension. Case insensitive. Defaults to "_list".
+#' @param synonym_delimiter Optional string specifying the delimiter used for
+#'   multiple synonyms in the synonym column of the lists. Defaults to `","`.
 #'
-#' @return A data.frame of unique scientific names, the search term used to
-#'   match those names to the ALA taxonomy, a common name for each species, the
-#'   state and LGA jurisdictions of interest for each species, and a column for
-#'   the name of the list that name was provided by. This data.frame may be
-#'   passed to `assign_common_names()` and `search_occurrences()`.
+#' @returns A data.frame with 8 columns and a row for every unique combination
+#'   of values in the "correct_name", "provided_name", "synonyms", and
+#'   "common_name" columns. If not present in the provided species lists,
+#'   "state", "lga", and "shape" columns will be added. The "list_name" column
+#'   is added to indicate the name of the original provided species list.
+#'   This data.frame may be passed to `assign_common_names()` and
+#'   `search_occurrences()`.
 #'
 #' @importFrom dplyr across
 #' @importFrom dplyr distinct
