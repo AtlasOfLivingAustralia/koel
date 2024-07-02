@@ -14,7 +14,7 @@ get_species_lists(lists_path, list_suffix = "_list", synonym_delimiter = ",")
 extension. Case insensitive. Defaults to "_list".}
 
 \item{synonym_delimiter}{Optional string specifying the delimiter used for
-multiple synonyms in the synonym column of the lists. Defaults to `","`.}
+multiple synonyms in the synonym column of the lists. Defaults to ",".}
 }
 \value{
 A data.frame with 8 columns and a row for every unique combination

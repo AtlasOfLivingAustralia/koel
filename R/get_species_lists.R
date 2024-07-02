@@ -10,7 +10,7 @@
 #' @param list_suffix String between the name of the list and the file
 #'   extension. Case insensitive. Defaults to "_list".
 #' @param synonym_delimiter Optional string specifying the delimiter used for
-#'   multiple synonyms in the synonym column of the lists. Defaults to `","`.
+#'   multiple synonyms in the synonym column of the lists. Defaults to ",".
 #'
 #' @returns A data.frame with 8 columns and a row for every unique combination
 #'   of values in the "correct_name", "provided_name", "synonyms", and
@@ -42,12 +42,10 @@ get_species_lists <- function(lists_path,
                               list_suffix = "_list",
                               synonym_delimiter = ",") {
 
-  ##### Defensive Programming #####
   this_call <- match.call(expand.dots = TRUE)
   this_call[[1]] <- as.name("koel_defensive")
   eval.parent(this_call)
 
-  ##### Function Implementation #####
   file_names <- list.files(lists_path)
   file_paths <- paste0(lists_path, file_names)
   labels <- gsub(paste0(list_suffix, ".csv"), "", file_names, ignore.case = T)
@@ -64,10 +62,8 @@ get_species_lists <- function(lists_path,
            mutate(list_name = label)) |>
     list_rbind() |>
     distinct() |>
-    # to clean columns for searching
-    mutate(
-      correct_name = clean_names(correct_name),
-      synonyms = clean_names(synonyms)) |>
+    mutate(correct_name = clean_names(correct_name),
+           synonyms = clean_names(synonyms)) |>
     # add state and/or LGA columns if not present
     (\(.) if ("state" %in% names(.)) {.}
      else {. |> tibble::add_column(state = NA)})() |>
@@ -98,14 +94,14 @@ get_species_lists <- function(lists_path,
 }
 
 
-#' Clean up name columns
+#' Clean values in name columns
 #'
-#' Internal function to perform numerous regex substitution that clean up
-#'    name columns to be suitable for searching with galah
+#' Internal function that performs regex substitutions to tidy values in name
+#' columns so values are compatible with galah.
 #'
-#' @param name `character string` object or column/vector to be cleaned
+#' @param name A character vector.
 #'
-#' @return A cleaned `character string` of the same type and length as `name`.
+#' @returns A character vector of the same length as `name`.
 #'
 #' @importFrom magrittr %>%
 #' @importFrom stringr str_squish
