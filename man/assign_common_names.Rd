@@ -2,23 +2,24 @@
 % Please edit documentation in R/assign_common_names.R
 \name{assign_common_names}
 \alias{assign_common_names}
-\title{Function to identify single assigned common names for species}
+\title{Assign single common name per taxon}
 \usage{
 assign_common_names(species_names)
 }
 \arguments{
-\item{species_names}{A data.frame of species data, probably produced by
-`get_species_list2()`, that contains at least a `correct_name` and a
-`common_name` column.}
+\item{species_names}{A data.frame containing taxon information, with columns
+named "correct_name" and "common_name".}
 }
 \value{
-A single data.frame with a `correct_name` and `common_name` column.
-   Each correct_name is unique and has a single common name assigned to it.
-   This object can be passed onto `search_occurrences()`.
+A data.frame with two columns, named "correct_name" and
+  "common_name". The number of unique values in "correct_name" will be the
+  same as that supplied in "species_names". Each value in "correct_name" will
+  only have a single corresponding match in "common_name". This may be passed
+  to `search_occurrences()`.
 }
 \description{
-This function reduces confusion and complexity that arises from species having
-   multiple accepted common names. It takes a data.frame of species name
-   data and filters it down to have a single row for correct scientific
-   species name. Each name is assigned a single correct common name.
+In cases where taxa have been supplied with multiple common names, this
+function selects and assigns a single common name to each taxon. If a taxon
+has not been supplied with a common name, it is assigned "[Common Name
+Unknown]".
 }

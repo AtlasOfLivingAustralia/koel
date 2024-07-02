@@ -1,14 +1,11 @@
-# tests for assign_common_names
-
-# test format of input
-test_that("dataframe argument is supplied correctly", {
+test_that("correct input is provided", {
   # throw an error if argument is not a data.frame or tibble
   expect_error(assign_common_names(list(12)))
   # throw an error if the argument does not have the correct columns
-  expect_error(get_species_list2(data.frame(correct_name = NULL, search_term = NULL)))
+  expect_error(get_species_lists(data.frame(correct_name = NULL, search_term = NULL)))
 })
 
-test_that("assign_common_names() returns the correct data.frame output", {
+test_that("assign_common_names returns the correct data.frame output", {
   # set up lists_df object
   dir_path <- withr::local_tempdir()
   {write.csv(tibble(correct_name = c("Eudynamys orientalis", "Eolophus roseicapilla"),
