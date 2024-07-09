@@ -2,7 +2,6 @@
 
 export(assign_common_names)
 export(build_email)
-export(build_email_large)
 export(build_gt_table)
 export(build_map_thumbnail)
 export(download_occurrences)

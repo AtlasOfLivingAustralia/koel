@@ -123,7 +123,7 @@ koel_defensive <- function(...) {
     }
   }
 
-  ###### build_email() + build_email_large() ######
+  ###### build_email() ######
   if (exists("alerts_data", inherits = FALSE)) {
     if (nrow(alerts_data) > 0) {
       # alerts_data

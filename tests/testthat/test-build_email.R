@@ -1,5 +1,3 @@
-# testing for build_email()
-
 test_that("correct types of input are supplied", {
 
   # test class/type of alerts_data, email_list, template_path
@@ -24,10 +22,4 @@ test_that("correct types of input are supplied", {
   expect_error(build_email(data.frame(),
                            data.frame(email =  "dummy_email", list = "list_1"),
                            "dummy_path.csv"))
-})
-
-test_that("function behaves as expected with 0 and >0 alerts", {
-
-  # we can discuss this when we have a chat
-
 })
