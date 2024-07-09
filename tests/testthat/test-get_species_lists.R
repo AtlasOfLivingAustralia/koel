@@ -1,21 +1,18 @@
-# tests for get_species_lists
 library(tibble)
 
-# inputs must be in the correct format - df, correct columns
-test_that("get_species_lists() arguments are supplied correctly",{
+test_that("get_species_lists arguments are supplied correctly",{
   # test if `lists_path` is supplied properly
   expect_error(get_species_lists(12))
   expect_error(get_species_lists("./dummy_path"))
   # test if `list_suffix` is supplied properly
-  expect_error(get_species_list2("./dummy_path/", 12))
-  expect_error(get_species_list2("./dummy_path/", c("_list", "_List")))
+  expect_error(get_species_lists("./dummy_path/", 12))
+  expect_error(get_species_lists("./dummy_path/", c("_list", "_List")))
   # test if `synonym_delimiter` is supplied properly
-  expect_error(get_species_list2("./dummy_path/", "_list", 12))
-  expect_error(get_species_list2("./dummy_path/", "_list", c(", ", "|")))
+  expect_error(get_species_lists("./dummy_path/", "_list", 12))
+  expect_error(get_species_lists("./dummy_path/", "_list", c(", ", "|")))
 })
 
-# test that the output is of the correct form
-test_that("get_species_lists() returns the correct data.frame output",{
+test_that("get_species_lists returns the correct data.frame output",{
   # set up lists_df object
   dir_path <- withr::local_tempdir()
   {write.csv(tibble(correct_name = c("Eudynamys orientalis", "Eolophus roseicapilla"),
@@ -53,7 +50,7 @@ test_that("get_species_lists() returns the correct data.frame output",{
 })
 
 # test that the function doesn't group same states/LGAs/shapes
-test_that("get_species_lists() deals with similar and different states", {
+test_that("get_species_lists deals with similar and different states", {
   # set up lists_df object with same states/LGAs
   dir_path <- withr::local_tempdir()
   {write.csv(tibble(correct_name = "Eudynamys orientalis",
@@ -91,7 +88,7 @@ test_that("get_species_lists() deals with similar and different states", {
 })
 
 # test that the function includes all synonyms as search terms
-test_that("get_species_lists() returns the correct data.frame output",{
+test_that("get_species_lists returns the correct data.frame output",{
   # set up lists_df object
   dir_path <- withr::local_tempdir()
   {write.csv(tibble(correct_name = "Eudynamys orientalis",
@@ -111,7 +108,7 @@ test_that("get_species_lists() returns the correct data.frame output",{
 })
 
 # check that state, lga and shape columns are created correctly when not provided
-test_that("get_species_lists() creates state/lga columns when not provided", {
+test_that("get_species_lists creates state/lga columns when not provided", {
   # create dummy list with no state, lga or shape columns
   dir_path <- withr::local_tempdir()
   {write.csv(tibble(correct_name = "Eudynamys orientalis",
@@ -154,7 +151,7 @@ test_that("get_species_lists() creates state/lga columns when not provided", {
 })
 
 # check that state column only defaults to "AUS" when no LGA or shape is provided
-test_that("get_species_list2() defaults state to 'AUS' correctly", {
+test_that("get_species_lists defaults state to 'AUS' correctly", {
   # create dummy list with no state or lga columns
   dir_path <- withr::local_tempdir()
   {write.csv(tibble(correct_name = c("Eudynamys orientalis", "Dicrurus bracteatus", "Cacatua roseicapilla"),
