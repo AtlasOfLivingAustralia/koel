@@ -26,7 +26,7 @@ calls](https://xeno-canto.org/explore?query=Eudynamys%20orientalis). The
 package is named after this species because the suggested workflow is
 primarily used for sending alerts, and the Eastern Koel is frequently
 identified through its distinctive call before it is seen. The logo was
-designed by Shandiya Balasubramaniam.
+designed by [Shandiya Balasubramaniam](https://labs.ala.org.au/about/Balasubramaniam_Shandiya/).
 
 If you have any questions or suggestions, please [contact
 us](mailto:support@ala.org.au).
