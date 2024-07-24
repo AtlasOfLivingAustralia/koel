@@ -2,11 +2,13 @@
 % Please edit documentation in R/generate_email.R
 \name{build_email}
 \alias{build_email}
-\title{Build and send biosecurity alert emails}
+\title{Build and send alert emails}
 \usage{
 build_email(
   alerts_data,
   cache_path,
+  records_threshold = 25,
+  records_per_email = 20,
   template_path = NULL,
   output_path = NULL,
   email_list = data.frame(email = character(), list = character()),
@@ -19,48 +21,54 @@ build_email(
 )
 }
 \arguments{
-\item{alerts_data}{A data.frame ideally produced by `download_occurrences()`.
-Each row contains ALA data pertaining to a single species occurrence record
-downloaded with galah. Should contain 8 default columns.}
+\item{alerts_data}{A data.frame with eight columns and a row for every taxon
+occurrence record. May be produced by `download_occurrences()`.}
 
-\item{cache_path}{A single string containing the path to the temporary
-cache folder in which species images and maps are saved.  Must begin with
-`"./"` and end  with `"/"`. Should contain a `species_images` and a `maps`
-directory, however these will be created if they do not exist.}
+\item{cache_path}{A string containing the path to the temporary cache folder
+in which species images and maps are saved.  Must begin with `"./"` and end
+with `"/"`. If directories named `species_images` and `maps` are not
+present, they will be created automatically.}
 
-\item{template_path}{A single string containing the path to the R
-markdown template to be rendered with the html table produced by
-`build_gt_table()`. Defaults to NULL which triggers the use of a minimal
-.Rmd file to render the produced table. Markdown file must use object
-`table_df`.}
+\item{records_threshold}{A (positive) numeric value indicating the minimum
+number of records on a single list to trigger the splitting of the list's
+records into multiple emails. Defaults to 25.}
+
+\item{records_per_email}{A (positive) numeric value indicating how many
+records to include per email for a list if the total number of records
+exceeds `records_threshold`. Defaults to 20 records per email.}
+
+\item{template_path}{A single string containing the path to the R markdown
+template to be rendered with the html table produced by `build_gt_table()`.
+Defaults to NULL which triggers the use of a minimal .Rmd file to render
+the produced table. Markdown file must use object `table_df`.}
 
 \item{output_path}{An optional single string containing the path to the
 permanent directory in which the produced .html and .csv files are saved
 for record-keeping purposes. Default value is `NULL`, and files are only
 saved if a file path is provided instead. Must begin with `"./"` and end
-with `"/"`. Should contain a 'html' and a 'csv' directory, however these
-will be created if they do not exist.}
+with `"/"`. If directories named `html` and `csv` are not present, they
+will be created automatically.}
 
-\item{email_list}{A data.frame of email details for each list. Should
-contain at least two columns, one named `email` containing email addresses,
-and one named `list` containing the lists each email is associated with.
-Defaults to an empty dataframe with these columns. Emails provided with
-`"universal"` in the `list` column receive emails for all lists}
+\item{email_list}{A data.frame with at least two columns, the first named
+`email` and containing email addresses, and the second named `list` and
+detailing the lists associated with that email address. Defaults to an
+empty dataframe with these columns. Emails provided with `"universal"` in
+the `list` column receive emails for all lists.}
 
-\item{email_subject}{An optional single string of the subject of the email.
-If not provided, default subject is "ALA Biosecurity Alerts".}
+\item{email_subject}{An optional string of the subject of the email. If not
+provided, defaults to "ALA Biosecurity Alerts".}
 
-\item{email_send}{A single string providing the email address from which
-the alerts are to be sent. Deafults to `NA`.}
+\item{email_send}{A string providing the email address from which the alerts
+are to be sent. Defaults to `NA`.}
 
-\item{email_password}{A single string providing the password for the
-provided email address (`email_send` argument). Defaults to `NA`.}
+\item{email_password}{A string providing the password for the provided email
+address (`email_send` argument). Defaults to `NA`.}
 
-\item{email_host}{A single string providing the email server host to be
-fed to the {emayili} function `server()`. Defaults to `NA`.}
+\item{email_host}{A string providing the email server host to be fed to the
+{emayili} function `server()`. Defaults to `NA`.}
 
-\item{email_port}{A single numeric value providing the email server port to be
-fed to the {emayili} function `server()`. Defaults to `NA`.}
+\item{email_port}{A numeric value providing the email server port to be fed
+to the {emayili} function `server()`. Defaults to `NA`.}
 
 \item{test}{A logical argument which indicates whether the email should be
 sent as a test email (TRUE) or as an official email (FALSE). If the email
@@ -68,11 +76,10 @@ is a test then it is not addressed to the sending email address. Defaults
 to `TRUE`.}
 }
 \description{
-This function compiles the downloaded ALA species occurrences into an
-   informative table for each biosecurity list, and facilitates the sending
-   of emails containing these tables to relevant addressees. It uses helper
-   (internal and external) functions to format and compile necessary map
-   images, format the table, and send the emails. There is no outputted value
-   of this function, however it provides the option to save .html and .csv
-   files to local or temporary directories.
+This function compiles the downloaded records into a table for each list, and
+sends these tables as emails to the provided addresses. It uses helper
+functions to format and compile map images, format tables, and send emails.
+If a list has too many records for a single email, multiple emails will be
+sent. There is also the option to save .html and .csv files to local or temp
+directories.
 }
